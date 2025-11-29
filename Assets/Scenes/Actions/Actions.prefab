@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2265529566895923394
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5331765402480672917}
+  - component: {fileID: 7044924474578344561}
+  - component: {fileID: 6620160429630990847}
+  - component: {fileID: -6685083425827332896}
+  m_Layer: 0
+  m_Name: Actions
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5331765402480672917
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2265529566895923394}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.39215, y: 0.86665, z: 3.71084}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7044924474578344561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2265529566895923394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a8cfdf9cdf4c9494aa27007984fa878, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LightBonfireExecutor
+  actionRecipe: {fileID: 11400000, guid: 5dffd13e1a219e3db87f8fcbffec7458, type: 2}
+  isBonfireLit: 0
+  fireParticles: {fileID: 0}
+  pointLight: {fileID: 0}
+--- !u!114 &6620160429630990847
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2265529566895923394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af8f7ec1f2943396494a9503c79e83c4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AddWoodExecutor
+  actionRecipe: {fileID: 0}
+  timeIncreaseAmount: 8
+--- !u!114 &-6685083425827332896
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2265529566895923394}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56abf3ffe2d5be7f49b3866d19410804, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AddCoalExecutor
+  actionRecipe: {fileID: 0}
+  timeIncreaseAmount: 15

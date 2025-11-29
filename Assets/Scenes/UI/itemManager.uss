@@ -1,0 +1,124 @@
+:root {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+#unity-content-container {
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+}
+
+.inventory-panel-base {
+    width: 400px;
+    height: 600px;
+    background-color: rgb(30, 30, 30);
+    border-radius: 8px;
+    border-color: rgb(70, 70, 70);
+    border-width: 2px;
+    padding: 10px;
+}
+
+.header-section {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.panel-title {
+    -unity-font-style: bold;
+    color: rgb(200, 200, 200);
+    font-size: 16px;
+}
+
+.exit-button {
+    width: 30px;
+    height: 30px;
+}
+
+.slots-grid {
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 5px;
+    gap: 5px;
+}
+
+.inventory-slot {
+    width: 64px;
+    height: 64px;
+    background-image: url("project://database/Assets/Scenes/UI/slot2.png?fileID=2800000&guid=d83fcdb375ba9ae3d9ec7fb04abeac29&type=3#slot2");
+    -unity-background-scale-mode: scale-to-fit;
+    border-color: rgb(150, 150, 150);
+    border-width: 1px;
+    border-radius: 4px;
+    position: relative;
+    background-color: rgb(129, 129, 129);
+}
+
+.item-icon {
+    width: 100%;
+    height: 100%;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.stack-count-label {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    -unity-font-style: bold;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 2px 4px;
+    font-size: 10px;
+    border-top-left-radius: 3px;
+}
+
+
+/* NOU: Containerul care ține grila de inventar ȘI secțiunea de echipare */
+#main-content-area {
+    flex-direction: row; /* Alinierea orizontală */
+    flex-grow: 1; /* Ocupă tot spațiul rămas */
+}
+
+/* Ajustează grila existentă pentru a ocupa 3/4 din spațiu */
+#slots-grid-container {
+    flex-grow: 3;
+    /* Păstrează celelalte proprietăți din .slots-grid */
+}
+
+
+/* NOU: Containerul secțiunii de echipare */
+#equipped-tools-section {
+    flex-direction: column;
+    flex-grow: 1; /* Ocupă 1/4 din spațiu (dacă #slots-grid-container are flex-grow: 3) */
+    align-items: center;
+    padding: 10px;
+    border-left-width: 1px;
+    border-left-color: rgb(0, 0, 0); /* Separator vizual */
+    margin-left: 10px;
+}
+
+/* NOU: Clasă specifică pentru slotul de Unealtă Echipată */
+#equipped-tool-slot {
+    width: 80px; /* Sau dimensiunea dorită */
+    height: 80px;
+    margin-top: 10px;
+    /* Moștenește stilul de bază al slotului, dar îl putem suprascrie */
+    background-color: rgb(196, 202, 18); /* Diferențiază-l de fundal */
+    border-color: rgba(232, 166, 0, 0.46); /* Poate o culoare de accent */
+    border-width: 2px;
+    border-radius: 6px;
+}
+
+#tool-type-label,
+#damage-label {
+    color: rgb(45, 233, 24);
+    font-size: 12px;
+    -unity-font-style: normal;
+    margin-top: 5px;
+}

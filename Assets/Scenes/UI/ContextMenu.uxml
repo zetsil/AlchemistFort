@@ -1,0 +1,8 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scenes/UI/contextMenu.uss?fileID=7433441132597879392&amp;guid=41bfe1c84337710569d88be1f6619ee9&amp;type=3#contextMenu" />
+    <ui:VisualElement name="context-menu-base" class="context-menu">
+        <ui:Button text="Equip" name="ContextMenuEquip" class="context-button" />
+        <ui:Button text="Use" name="ContextMenuUse" class="context-button" />
+        <ui:Button text="Drop" name="ContextMenuDrop" class="context-button" />
+    </ui:VisualElement>
+</ui:UXML>

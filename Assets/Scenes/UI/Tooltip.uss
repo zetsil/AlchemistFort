@@ -1,0 +1,50 @@
+/* Containerul de bază al Tooltip-ului */
+.tooltip-base {
+    position: absolute; /* Crucial pentru a-l plasa lângă mouse */
+    width: 250px;
+    padding: 8px;
+    background-color: rgba(30, 30, 30, 0.95); /* Fundal semi-transparent întunecat */
+    border-radius: 4px;
+    border-color: rgb(150, 150, 150);
+    border-width: 1px;
+    border-style: solid;
+    z-index: 200; /* Asigură-te că apare deasupra a tot */
+}
+
+/* Stil pentru Numele Item-ului */
+.tooltip-name {
+    font-size: 16px;
+    -unity-font-style: bold;
+    color: rgb(255, 230, 100); /* O culoare aurie sau galben deschis */
+    margin-bottom: 5px;
+}
+
+/* Bara de separare */
+.tooltip-separator {
+    height: 1px;
+    background-color: rgb(70, 70, 70);
+    margin: 4px 0;
+}
+
+/* Stil pentru descrierea generală */
+.tooltip-description {
+    font-size: 13px;
+    white-space: normal; /* Permite textului să se extindă pe mai multe rânduri */
+    color: rgb(200, 200, 200);
+    margin-top: 5px;
+    margin-bottom: 8px;
+}
+
+/* Secțiunea de proprietăți (Daune, Heal, etc.) */
+.properties-container {
+    flex-direction: column;
+    padding-top: 5px;
+}
+
+/* Stilul fiecărei proprietăți (Daune, Heal, etc.) */
+.tooltip-property {
+    font-size: 12px;
+    color: rgb(150, 255, 150); /* O culoare verde pentru statistici pozitive */
+    -unity-font-style: italic;
+    margin: 1px 0;
+}

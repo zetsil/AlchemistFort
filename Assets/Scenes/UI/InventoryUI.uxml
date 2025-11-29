@@ -1,0 +1,20 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scenes/UI/itemManager.uss?fileID=7433441132597879392&amp;guid=0492d0c4b9979b3c7858e203d083a516&amp;type=3#itemManager" />
+    <ui:VisualElement name="inventory-panel" class="inventory-panel-base">
+        <ui:VisualElement class="header-section">
+            <ui:Label text="INVENTORY" class="panel-title" />
+            <ui:Button text="X" name="Exit" class="exit-button" />
+        </ui:VisualElement>
+        <ui:VisualElement name="main-content-area" style="flex-direction: row; flex-grow: 1;">
+            <ui:VisualElement name="slots-grid-container" class="slots-grid" style="background-image: url(&quot;project://database/Assets/TextMesh%20Pro/Examples%20&amp;%20Extras/Textures/Floor%20Cement.jpg?fileID=2800000&amp;guid=283f897e4925411ebbaa758b4cb13fc2&amp;type=3#Floor Cement&quot;); flex-grow: 3; min-width: 250px;" />
+            <ui:VisualElement name="equipped-tools-section" style="flex-direction: column; flex-grow: 1; align-items: center; padding: 10px; min-width: 120px; border-left-width: 1px; border-left-color: rgb(51, 51, 51);">
+                <ui:Label text="EQUIPPED TOOL" style="margin-bottom: 5px; font-size: 14px; background-color: rgb(32, 32, 32); color: rgb(188, 188, 188);" />
+                <ui:VisualElement name="equipped-tool-slot" class="inventory-slot-base" style="width: 80px; height: 80px; background-color: rgba(50, 50, 50, 0.8);">
+                    <ui:Image name="tool-icon" class="slot-icon" style="width: 90%; height: 90%; color: rgb(246, 246, 246);" />
+                    <ui:Label name="durability-label" text="100%" class="slot-count-label" style="align-self: flex-end; font-size: 10px;" />
+                </ui:VisualElement>
+                <ui:Label name="tool-type-label" text="Type: --" style="margin-top: 10px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

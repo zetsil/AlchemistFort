@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a06461ad318fee03b380eb2dab2f000, type: 3}
+  m_Name: Rock
+  m_EditorClassIdentifier: Assembly-CSharp::Item
+  itemName: Rock
+  icon: {fileID: 21300000, guid: c440ec793716e3f71bd1037be922e5f5, type: 3}
+  description: A common piece of stone found almost everywhere. It is the most fundamental
+    resource, usable as an essential base for crafting your very first tools and
+    structures. It can also be used as a starting weapon or an improvised projectile
+    in an emergency.
+  stackSize: 10
+  amount: 1

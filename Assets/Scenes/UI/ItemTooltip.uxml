@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scenes/UI/Tooltip.uss?fileID=7433441132597879392&amp;guid=5f7f8501da2beb5ffa885b16a7eb8d5f&amp;type=3#Tooltip" />
+    <ui:VisualElement name="tooltip-container" class="tooltip-base">
+        <ui:Label name="ItemNameLabel" text="Nume Item" class="tooltip-name" />
+        <ui:VisualElement class="tooltip-separator" />
+        <ui:VisualElement name="details-section" class="details-container">
+            <ui:Label name="ItemDescriptionLabel" text="O descriere scurtă și informativă a itemului." class="tooltip-description" />
+            <ui:VisualElement name="properties-section" class="properties-container">
+                <!-- <ui:Label name="PropertyOneLabel" text="Daune: +15" class="tooltip-property" />
+                <ui:Label name="PropertyTwoLabel" text="Vindecare: +10" class="tooltip-property" /> -->
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
