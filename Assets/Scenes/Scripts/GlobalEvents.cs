@@ -1,6 +1,16 @@
 using System;
 using UnityEngine;
 
+
+public enum MessageType
+{
+    Info,
+    Alert,
+    ResourceNeeded,
+    Health,
+    Tutorial
+}
+
 public static class GlobalEvents
 {
     // ================================================================
@@ -16,24 +26,13 @@ public static class GlobalEvents
 
     public static event Action<float> OnTimeUpdate;
 
-
-    // ================================================================
-    // EVENIMENTE NOI (PENTRU SISTEMUL DE ECHIPARE BAZAT PE SLOT)
-    // ================================================================
-
-    /// <summary>
-    /// NOU: Eveniment pentru a cere echiparea unui slot instanță specific, 
-    /// care conține datele dinamice (durabilitatea).
-    /// </summary>
     public static event Action<InventorySlot> OnSlotEquipRequested;
 
+    public static event Action<string, MessageType> OnNotificationRequested;
 
-    // ================================================================
-    // METODE DE APELARE (INVOKE)
-    // ================================================================
+    public static event Action<string> OnPlaySound;
 
-    // Am păstrat metodele vechi, dar ele vor fi ignorate de EquippedManager
-    // dacă acesta se bazează pe noul event OnSlotEquipRequested.
+
 
     public static void RequestEquip(ToolItem tool)
     {
@@ -74,7 +73,7 @@ public static class GlobalEvents
 
         OnSlotEquipRequested?.Invoke(slot);
     }
-    
+
     public static void NotifyDayStart()
     {
         OnDayStart?.Invoke();
@@ -89,4 +88,28 @@ public static class GlobalEvents
     {
         OnTimeUpdate?.Invoke(percentRemaining);
     }
+
+
+    public static void RequestNotification(string message, MessageType type)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            Debug.LogError($"Cerere de notificare invalidă: Mesajul lipsește. Tip: {type}");
+            return;
+        }
+
+        OnNotificationRequested?.Invoke(message, type);
+    }
+
+
+    public static void TriggerPlaySound(string soundName)
+    {
+        // Verifică dacă există abonați înainte de a declanșa evenimentul
+        if (OnPlaySound != null)
+        {
+            OnPlaySound.Invoke(soundName);
+        }
+    }
+
+
 }

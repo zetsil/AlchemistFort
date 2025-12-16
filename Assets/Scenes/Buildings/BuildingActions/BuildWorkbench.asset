@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc820c202704a3dd492607e19cff509f, type: 3}
   m_Name: BuildWorkbench
   m_EditorClassIdentifier: Assembly-CSharp::ActionRecipeSO
-  actionName: Need Wood Worktbench
+  actionName: Build Wood Wall
   description: Need Wood
   actionLogic: {fileID: 11400000, guid: 7699cf62acbccdfa0adca7443b69b62b, type: 2}
   actionIcon: {fileID: 21300000, guid: 2607800ccb7863079b43e4255d07669f, type: 3}

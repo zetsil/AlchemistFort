@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Use to cut Wood
   stackSize: 1
   amount: 1
-  maxDurability: 1
-  durabilityLossPerUse: 0
+  maxDurability: 100
+  durabilityLossPerUse: 1
   toolCategory: 1
   attackDamage: 1

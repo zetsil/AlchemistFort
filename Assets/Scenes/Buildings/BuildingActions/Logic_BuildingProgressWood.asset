@@ -12,3 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41eb7b91936b2201dbe4bb0494912537, type: 3}
   m_Name: Logic_BuildingProgressWood
   m_EditorClassIdentifier: Assembly-CSharp::LogicBuildingProgressSO
+  IsProgressAction: 1

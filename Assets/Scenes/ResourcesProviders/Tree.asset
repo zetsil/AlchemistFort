@@ -13,6 +13,8 @@ MonoBehaviour:
   m_Name: Tree
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 10
+  name: Tree
+  baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 1
     damageMultiplier: 1

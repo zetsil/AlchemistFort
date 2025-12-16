@@ -45,8 +45,8 @@ public class EntityData : ScriptableObject
     [Header("Statistici Generale")]
     [Tooltip("Viața maximă a acestei entități.")]
     public int maxHealth = 100;
-
-
+    public string name = "Entity";
+    
     [Tooltip("Damage-ul de bază pe care această entitate îl aplică altor entități.")]
     [Range(0f, 100f)] // Poți ajusta range-ul în funcție de jocul tău
     public float baseAttackDamage = 1f;

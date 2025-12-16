@@ -9,7 +9,7 @@ public class Resource : Entity
     
     [Tooltip("Mesaj afișat dacă jucătorul folosește unealta greșită.")]
     [SerializeField]
-    private string wrongToolMessage = "Ai nevoie de unealta corectă pentru a recolta acest lucru!";
+    private const string WRONG_TOOL_FORMAT = "Requires a $TOOL_NAME$ in order to harvest $RESOURCE_NAME$.";
 
     
     protected override void Start()
@@ -31,31 +31,34 @@ public class Resource : Entity
     /// <param name="toolUsed">Tipul uneltei folosite de jucător.</param>
     public void Harvest(float damageAmount, ToolType toolUsed)
     {
-        // 1. Verificare opțională: Asigură-te că jucătorul folosește cel puțin unealta *corectă* //    (chiar dacă logica de damage este deja în TakeDamage)
+
         if (requiredToolType != ToolType.None && requiredToolType != toolUsed)
         {
-            // O poți folosi pentru a afișa un mesaj de notificare pe ecran
-            Debug.LogWarning(wrongToolMessage); 
+            string requiredToolName = requiredToolType.ToString();
+            string dynamicMessage = $"Requires a {requiredToolName} in order to harvest this.";
+            GlobalEvents.RequestNotification(dynamicMessage, MessageType.Alert);
+
+            Debug.LogWarning(dynamicMessage);
         }
 
-        // 2. Aplică damage-ul, lăsând clasa de bază Entity să gestioneze viața, 
-        //    multiplicatorul de damage (eficacitatea uneltei) și logica de Die/Drop.
+
         TakeDamage(damageAmount, toolUsed);
     }
-    
+
+        
     // Suprascriem metoda Die pentru a adăuga logica specifică resurselor, 
     // cum ar fi schimbarea modelului vizual (de la copac întreg la ciot)
     protected override void Die()
     {
         Debug.Log($"Resursa {gameObject.name} a fost epuizată.");
-        
+
         // Aici poți adăuga logică specifică resursei, cum ar fi:
         // * Schimbarea vizualului (ex: dezactivează modelul copacului, activează modelul ciotului).
         // * Dacă vrei ca resursa să reapară (respawn)
-        
+
         // Apelăm DropLoot din clasa de bază Entity
         DropLoot();
-        
+
         // O resursă ar putea să nu se distrugă imediat, ci să dispară doar vizual.
         // Pentru simplitate, menținem distrugerea obiectului, ca în Entity:
         Destroy(gameObject);

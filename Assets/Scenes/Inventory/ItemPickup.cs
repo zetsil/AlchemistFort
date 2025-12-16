@@ -10,10 +10,9 @@ public class ItemPickup : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        // ... (restul logicii Start)
     }
 
-    public void Collect()
+   public void Collect()
     {
         if (itemData == null)
         {
@@ -21,18 +20,45 @@ public class ItemPickup : MonoBehaviour
             return;
         }
 
-        // 1. ADĂUGAREA ÎN INVENTAR
-        // Aici se folosește asset-ul ScriptableObject.
-        Debug.Log("Am ridicat: " + itemData.itemName);
+        if (itemData is ToolItem toolItem)
+        {
+            if (EquippedManager.Instance.IsEquippedSlotEmpty())
+            {
+
+                InventorySlot newSlot = new InventorySlot(toolItem, -1); 
+
+                GlobalEvents.RequestSlotEquip(newSlot);
+                
+                Debug.Log($"✅ Unealta {toolItem.itemName} a fost echipată direct din Lume.");
+                
+                Destroy(gameObject); 
+                
+                // Opțional: Trimitem un semnal de sunet specific pentru echipare
+                // GlobalEvents.TriggerPlaySound("EquipToolSound"); 
+                return; 
+            }
+        }
         
-        // Dacă e un obiect consumabil, poți face un test (deși de obicei nu se face aici)
-        // if (itemData is Apple) 
-        // {
-        //     Apple apple = itemData as Apple;
-        //     Debug.Log("Mărul restaurează " + apple.healthRestored + " viață.");
-        // }
+        bool added = InventoryManager.Instance.AddItem(itemData); 
+
+        if (added)
+        {
+            // Obiectul a fost adăugat cu succes în inventar.
+            Debug.Log($"✅ Colectat: {itemData.itemName} x{itemData.amount}.");
+            
+            // Notificare (pentru sunet/UI, indiferent de succesul adăugării)
+            // Păstrăm logica ta de semnal combinat pentru notificare/sunet.
+            string combinedSignal = "Collect_" + itemData.itemName;
+            GlobalEvents.TriggerPlaySound(combinedSignal); // Managerul de sunet primește "Collect_Wood"
+
+            // Distrugem obiectul fizic, deoarece adăugarea a fost confirmată.
+            Destroy(gameObject); 
+        }
+        else
+        {
+            Debug.LogWarning($"❌ Inventarul este plin! Nu s-a putut adăuga {itemData.itemName}.");
+            
+        }
         
-        // 2. ȘTERGEREA OBIECTULUI FIZIC DIN SCENĂ
-        Destroy(gameObject); 
     }
 }

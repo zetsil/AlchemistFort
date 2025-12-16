@@ -41,7 +41,6 @@ public abstract class AbstractActionLogicSO : ScriptableObject
             int totalCountInInventory = InventoryManager.Instance.GetTotalItemCount(itemName);
             if (totalCountInInventory < requiredAmount)
             {
-                Debug.Log($"Nu se poate executa '{actionRecipe.actionName}'. Lipsește {itemName} ({totalCountInInventory}/{requiredAmount}).");
                 return false;
             }
         }

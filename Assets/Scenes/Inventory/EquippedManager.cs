@@ -45,14 +45,12 @@ public class EquippedManager : MonoBehaviour
     {
         return currentEquippedSlot;
     }
+    
+    public bool IsEquippedSlotEmpty()
+    {
+        return currentEquippedSlot == null;
+    }
 
-    // =================================================================
-    // LOGICĂ ECHIPARE (APELATĂ PRIN EVENT)
-    // =================================================================
-
-    /// <summary>
-    /// Gestionează cererea de echipare primită prin evenimentul GlobalEvents.OnSlotEquipRequested.
-    /// </summary>
     private void HandleEquipSlotRequest(InventorySlot slotToEquip)
     {
         // 1. Verificări preliminare
@@ -61,25 +59,25 @@ public class EquippedManager : MonoBehaviour
             Debug.LogError("Tentativă de echipare slot eșuată: Nu este ToolItem.");
             return;
         }
-        
+
         // 2. Dezechiparea obiectului curent (dacă există)
         if (currentEquippedSlot != null)
         {
             UnequipTool();
-            
+
             // Verificăm dacă dezechiparea a reușit (dacă inventarul nu e plin)
-            if (currentEquippedSlot != null) 
+            if (currentEquippedSlot != null)
             {
                 Debug.LogWarning($"Echipare nouă eșuată: Slotul curent ({currentEquippedSlot.itemData.itemName}) nu a putut fi dezechipat (Inventarul este plin).");
                 return;
             }
         }
-        
+
         // 3. Finalizarea Echipării Noului Slot
         currentEquippedSlot = slotToEquip;
-        
+
         // CONECTARE CRITICĂ: Trimitem Slotul instanță către ToolController.
-        ToolController equippedController = FindToolControllerInScene(); 
+        ToolController equippedController = FindToolControllerInScene();
         if (equippedController != null)
         {
             Debug.Log($"[EquippedManager] Conectat Slotul {currentEquippedSlot.itemData.itemName} la ToolController. Durabilitate: {currentEquippedSlot.state.currentDurability:F0}");
@@ -101,7 +99,7 @@ public class EquippedManager : MonoBehaviour
         InventorySlot slotToUnequip = currentEquippedSlot;
         
         // 1. Încearcă să returnezi slotul înapoi în inventar
-        bool success = InventoryManager.Instance.AddItem(slotToUnequip.itemData); // trebuie schimbat
+        bool success = InventoryManager.Instance.AddExistingSlot(slotToUnequip);
 
         if (success)
         {
@@ -126,6 +124,77 @@ public class EquippedManager : MonoBehaviour
             // Dezechipare eșuată (inventar plin) - Slotul rămâne ECHIPAT.
             Debug.LogError($"⚠️ Dezechiparea {slotToUnequip.itemData.itemName} a eșuat! Inventarul stocabil este plin.");
         }
+    }
+
+
+    public bool DropEquippedTool(int amount = 1)
+    {
+        if (currentEquippedSlot == null)
+        {
+            Debug.LogWarning("[EquippedManager] Nu este nicio unealtă echipată de aruncat.");
+            return false;
+        }
+
+        // Preia referința la slot înainte de curățare
+        InventorySlot slotToDrop = currentEquippedSlot;
+
+        // 1. Curățarea slotului echipat
+        ToolController equippedController = FindToolControllerInScene();
+        if (equippedController != null)
+        {
+            // Deconectează ToolController
+        }
+
+        // Curățarea EquippedManager (Dezechiparea)
+        currentEquippedSlot = null;
+        OnSlotEquippedStateChanged?.Invoke(null);
+        
+        Debug.Log($"[EquippedManager] Se pregătește aruncarea uneltei '{slotToDrop.itemData.itemName}'.");
+        
+        // 2. Apelul la logica de aruncare din InventoryManager
+        // DropItem va genera obiectul vizual în lume și va scădea count-ul din slotToDrop
+        // (Deși count-ul este 1 și va ajunge la 0).
+        
+        bool dropSuccess = InventoryManager.Instance.DropItem(slotToDrop, amount);
+        
+        if (dropSuccess)
+        {
+            Debug.Log($"Unealta Echipată '{slotToDrop.itemData.itemName}' a fost aruncată.");
+            return true;
+        }
+        else
+        {
+            Debug.LogError("Aruncarea uneltei echipate a eșuat la nivel vizual/locație.");
+            return false;
+        }
+    }
+
+
+    public void DestroyEquippedToolBySlot(InventorySlot slotToDestroy)
+    {
+        if (currentEquippedSlot == null || currentEquippedSlot != slotToDestroy)
+        {
+            Debug.LogWarning($"[EquippedManager] Tentativă de distrugere slot ignorată. Slotul primit ({slotToDestroy.itemData.itemName}) nu este slotul echipat curent.");
+            return;
+        }
+
+        ToolController equippedController = FindToolControllerInScene();
+        if (equippedController != null)
+        {
+            // Deconectează ToolController de slot
+            // Adaugă aici codul specific de deconectare a ToolController-ului
+        }
+
+        // 3. Curățarea EquippedManager
+        slotToDestroy.ToolItemData?.Unequip(); 
+        currentEquippedSlot = null;
+        
+        // 4. Anunță Dezechiparea (pentru UI, etc.)
+        OnSlotEquippedStateChanged?.Invoke(null);
+
+        Debug.Log($"[EquippedManager] Unealta echipată '{slotToDestroy.itemData.itemName}' a fost DISTRUSĂ (durabilitate 0).");
+        
+
     }
 
     private ToolController FindToolControllerInScene()

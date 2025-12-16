@@ -1,0 +1,12 @@
+<UXML xmlns:ui="UnityEngine.UIElements" version="1.0" editor-extension-mode="False">
+    <ui:VisualElement name="InfoWindowRoot">
+        <ui:VisualElement name="MessageContainer" class="message-container" style="background-image: url(&quot;project://database/Assets/Scenes/UI/chatbuble.png?fileID=2800000&amp;guid=e4939c7146ad9ce7a9b0c9cf8f0afa97&amp;type=3#chatbuble&quot;); height: 94px; width: auto; align-content: auto; align-items: auto; flex-direction: column; flex-wrap: nowrap; justify-content: flex-start; overflow: visible; align-self: flex-start; text-overflow: ellipsis; flex-grow: 0;">
+            <ui:VisualElement name="Icon" class="icon-frame" />
+            <ui:VisualElement name="TextContainer" class="text-container">
+                <ui:VisualElement name="Separator" class="separator-line" />
+            </ui:VisualElement>
+            <ui:Label name="BuildingNameLabel" text="Building Name" class="title-label" style="left: 0; right: 56px; -unity-text-align: middle-right; white-space: pre; align-self: flex-start; margin-left: 10px; height: 23px; text-overflow: ellipsis; align-content: flex-start;" />
+            <ui:Label name="CostLabel" text="Cost: 100" class="cost-label" style="align-content: auto; align-self: flex-start; padding-top: 4px; padding-right: 4px; margin-left: 10px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</UXML>

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: BuildWall
   m_EditorClassIdentifier: Assembly-CSharp::ActionRecipeSO
   actionName: Build Wall
-  description: Build  Wall
+  description: Build Wall
   actionLogic: {fileID: 11400000, guid: c299e581b2794be04817b8b81169d150, type: 2}
   actionIcon: {fileID: 21300000, guid: c440ec793716e3f71bd1037be922e5f5, type: 3}
   requiredItems:

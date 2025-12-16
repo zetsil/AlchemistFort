@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Zombie
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 10
+  name: Zombie
   baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 1

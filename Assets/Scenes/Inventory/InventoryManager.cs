@@ -14,6 +14,7 @@ public class InventoryManager : MonoBehaviour
 
     // Limite
     public int max_slots = 6;
+    public float dropDistance = 1.5f;
     private int current_slots = 0;
     private static int nextSlotIndex = 0; // ID unic global
 
@@ -85,6 +86,9 @@ public class InventoryManager : MonoBehaviour
         if (!inventory.ContainsKey(itemName))
         {
             Debug.LogWarning($"Itemul {itemName} nu există în inventar!");
+
+            var allKeys = string.Join(", ", inventory.Keys);
+            Debug.Log($"Chei disponibile în inventar: [{allKeys}]");
             return false;
         }
 
@@ -197,6 +201,109 @@ public class InventoryManager : MonoBehaviour
             autoRefresh = false;
         }
     }
+
+    public bool DropItem(InventorySlot slot, int amount)
+    {
+        if (slot == null || slot.itemData == null) return false;
+        if (amount <= 0 || amount > slot.count) amount = slot.count; // Aruncă maxim cât are
+
+        // 1. Obținerea Prefab-ului Vizual
+        if (ItemVisualManager.Instance == null)
+        {
+            Debug.LogError("ItemVisualManager nu este instanțiat. Nu se poate arunca item-ul.");
+            return false;
+        }
+
+        GameObject itemPrefab = ItemVisualManager.Instance.GetItemVisualPrefab(slot.itemData);
+        if (itemPrefab == null)
+        {
+            Debug.LogWarning($"Nu s-a găsit Prefab-ul vizual pentru '{slot.itemData.itemName}'. Item-ul nu poate fi aruncat.");
+            // Cu toate acestea, item-ul este eliminat din inventar
+        }
+
+        // 2. Localizarea Poziției de Aruncare
+        Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
+        if (playerTransform == null)
+        {
+            Debug.LogError("Obiectul cu tag-ul 'Player' nu a fost găsit. Item-ul nu poate fi aruncat în fața jucătorului.");
+            return false;
+        }
+
+        // Calculăm poziția în fața camerei/jucătorului
+        // Presupunem că InventoryManager este pe un obiect de la același nivel sau știm cum să ajungem la cameră.
+        // O abordare comună este de a folosi Camera.main
+        Camera mainCamera = Camera.main;
+        Vector3 dropPosition;
+
+        if (mainCamera != null)
+        {
+            dropPosition = mainCamera.transform.position + mainCamera.transform.forward * dropDistance;
+        }
+        else
+        {
+            // Fallback la poziția jucătorului
+            dropPosition = playerTransform.position + playerTransform.forward * dropDistance;
+        }
+
+
+        // 3. Instanțierea Item-ului în Lume
+        if (itemPrefab != null)
+        {
+            GameObject droppedObject = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
+
+            // Opțional: Poți seta count-ul pe un script "WorldItem" atașat la prefab
+            // WorldItem worldItem = droppedObject.GetComponent<WorldItem>();
+            // if (worldItem != null) { worldItem.SetAmount(amount); }
+
+            Debug.Log($"✅ Aruncat {amount} x {slot.itemData.itemName} la poziția {dropPosition}.");
+        }
+
+
+        // 4. Eliminarea Item-ului din Inventar
+        // Pentru simplitate, folosim DecreaseCount care gestionează și eliminarea slotului gol
+        // Creăm o funcție separată în InventorySlot care nu face RemoveSlot la sfârșit.
+        // Sau, mai simplu, apelăm DecreaseCount direct.
+        DecreaseItem(slot.itemData.itemName, amount);
+
+
+        return true;
+    }
+    
+    public bool AddExistingSlot(InventorySlot slot)
+    {
+        // Verificăm dacă inventarul este plin, ignorând faptul că slotul există deja
+        if (current_slots >= max_slots)
+        {
+            Debug.LogError($"⚠️ Inventarul este plin! Nu se poate returna slotul {slot.itemData.itemName}.");
+            return false;
+        }
+
+        string key = slot.itemData.itemName;
+
+        if (!inventory.ContainsKey(key))
+        {
+            inventory[key] = new List<InventorySlot>();
+        }
+
+        // 1. Adăugăm slotul în map-ul de inventar și în lista globală
+        inventory[key].Add(slot);
+        allSlots.Add(slot);
+
+        // 2. Incrementăm numărul de sloturi folosite
+        current_slots++;
+        
+        // 3. Ne asigurăm că slotIndex-ul nu se suprapune cu următoarele sloturi noi
+        // Deși nu ar trebui să se întâmple dacă EquippedManager gestionează corect,
+        // actualizăm indexul global pentru siguranță, deși acest slot are deja un index.
+        if (slot.slotIndex >= nextSlotIndex)
+        {
+            nextSlotIndex = slot.slotIndex + 1;
+        }
+
+        Debug.Log($"✅ Slotul {slot.itemData.itemName} a fost reintegrat în inventar.");
+        UpdateDebugList();
+        return true;
+    }
 }
 
 // ============================================================================
@@ -230,7 +337,30 @@ public class InventorySlot
         manager = InventoryManager.Instance;
         // Inițializarea stării dinamice la creare
         InitializeState(data);
+
         
+
+    }
+
+
+    public void DropOne()
+    {
+        // ADAUGARE VERIFICARE SLOT GOL
+        if (count <= 0)
+        {
+            Debug.LogWarning($"Nu se poate arunca item din slotul #{slotIndex} deoarece este gol (Count = 0).");
+            return;
+        }
+
+        // De asemenea, asigură-te că managerul există
+        if (manager == null)
+        {
+            Debug.LogError("InventoryManager nu este inițializat. Nu se poate arunca itemul.");
+            return;
+        }
+
+        // Aruncă o bucată, dacă este cazul
+        manager.DropItem(this, 1);
     }
 
     public void ApplyDurabilityLoss()
@@ -245,7 +375,7 @@ public class InventorySlot
 
         // 1. Scăderea durabilității
         state.currentDurability -= tool.durabilityLossPerUse;
-        
+
         Debug.Log($"🛠️ Durabilitate {tool.itemName} scazută la {state.currentDurability:F1}");
 
 
@@ -253,25 +383,29 @@ public class InventorySlot
         if (state.currentDurability <= 0)
         {
             state.currentDurability = 0;
-            
+
             Debug.Log($"💔 Unealta {tool.itemName} s-a rupt și va fi eliminată.");
 
-            // Aici trebuie să notificăm sistemul că itemul echipat s-a rupt.
-            // Dacă este ECHIPAT, EquippedManager trebuie să-l elimine.
+
+            if (EquippedManager.Instance != null && EquippedManager.Instance.GetEquippedSlot() == this)
+            {
+                EquippedManager.Instance.DestroyEquippedToolBySlot(this);
+            }
+            
             if (manager != null)
             {
                 // Deși slotul ar trebui să fie deținut de EquippedManager în acest caz,
                 // apelăm un eveniment sau o metodă care să gestioneze distrugerea.
-                
+
                 // NOTĂ: Dacă slotul este echipat, el NU este în inventar, 
                 // ci este în EquippedManager. Trebuie să notificăm EquippedManager.
                 // GlobalEvents.RequestUnequipToolBroken(this); // Presupunem un nou eveniment
 
                 // Dacă cumva ar fi rămas în inventar, l-am scoate:
-                manager.RemoveSlot(this); 
+                // manager.RemoveSlot(this);
             }
         }
-        
+
         // NOTĂ: Aici ar trebui emis un eveniment UI pentru a actualiza bara de durabilitate
         // GlobalEvents.OnDurabilityChanged?.Invoke(this);
     }
@@ -305,16 +439,16 @@ public class InventorySlot
     public void HandleUse()
     {
         // 1. Verificare: Itemul este o Unealtă (echipabilă, cu stare dinamică)?
-       if (itemData is ToolItem tool && state != null)
+        if (itemData is ToolItem tool && state != null)
         {
             // sterge(muta din inventar)
             manager.RemoveSlot(this);
-            GlobalEvents.RequestSlotEquip(this); 
-            return; 
+            GlobalEvents.RequestSlotEquip(this);
+            return;
         }
-        
+
         // 2. Altfel (este un item consumabil, material, sau nu are EquippedManager), apelăm logica SO de bază.
-        itemData.Use(); 
+        itemData.Use();
     }
 
     public int DecreaseCount(int amount)
@@ -332,6 +466,8 @@ public class InventorySlot
         return amount - toRemove;
     }
     
+
+
 
     
 }

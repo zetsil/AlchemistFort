@@ -31,7 +31,7 @@ public class PrefabSpawner : MonoBehaviour
         
         // 2. Obține Prefab-ul din Managerul Centralizat
         // (Folosim funcția GetVisualPrefab din ItemVisualManager.cs)
-        GameObject prefabToSpawn = ItemVisualManager.Instance.GetVisualPrefab(itemKey);
+        GameObject prefabToSpawn = ItemVisualManager.Instance.GetItemVisualPrefab(itemKey);
 
         if (prefabToSpawn == null)
         {

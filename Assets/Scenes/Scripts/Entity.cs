@@ -52,11 +52,12 @@ public abstract class Entity : MonoBehaviour
     /// <summary>
     /// Aplică damage entității, luând în considerare tipul de unealtă folosită.
     /// </summary>
-    public virtual void TakeDamage(float baseDamage, ToolType attackingToolType = ToolType.None)
+    public virtual void TakeDamage( float baseDamage,
+                                    ToolType attackingToolType = ToolType.None)
     {
         if (currentHealth <= 0 || entityData == null) return;
 
-        float multiplier = 1f;
+        float multiplier = 0f;
 
         foreach (var effectiveness in entityData.toolEffectivenesses)
         {
@@ -71,12 +72,20 @@ public abstract class Entity : MonoBehaviour
 
         if (finalDamage <= 0)
         {
+            string nopeSignal = $"Hit_{attackingToolType}_{entityData.name}";
+            GlobalEvents.TriggerPlaySound(nopeSignal);
+
             Debug.Log($"{gameObject.name} este imun/rezistent la damage-ul de tip {attackingToolType}. Base: {baseDamage} x Multiplier: {multiplier}.");
             return;
         }
 
         currentHealth -= finalDamage;
         currentHealth = Mathf.Max(currentHealth, 0);
+
+        // 📡 EMITEREA SEMNALULUI COMBINAT (Cazul HIT)
+        // Format: "Hit|ToolType.Nume|NumeGameObject"
+        string hitSignal = $"Hit_{attackingToolType}_{entityData.name}";
+        GlobalEvents.TriggerPlaySound(hitSignal);
 
         Debug.Log($"Damage aplicat de {attackingToolType}: {finalDamage}. Viață rămasă: {currentHealth}.");
 
@@ -104,7 +113,7 @@ public abstract class Entity : MonoBehaviour
                 int quantity = Random.Range(drop.minQuantity, drop.maxQuantity + 1);
                 if (quantity <= 0) continue;
 
-                GameObject visualPrefab = ItemVisualManager.Instance.GetVisualPrefab(drop.item);
+                GameObject visualPrefab = ItemVisualManager.Instance.GetItemVisualPrefab(drop.item);
 
                 if (visualPrefab != null)
                 {

@@ -20,6 +20,7 @@ public class ZombieNPC : NPCBase, IHasBasePoint
     public readonly MoveToBaseState moveToBaseState = new MoveToBaseState();
     public readonly ChooseTargetState chooseTargetState = new ChooseTargetState();
     public readonly ZombieMoveToState zombieMoveToState = new ZombieMoveToState();
+
     // 🚨 ATENȚIE: AttackBaseState a fost eliminată. Folosim attackState din NPCBase.
 
     public new void Awake()
@@ -148,32 +149,57 @@ public class ZombieMoveToState : INPCState
     
     private const float ATTACK_RANGE_THRESHOLD = 2.0f;
     private const float PLAYER_AGGRO_RANGE = 10.0f;
-    private const float PLAYER_FLEE_RANGE = PLAYER_AGGRO_RANGE + 2f; 
-
+    private const float PLAYER_FLEE_RANGE = PLAYER_AGGRO_RANGE + 2f;
+    private const float RAYCAST_RANGE = 2.0f;
+    private const int ALLY_LAYER_MASK = 1 << 8;
+    
     public void EnterState(NPCBase npc)
     {
         ZombieNPC zombie = npc as ZombieNPC;
-        
+
         if (zombie == null || npc.Target == null)
         {
-             npc.ChangeState(npc.idleState); 
-             return;
+            npc.ChangeState(npc.idleState);
+            return;
         }
 
         npc.Agent.isStopped = false;
-        
+
         if (npc.Agent.isOnNavMesh)
         {
             npc.Agent.SetDestination(npc.Target.transform.position);
         }
-        
+
         if (npc.animator != null) npc.animator.SetInteger("State", (int)StateID);
     }
 
     private void ReevaluateTargetPriority(ZombieNPC zombie)
     {
         if (zombie.CrystalTarget == null) return; 
-
+        
+        // Calculează punctul de plecare (în fața zombie-ului) și direcția
+        // Presupunem că 'zombie.Position' este Vector3 (zombie.transform.position) 
+        // și că 'zombie.Forward' este Vector3 (zombie.transform.forward)
+        Vector3 zombiePosition = zombie.transform.position;
+        Vector3 zombieForward = zombie.transform.forward;
+        
+        Vector3 startPos = zombiePosition + zombieForward * 0.5f;
+        
+        // Execută Raycast-ul
+        if (Physics.Raycast(startPos, zombieForward, out RaycastHit hit, RAYCAST_RANGE, ALLY_LAYER_MASK))
+        {
+            // Verifică dacă obiectul lovit are componenta AllyEntity
+            AllyEntity ally = hit.collider.GetComponent<AllyEntity>();
+            
+            if (ally != null && ally.gameObject != zombie.Target)
+            {
+                Debug.Log($"🚨 Zombie #{zombie.GetInstanceID()} a detectat Ally-ul '{ally.gameObject.name}' prin Raycast! Schimbă ținta.");
+                zombie.Target = ally.gameObject;
+                return; 
+            }
+        }
+        
+        
         GameObject currentTarget = zombie.Target; 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         
@@ -181,7 +207,7 @@ public class ZombieMoveToState : INPCState
         
         float distToPlayer = Vector3.Distance(zombie.Position, player.transform.position);
 
-        // Case 1: Base -> Player (Aggro check)
+        // Case 1: Base/Crystal -> Player (Aggro check)
         if (currentTarget == zombie.CrystalTarget.gameObject)
         {
             if (distToPlayer < PLAYER_AGGRO_RANGE && Random.value < zombie.aggroPlayerChance)
@@ -190,7 +216,7 @@ public class ZombieMoveToState : INPCState
             }
         }
         
-        // Case 2: Player -> Base (Flee check)
+        // Case 2: Player -> Base/Crystal (Flee check)
         else if (currentTarget == player)
         {
              if (distToPlayer > PLAYER_FLEE_RANGE) 

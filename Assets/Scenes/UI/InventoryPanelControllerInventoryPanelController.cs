@@ -518,13 +518,25 @@ public class InventoryPanelController : MonoBehaviour
 
     private void OnContextDropClicked()
     {
-        // Logica de Aruncare
-        if (selectedSlot != null && selectedSlot.itemData != null)
+        if (selectedSlot == null || selectedSlot.itemData == null)
         {
-            Debug.Log($"Aruncă: {selectedSlot.itemData.itemName}");
-            // EX: InventoryManager.Instance.DropItem(selectedSlot);
+            HideContextMenu();
+            return;
         }
-        
+
+        if (selectedSlot == EquippedManager.Instance.GetEquippedSlot())
+        {
+            Debug.Log($"Aruncă Unealta Echipată: {selectedSlot.itemData.itemName}");
+            
+
+            EquippedManager.Instance.DropEquippedTool(1);
+        }
+        else
+        {
+            Debug.Log($"Aruncă din Inventar: {selectedSlot.itemData.itemName}");
+            selectedSlot.DropOne();
+        }
+
         HideContextMenu();
         RefreshUI();
     }

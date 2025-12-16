@@ -76,6 +76,8 @@ public class FirstPersonController : MonoBehaviour
     public float sprintFOV = 80f;
     public float sprintFOVStepTime = 10f;
 
+    public float stepUpForce = 0.03f;
+
     // Sprint Bar
     public bool useSprintBar = true;
     public bool hideBarWhenFull = true;
@@ -135,6 +137,18 @@ public class FirstPersonController : MonoBehaviour
 
     #endregion
 
+    #region Step Climbing // << NEW
+
+    public bool enableStepClimbing = true;
+    [Tooltip("The maximum height (in meters/units) the player can automatically climb (e.g., 0.3m).")]
+    public float maxStepHeight = 0.3f; 
+    [Tooltip("The transition speed for climbing (a small value for smooth movement).")]
+    public float stepSpeed = 0.1f;    
+    [Tooltip("How far forward the Raycast will look for an obstacle.")]
+    public float stepReach = 0.4f;
+    
+    #endregion
+    
 
     private void Awake()
     {
@@ -393,6 +407,25 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
+
+    private void OnTriggerStay(Collider other)
+    {
+        if (!other.CompareTag("Climbable"))
+            return;
+
+        if (other.isTrigger == false && rb.linearVelocity.y < 0.1f)
+            {
+
+                bool isMoving = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
+
+                if (isMoving && isGrounded)
+                {
+                    rb.MovePosition(rb.position + Vector3.up * stepUpForce);
+
+                }
+            }
+    }
+
     void FixedUpdate()
     {
         #region Movement
@@ -412,6 +445,7 @@ public class FirstPersonController : MonoBehaviour
             {
                 isWalking = false;
             }
+
 
             // All movement calculations shile sprint is active
             if (enableSprint && Input.GetKey(sprintKey) && sprintRemaining > 0f && !isSprintCooldown)
@@ -669,7 +703,7 @@ public class FirstPersonController : MonoBehaviour
 
         fpc.sprintFOV = EditorGUILayout.Slider(new GUIContent("Sprint FOV", "Determines the field of view the camera changes to while sprinting."), fpc.sprintFOV, fpc.fov, 179f);
         fpc.sprintFOVStepTime = EditorGUILayout.Slider(new GUIContent("Step Time", "Determines how fast the FOV transitions while sprinting."), fpc.sprintFOVStepTime, .1f, 20f);
-
+        
         fpc.useSprintBar = EditorGUILayout.ToggleLeft(new GUIContent("Use Sprint Bar", "Determines if the default sprint bar will appear on screen."), fpc.useSprintBar);
 
         // Only displays sprint bar options if sprint bar is enabled
@@ -780,6 +814,9 @@ public class FirstPersonController : MonoBehaviour
             SerFPC.ApplyModifiedProperties();
         }
     }
+
+
+
 
 }
 

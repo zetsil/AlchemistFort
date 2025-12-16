@@ -47,22 +47,22 @@ public class InteractablePicker : MonoBehaviour
         RaycastHit hit;
         Vector3 rayOrigin = playerCamera.transform.position;
         Vector3 rayDirection = playerCamera.transform.forward;
+        string resourceCostMessage = null;
 
         if (Physics.Raycast(rayOrigin, rayDirection, out hit, interactionDistance))
         {
-            // Setăm ținta curentă indiferent de tip (util pentru highlight)
-            currentTarget = hit.transform; 
-            
-            // ----------------------------------------------------
-            // Prioritate 1: Buton de Acțiune UI (Ex: pe un panou)
-            // ----------------------------------------------------
+            currentTarget = hit.transform;
             ActionButtonUI buttonUI = hit.transform.GetComponent<ActionButtonUI>();
-            
-            // Verificăm dacă este buton ȘI este în containerul corect (pentru siguranță)
+
             if (buttonUI != null && hit.transform.parent != null && hit.transform.parent.name == "UI_Action_Container")
             {
                 canInteract = true;
-                
+
+                if (buttonUI.recipe != null)
+                {
+                    resourceCostMessage = FormatResourceCost(buttonUI.recipe);
+                }
+
                 if (Input.GetKeyDown(pickUpKey))
                 {
                     ActivateActionButton(buttonUI);
@@ -71,7 +71,7 @@ public class InteractablePicker : MonoBehaviour
             // ----------------------------------------------------
             // Prioritate 2: Obiect Ridicabil (Bazat pe Componenta PickableObject)
             // ----------------------------------------------------
-            else 
+            else
             {
                 // Caută componenta PickableObject pe obiectul lovit.
                 // Acesta este cel mai bun mod de a identifica un obiect ridicabil.
@@ -80,28 +80,84 @@ public class InteractablePicker : MonoBehaviour
                 if (pickable != null)
                 {
                     canInteract = true;
-                    
-                    if (Input.GetKeyDown(pickUpKey)) 
+
+                    if (Input.GetKeyDown(pickUpKey))
                     {
                         // Transmite GameObject-ul care deține componenta PickableObject
-                        PickUpObject(pickable.gameObject); 
+                        PickUpObject(pickable.gameObject);
                     }
                 }
             }
         }
         
         // Actualizăm UI-ul de prompt (la final, după ce canInteract a fost setat)
-        UpdateInteractionPrompt(canInteract);
+        UpdateInteractionPrompt(canInteract, resourceCostMessage);
     }
     
-    private void UpdateInteractionPrompt(bool show)
+
+    private string FormatResourceCost(ActionRecipeSO recipe)
+    {
+        if (recipe == null) return null;
+
+        var sb = new System.Text.StringBuilder();
+
+        // 1. Titlul (Numele Acțiunii)
+        sb.AppendLine(recipe.actionName); 
+
+        // 2. Costurile Detașate (cu verificare de inventar)
+        if (recipe.requiredItems != null && recipe.requiredItems.Count > 0)
+        {
+            sb.Append("Cost: ");
+            
+            for (int i = 0; i < recipe.requiredItems.Count; i++)
+            {
+                ItemCost cost = recipe.requiredItems[i];
+                
+                if (cost.requiredItem != null)
+                {
+                    int playerHave = InventoryManager.Instance.GetTotalItemCount(cost.requiredItem.itemName);
+                    
+                    // Formatul dorit: "ItemName: Needed X / Have Y"
+                    // Exemplu: "Wood: 7 / 4"
+                    
+                    sb.Append($"{cost.requiredItem.itemName}: {playerHave} / {cost.amount}");
+                    
+                    // Adăugăm separator dacă nu este ultimul element
+                    if (i < recipe.requiredItems.Count - 1)
+                    {
+                        sb.Append(" | "); // Folosesc '|' pentru o separare vizuală mai clară
+                    }
+                }
+            }
+        }
+        else
+        {
+            sb.Append("Cost: Free");
+        }
+
+        // Mesajul va avea formatul (Exemplu): 
+        // "Build Wall\nCost: Wood: 7 / 4 | Stone: 5 / 8"
+        return sb.ToString();
+    }
+    
+    private void UpdateInteractionPrompt(bool show, string costMessage)
     {
         if (interactionPromptUI != null)
         {
             interactionPromptUI.SetActive(show);
-            
-            // Opțional: Dacă dorești să afișezi un text diferit pentru butoane vs. obiecte,
-            // poți face o verificare suplimentară pe currentTarget aici.
+        }
+
+        if (show && !string.IsNullOrEmpty(costMessage))
+        {
+            GlobalEvents.RequestNotification(costMessage, MessageType.ResourceNeeded);
+        }
+        else if (!show)
+        {
+            // Dacă nu vizăm nimic interacționabil, ascundem fereastra de notificare
+            // Presupunem că GlobalEvents are o metodă pentru a ascunde notificarea curentă
+            // sau că UIInfoWindow ascunde singur după un timp.
+            // Pentru siguranță, putem trimite un mesaj gol sau un eveniment de curățare.
+            // Presupunem că UIInfoWindow se șterge singur după DISPLAY_TIME.
         }
     }
 
@@ -116,45 +172,24 @@ public class InteractablePicker : MonoBehaviour
         }
     }
 
-    // Metodă refăcută pentru a folosi InventoryManager.Instance.AddItem()
     private void PickUpObject(GameObject pickableObject)
     {
+        // 1. Obține componenta ItemPickup
         ItemPickup pickup = pickableObject.GetComponent<ItemPickup>();
 
+        // 2. Verifică validitatea (dacă pickup și itemData sunt setate)
         if (pickup != null && pickup.itemData != null)
         {
-            // 1. Verificare pentru Echipare Directă
-            // Verificăm dacă obiectul este o Unealtă (ToolItem) ȘI dacă slotul de echipare este gol.
-            if (pickup.itemData is ToolItem toolItem && EquippedManager.Instance.GetEquippedSlot() == null)
-            {
-                // Pas CRITIC: Creăm o instanță de slot pentru a urmări durabilitatea.
-                // Folosim un index temporar de -1, deoarece EquippedManager va prelua proprietatea slotului.
-                InventorySlot newSlot = new InventorySlot(toolItem, -1); 
-
-                // Apelăm noul semnal bazat pe slot. EquippedManager se va abona și va echipa slotul.
-                GlobalEvents.RequestSlotEquip(newSlot);
-                
-                Debug.Log($"✅ Unealta {toolItem.itemName} a fost echipată direct din Lume.");
-                Destroy(pickableObject); 
-                return; 
-            }
+            // 3. 🚀 Deleagă TOATĂ LOGICA DE COLECTARE componentei ItemPickup
+            // ItemPickup.Collect() decide dacă itemul e echipat, adăugat sau dacă inventarul e plin.
+            // Și tot ItemPickup.Collect() gestionează distrugerea obiectului (Destroy(pickableObject)).
             
-            // 2. Logica Standard de Adăugare în Inventar (dacă nu e unealtă sau slotul e ocupat)
-            bool added = InventoryManager.Instance.AddItem(pickup.itemData); 
-
-            if (added)
-            {
-                Debug.Log($"✅ Colectat: {pickup.itemData.itemName} x{pickup.itemData.amount}.");
-                Destroy(pickableObject); 
-            }
-            else
-            {
-                Debug.LogWarning($"❌ Inventarul este plin! Nu s-a putut adăuga {pickup.itemData.itemName}.");
-            }
+            pickup.Collect();
         }
         else
         {
-            Debug.LogError($"Obiectul {pickableObject.name} nu are un ItemPickup valid (sau itemData este null)!");
+            // Eroare dacă obiectul interacționat nu are componenta necesară
+            Debug.LogError($"Obiectul {pickableObject.name} nu are un ItemPickup valid (sau itemData este null)! Verifică Asset-ul SO.");
         }
     }
 }

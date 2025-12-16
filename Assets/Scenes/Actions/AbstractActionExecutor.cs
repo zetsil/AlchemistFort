@@ -35,7 +35,6 @@ public abstract class AbstractActionExecutor : MonoBehaviour
             if (totalCountInInventory < recipe.amount)
             {
                 // Un item necesar lipsește sau nu este în cantitate suficientă
-                Debug.Log($"❌ Nu se poate executa acțiunea '{actionRecipe.actionName}'. Lipsește {recipe.requiredItem.itemName} ({totalCountInInventory}/{recipe.amount}).");
                 return false; 
             }
         }

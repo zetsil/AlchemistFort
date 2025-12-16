@@ -65,7 +65,7 @@ public class EquippedToolVisualizer : MonoBehaviour
         if (newToolData != null && ItemVisualManager.Instance != null)
         {
             // Cerem Prefab-ul 3D de la manager, folosind ScriptableObject-ul (din slot) ca cheie.
-            GameObject prefabToInstantiate = ItemVisualManager.Instance.GetVisualPrefab(newToolData);
+            GameObject prefabToInstantiate = ItemVisualManager.Instance.GetFirstPersonVisualPrefab(newToolData);
             
             if (prefabToInstantiate != null)
             {

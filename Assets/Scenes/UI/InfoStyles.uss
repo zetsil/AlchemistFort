@@ -1,0 +1,124 @@
+/* ========================================================= */
+/* 1. SETĂRI DE BAZĂ (RĂDĂCINĂ ȘI STRUCTURĂ) */
+/* ========================================================= */
+
+/* Rădăcina ferestrei (se ajustează la conținut) */
+#InfoWindowRoot {
+    /* Poziționare fixă în colțul dreapta sus */
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    
+    /* Auto-ajustare: Lăsăm lățimea să fie dictată de conținut, limitată de max-width */
+    width: auto;         
+    max-width: 350px;    
+    height: auto;
+}
+
+/* Containerul Flex: Iconiță (stânga) + Text (dreapta) */
+.message-container {
+    flex-direction: row; 
+    align-items: flex-start; /* Aliniere sus pentru o structură curată */
+    padding: 12px;
+    border-radius: 4px;
+    border-width: 2px;
+    border-style: solid; /* Asigură că border-width funcționează */
+    height: auto;
+}
+
+/* Frame-ul pentru iconiță */
+.icon-frame {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+    margin-top: 2px; 
+    background-color: rgba(0, 0, 0, 0.5); /* Placeholder */
+    border-radius: 4px;
+    border-width: 1px;
+    border-color: rgba(255, 255, 255, 0.3);
+    border-style: solid;
+}
+
+/* Containerul de text */
+.text-container {
+    flex-grow: 1; 
+    flex-direction: column;
+}
+
+/* Separatorul subtil */
+.separator-line {
+    height: 1px;
+    margin-top: 4px;
+    margin-bottom: 4px;
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ========================================================= */
+/* 2. STILURI DE TEXT (FONTURI ȘI UMBRE) */
+/* ========================================================= */
+
+.title-label {
+    -unity-font-style: bold;
+    font-size: 16px;
+    white-space: normal; /* Permite wrap */
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.8); /* Umbră pentru lizibilitate */
+    padding: 0;
+    margin: 0;
+}
+
+.cost-label {
+    font-size: 14px;
+    white-space: normal;
+    color: rgb(220, 220, 220); 
+    padding: 0;
+    margin: 0;
+}
+
+/* ========================================================= */
+/* 3. TEMA: ALERTĂ (.alert-window) - Roșu / Auriu */
+/* ========================================================= */
+
+.alert-window .message-container {
+    /* Fundal Roșu Închis Transparent */
+    background-color: rgba(40, 0, 0, 0.85); 
+    /* Border Auriu/Portocaliu */
+    border-color: rgb(255, 160, 20); 
+}
+
+.alert-window .title-label {
+    /* Text Auriu/Portocaliu */
+    color: rgb(255, 180, 40); 
+}
+
+.alert-window .icon-frame {
+    /* Border iconiță roșiatic */
+    border-color: rgb(150, 50, 50);
+}
+
+.alert-window .separator-line,
+.alert-window .cost-label {
+    /* În alertă, separatorul și label-ul de cost sunt ascunse de C# */
+    /* Dacă totuși apar, le putem stiliza pentru alertă */
+    background-color: transparent;
+}
+
+
+/* ========================================================= */
+/* 4. TEMA: INFO / RESOURCE NEEDED (.info-window) - Albastru / Argintiu */
+/* ========================================================= */
+
+.info-window .message-container {
+    /* Fundal Albastru-Gri Închis Transparent */
+    background-color: rgba(10, 20, 30, 0.9); 
+    /* Border Argintiu/Albăstrui */
+    border-color: rgb(100, 130, 160); 
+}
+
+.info-window .title-label {
+    /* Text Albastru Deschis / Cyan */
+    color: rgb(150, 220, 255); 
+}
+
+.info-window .icon-frame {
+    border-color: rgb(80, 100, 120);
+}
