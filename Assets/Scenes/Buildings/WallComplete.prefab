@@ -14,7 +14,8 @@ GameObject:
   - component: {fileID: 7744174019946973136}
   - component: {fileID: 4771342160281773609}
   - component: {fileID: 4673330323981340183}
-  m_Layer: 0
+  - component: {fileID: -5601741248129614767}
+  m_Layer: 8
   m_Name: WallComplete
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -155,3 +156,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-5601741248129614767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8866365951013264202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9940c93c7c3cbddfaf37f01080b35fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
+  entityData: {fileID: 11400000, guid: a91b5da2161ea7df38a75bfc77181be6, type: 2}
+  currentHealth: 0
+  MaxHealth: 0

@@ -8,13 +8,13 @@ using System.Collections.Generic;
 public class PrefabSpawner : MonoBehaviour
 {
     // NU mai avem nevoie de lista sau dictionary-ul local, deoarece folosim ItemVisualManager.
-    
+
     [Header("Setări Generare")]
     [Tooltip("Distanța față de inițiator (acest obiect) la care va fi plasat noul obiect.")]
     public float spawnDistance = 2f;
-    
 
-    public GameObject SpawnInFrontOfInitiator(Item itemKey) 
+
+    public GameObject SpawnInFrontOfInitiator(Item itemKey)
     {
         // 1. Verificări inițiale
         if (itemKey == null)
@@ -28,7 +28,7 @@ public class PrefabSpawner : MonoBehaviour
             Debug.LogError($"[PrefabSpawner] Lipsește ItemVisualManager din scenă!");
             return null;
         }
-        
+
         // 2. Obține Prefab-ul din Managerul Centralizat
         // (Folosim funcția GetVisualPrefab din ItemVisualManager.cs)
         GameObject prefabToSpawn = ItemVisualManager.Instance.GetItemVisualPrefab(itemKey);
@@ -44,14 +44,26 @@ public class PrefabSpawner : MonoBehaviour
         // Vectorul forward este direcția în care privește obiectul (inițiatorul)
         Vector3 spawnPosition = transform.position + transform.forward * spawnDistance;
         spawnPosition.y = transform.position.y; // Păstrează aceeași înălțime ca inițiatorul
-        
-        
+
+
         // 4. Instanțiază Prefab-ul
         // Folosim rotația inițiatorului.
         GameObject newObject = Instantiate(prefabToSpawn, spawnPosition, transform.rotation);
-        
+
         Debug.Log($"[PrefabSpawner] Obiectul '{newObject.name}' generat după Item-ul '{itemKey.itemName}'!");
-        
+
         return newObject;
+    }
+    
+
+    public GameObject SpawnObject(GameObject prefab)
+    {
+        if (prefab == null) return null;
+
+        // Exemplu de calcul poziție în fața inițiatorului
+        Vector3 spawnPos = transform.position + transform.forward * spawnDistance;
+        
+        GameObject spawned = Instantiate(prefab, spawnPos, Quaternion.identity);
+        return spawned;
     }
 }

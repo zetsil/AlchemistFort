@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="HUDContainer" style="flex-grow: 1; justify-content: flex-end; flex-direction: row; padding: 20px;">
+        
+        <ui:VisualElement name="HealthContainer" style="position: absolute; left: 40px; bottom: 40px; width: 250px;">
+            <ui:VisualElement name="HealthBG" style="background-color: rgba(0, 0, 0, 0.6); height: 25px; border-width: 2px; border-color: rgb(255, 255, 255);">
+                <ui:VisualElement name="HealthFill" style="background-color: rgb(200, 30, 30); width: 100%; height: 100%; transition: width 0.2s ease-out-sine;" />
+            </ui:VisualElement>
+            <ui:Label text="HEALTH" style="color: white; -unity-font-style: bold; font-size: 12px; margin-top: 5px;" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="StaminaContainer" style="position: absolute; right: 40px; bottom: 40px; width: 250px;">
+            <ui:VisualElement name="StaminaBG" style="background-color: rgba(0, 0, 0, 0.6); height: 20px; border-width: 2px; border-color: rgb(255, 255, 255);">
+                <ui:VisualElement name="StaminaFill" style="background-color: rgb(255, 200, 0); width: 100%; height: 100%; transition: width 0.1s ease-out-sine;" />
+            </ui:VisualElement>
+            <ui:Label text="STAMINA" style="color: white; -unity-font-style: bold; font-size: 12px; margin-top: 5px; -unity-text-align: middle-right;" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

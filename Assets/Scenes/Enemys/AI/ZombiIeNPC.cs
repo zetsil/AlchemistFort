@@ -10,6 +10,10 @@ public class ZombieNPC : NPCBase, IHasBasePoint
     [Tooltip("Șansa (0.0 - 1.0) ca zombiul să atace playerul când ajunge la bază.")]
     [Range(0f, 1f)]
     public float aggroPlayerChance = 0.3f;
+    [HideInInspector] public GameObject baseAccessPoint;
+    [HideInInspector] public bool hasReachedAccessPoint = false;
+    [HideInInspector] public bool zombieChoseBase = false;
+
 
     // Proprietăți pentru interfață și logică
     public Transform BasePoint => hidePoint;
@@ -50,6 +54,18 @@ public class ZombieNPC : NPCBase, IHasBasePoint
 
         base.Awake();
     }
+    // Resetăm bool-ul când se face noapte sau când zombiul este refolosit
+    public void ResetBaseAccess()
+    {
+        hasReachedAccessPoint = false;
+        // Optional: sterge si punctul vechi daca vrei unul nou de fiecare data
+    }
+    
+
+    private void OnDestroy()
+    {
+        if (baseAccessPoint != null) Destroy(baseAccessPoint);
+    }
 
 
     public override void TakeDamage(float baseDamage, ToolType attackingToolType = ToolType.None)
@@ -58,7 +74,7 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         base.TakeDamage(baseDamage, attackingToolType);
 
         // O condiție simplă pentru a evita Aggro-ul dacă NPC-ul moare sau e imun
-        if (currentHealth <= 0) return; 
+        if (currentHealth <= 0) return;
         if (currentHealth == MaxHealth && baseDamage > 0) return;
 
         // 2. Logica de AGGRO: Găsim Player-ul global (identificat prin Tag)
@@ -67,15 +83,15 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         if (player != null)
         {
             // Verificăm dacă Playerul nu este deja ținta curentă
-            if (Target != player) 
+            if (Target != player)
             {
                 Debug.Log($"💥 Zombie {gameObject.name} a fost lovit ({attackingToolType}) și a făcut AGGRO către Player (Căutare Tag)!");
-                
+
                 // Setează noul Target
-                Target = player; 
-                
+                Target = player;
+
                 // Intră în starea de mișcare (care va urmări noul Target)
-                ToMoveTo(player); 
+                ToMoveTo(player);
             }
         }
     }
@@ -147,120 +163,217 @@ public class ZombieMoveToState : INPCState
 {
     public NPCBase.NPCStateID StateID => NPCBase.NPCStateID.MoveToBase; 
     
+    // Constante ajustate pentru gameplay
     private const float ATTACK_RANGE_THRESHOLD = 2.0f;
     private const float PLAYER_AGGRO_RANGE = 10.0f;
-    private const float PLAYER_FLEE_RANGE = PLAYER_AGGRO_RANGE + 2f;
-    private const float RAYCAST_RANGE = 2.0f;
+    private const float PLAYER_FLEE_RANGE = 12.0f;
     private const int ALLY_LAYER_MASK = 1 << 8;
-    
+
+    private const float ZOMBIE_WIDTH = 0.5f;
+    private const float DETECT_RANGE = 1.5f;
+    private const float BASE_ACCESS_RADIUS = 8f; // Cât de departe de cristal stau punctele de acces
+
     public void EnterState(NPCBase npc)
     {
         ZombieNPC zombie = npc as ZombieNPC;
-
-        if (zombie == null || npc.Target == null)
-        {
-            npc.ChangeState(npc.idleState);
-            return;
-        }
+        if (zombie == null || npc.Target == null) { npc.ToIdle(); return; }
 
         npc.Agent.isStopped = false;
-
-        if (npc.Agent.isOnNavMesh)
-        {
-            npc.Agent.SetDestination(npc.Target.transform.position);
-        }
-
         if (npc.animator != null) npc.animator.SetInteger("State", (int)StateID);
-    }
-
-    private void ReevaluateTargetPriority(ZombieNPC zombie)
-    {
-        if (zombie.CrystalTarget == null) return; 
-        
-        // Calculează punctul de plecare (în fața zombie-ului) și direcția
-        // Presupunem că 'zombie.Position' este Vector3 (zombie.transform.position) 
-        // și că 'zombie.Forward' este Vector3 (zombie.transform.forward)
-        Vector3 zombiePosition = zombie.transform.position;
-        Vector3 zombieForward = zombie.transform.forward;
-        
-        Vector3 startPos = zombiePosition + zombieForward * 0.5f;
-        
-        // Execută Raycast-ul
-        if (Physics.Raycast(startPos, zombieForward, out RaycastHit hit, RAYCAST_RANGE, ALLY_LAYER_MASK))
-        {
-            // Verifică dacă obiectul lovit are componenta AllyEntity
-            AllyEntity ally = hit.collider.GetComponent<AllyEntity>();
-            
-            if (ally != null && ally.gameObject != zombie.Target)
-            {
-                Debug.Log($"🚨 Zombie #{zombie.GetInstanceID()} a detectat Ally-ul '{ally.gameObject.name}' prin Raycast! Schimbă ținta.");
-                zombie.Target = ally.gameObject;
-                return; 
-            }
-        }
-        
-        
-        GameObject currentTarget = zombie.Target; 
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        
-        if (player == null) return;
-        
-        float distToPlayer = Vector3.Distance(zombie.Position, player.transform.position);
-
-        // Case 1: Base/Crystal -> Player (Aggro check)
-        if (currentTarget == zombie.CrystalTarget.gameObject)
-        {
-            if (distToPlayer < PLAYER_AGGRO_RANGE && Random.value < zombie.aggroPlayerChance)
-            {
-                zombie.Target = player;
-            }
-        }
-        
-        // Case 2: Player -> Base/Crystal (Flee check)
-        else if (currentTarget == player)
-        {
-             if (distToPlayer > PLAYER_FLEE_RANGE) 
-             {
-                 zombie.Target = zombie.CrystalTarget.gameObject;
-             }
-        }
     }
 
     public void DoState(NPCBase npc)
     {
         ZombieNPC zombie = npc as ZombieNPC;
-        if (zombie == null || npc.Target == null)
+        if (zombie == null) return;
+
+        // 1. Re-evaluăm prioritatea țintei
+        ReevaluateTargetPriority(zombie);
+
+        if (npc.Target == null) 
         {
-            npc.ToIdle();
+            // Dacă ținta a dispărut, oprim agentul ca să nu alerge spre "nimic"
+            if (npc.Agent.isOnNavMesh) npc.Agent.isStopped = true;
+            return; 
+        }
+        
+        // 2. Executăm mișcarea către ținta curentă (care poate fi Player, Ally sau AccessPoint)
+        if (npc.Target != null && npc.Agent.isOnNavMesh)
+        {
+            npc.Agent.SetDestination(npc.Target.transform.position);
+        }
+
+        // 3. Verificăm tranziția către Atac
+        float distToTarget = Vector3.Distance(npc.transform.position, npc.Target.transform.position);
+        
+        // Dacă am ajuns la țintă (și ținta NU este punctul de acces intermediar)
+        if (distToTarget <= ATTACK_RANGE_THRESHOLD && npc.Target != zombie.baseAccessPoint)
+        {
+            npc.ToAttack(npc.Target); 
+        }
+    }
+
+    private void ReevaluateTargetPriority(ZombieNPC zombie)
+    {
+        Vector3 zombiePos = zombie.transform.position;
+
+        // --- PASUL A: Detecție Aliați (SphereCast) ---
+        // Prioritatea 1: Dacă are ceva imediat în față, se oprește să îl bată
+        RaycastHit hit;
+        if (Physics.SphereCast(zombiePos, ZOMBIE_WIDTH, zombie.transform.forward, out hit, DETECT_RANGE, ALLY_LAYER_MASK))
+        {
+            if (hit.collider.TryGetComponent<AllyEntity>(out var ally))
+            {
+                zombie.Target = ally.gameObject;
+                return; // Ieșim, aliatul este prioritatea maximă
+            }
+        }
+
+        // --- PASUL B: Logică Jucător (Aggro / Flee) ---
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        float distToPlayer = player != null ? Vector3.Distance(zombiePos, player.transform.position) : float.MaxValue;
+
+        // 1. Verificăm dacă player-ul este în raza de detecție
+        if (player != null && distToPlayer < PLAYER_AGGRO_RANGE)
+        {
+            // Dacă zombiul deja urmărește player-ul, nu facem nimic, mergem la return mai jos
+            if (zombie.Target == player) 
+            {
+                // Totuși, verificăm Flee
+                if (distToPlayer > PLAYER_FLEE_RANGE) 
+                {
+                    Debug.Log("🏃 Player-ul a fugit.");
+                    zombie.Target = (zombie.hasReachedAccessPoint && zombie.CrystalTarget != null) 
+                                    ? zombie.CrystalTarget.gameObject 
+                                    : GetOrCreateBaseAccessPoint(zombie);
+                    zombie.zombieChoseBase = false; // Resetăm decizia pentru a putea fi atras iar mai târziu
+                }
+                return; 
+            }
+
+            // Verificăm dacă zombiul a ajuns aproape de punctul de acces (ex: sub 15 metri de el)
+            float distToAccessPoint = (zombie.baseAccessPoint != null) 
+                ? Vector3.Distance(zombiePos, zombie.baseAccessPoint.transform.position) 
+                : float.MaxValue;
+
+            bool isNearObjective = distToAccessPoint < 15f || zombie.hasReachedAccessPoint;
+
+            if (isNearObjective)
+            {
+                // --- ZOMBIUL ESTE APROAPE DE BAZĂ: Ia o decizie calculată ---
+                if (!zombie.zombieChoseBase)
+                {
+                    if (Random.value < zombie.aggroPlayerChance)
+                    {
+                        Debug.Log("🧠 Aproape de bază, dar zombiul a ales totuși PLAYERUL.");
+                        zombie.Target = player;
+                        return;
+                    }
+                    else
+                    {
+                        Debug.Log("🏰 Aproape de bază, zombiul a ales BAZA și te ignoră!");
+                        zombie.zombieChoseBase = true;
+                        zombie.hasReachedAccessPoint = true;
+
+                        if (zombie.CrystalTarget != null)
+                        {
+                            zombie.Target = zombie.CrystalTarget.gameObject;
+                        }
+                        // Nu dăm return, mergem spre Pasul C
+                    }
+                }
+            }
+            else
+            {
+                // --- ZOMBIUL ESTE ÎN TRANZIT (Departe de bază): Aggro automat ---
+                Debug.Log("🥩 Zombiul te-a văzut în drum spre bază. Aggro instinctiv!");
+                zombie.Target = player;
+                zombie.zombieChoseBase = false; // Nu blocăm decizia încă
+                return;
+            }
+        }
+        else
+        {
+            // Jucătorul nu e în rază, resetăm starea
+            if (zombie.Target == player)
+            {
+                ResetToPrioritizedTarget(zombie);
+            }
+            zombie.zombieChoseBase = false;
+        }
+
+        // 2. Verificăm progresul către punctul de acces
+        if (zombie.Target == zombie.baseAccessPoint)
+        {
+            float distToPoint = Vector3.Distance(zombiePos, zombie.baseAccessPoint.transform.position);
+            
+            // Dacă am ajuns la punctul de acces (raza de 1.5m)
+            if (distToPoint < 15f)
+            {
+                Debug.Log("🎯 Punct de acces atins! Urmează asaltul final asupra Cristalului.");
+                zombie.hasReachedAccessPoint = true; // Blocăm revenirea la acest pas
+                zombie.Target = zombie.CrystalTarget.gameObject; // Setăm ținta finală
+            }
+        }
+    }
+    
+
+    private void ResetToPrioritizedTarget(ZombieNPC zombie)
+    {
+        // 1. Verificare de siguranță: Dacă baza a fost distrusă, zombiul nu mai are obiectiv principal
+        if (zombie.CrystalTarget == null)
+        {
+            Debug.Log($"🏠 Baza a fost distrusă. Zombie #{zombie.GetInstanceID()} intră în Idle.");
+            zombie.Target = null;
+            zombie.ToIdle();
             return;
         }
 
-        // 1. Re-evaluate target priority
-        ReevaluateTargetPriority(zombie);
-        
-        // 2. Execute movement
-        if (npc.Agent.isOnNavMesh)
+        // 2. Logica de redirecționare bazată pe progresul asediului
+        // Verificăm dacă zombiul a ajuns deja la perimetru înainte de a fi distras
+        if (zombie.hasReachedAccessPoint)
         {
-             npc.Agent.SetDestination(npc.Target.transform.position);
+            // Dacă a fost deja la punctul de acces, îl trimitem direct la cristal
+            zombie.Target = zombie.CrystalTarget.gameObject;
+            Debug.Log($"🎯 Redirecționare: Revenire directă la Cristal pentru Zombie #{zombie.GetInstanceID()}.");
         }
-        
-        // 3. Check transitions
-        
-        // Path Invalid check (e.g., path blocked by new walls)
-        if (npc.Agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathInvalid)
+        else
         {
-            zombie.ChangeState(zombie.chooseTargetState);
-            return;
+            // Dacă nu ajunsese la perimetru, îi dăm (sau îi recalculăm) punctul de acces
+            zombie.Target = GetOrCreateBaseAccessPoint(zombie);
+            Debug.Log($"🚩 Redirecționare: Revenire la Punctul de Acces pentru Zombie #{zombie.GetInstanceID()}.");
         }
-        
-        // Arrival check (Attack range)
-        float distToTarget = Vector3.Distance(npc.Position, npc.Target.transform.position);
-        
-        if (distToTarget <= ATTACK_RANGE_THRESHOLD)
+    }
+
+    private GameObject GetOrCreateBaseAccessPoint(ZombieNPC zombie)
+    {
+        // Verificăm dacă mai avem bază la care să calculăm punctul
+        if (zombie.CrystalTarget == null) return null;
+
+        if (zombie.baseAccessPoint == null)
         {
-            npc.ToAttack(npc.Target); 
-            return; 
+            zombie.baseAccessPoint = new GameObject($"Access_{zombie.name}_{zombie.GetInstanceID()}");
         }
+
+        float distToCrystal = Vector3.Distance(zombie.baseAccessPoint.transform.position, zombie.CrystalTarget.position);
+
+        // Verificarea distanței față de bază
+        if (distToCrystal > BASE_ACCESS_RADIUS + 1f || distToCrystal < BASE_ACCESS_RADIUS - 1f)
+        {
+            Vector2 randomCircle = Random.insideUnitCircle.normalized * BASE_ACCESS_RADIUS;
+            Vector3 targetPos = zombie.CrystalTarget.position + new Vector3(randomCircle.x, 0, randomCircle.y);
+
+            if (UnityEngine.AI.NavMesh.SamplePosition(targetPos, out UnityEngine.AI.NavMeshHit navHit, 5f, UnityEngine.AI.NavMesh.AllAreas))
+            {
+                zombie.baseAccessPoint.transform.position = navHit.position;
+            }
+            else
+            {
+                zombie.baseAccessPoint.transform.position = targetPos;
+            }
+        }
+
+        return zombie.baseAccessPoint;
     }
 
     public void ExitState(NPCBase npc) { }

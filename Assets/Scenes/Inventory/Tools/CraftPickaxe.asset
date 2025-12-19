@@ -10,15 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fc820c202704a3dd492607e19cff509f, type: 3}
-  m_Name: CraftAxe
+  m_Name: CraftPickaxe
   m_EditorClassIdentifier: Assembly-CSharp::ActionRecipeSO
-  actionName: Make Axe
-  description: Craft an Axe
+  actionName: Craft Pickaxe
+  description: Craft an pickaxe
   actionLogic: {fileID: 11400000, guid: 5dc24415c2946a280bbd180ab5c7e374, type: 2}
-  actionIcon: {fileID: 21300000, guid: 4030e36bbca09efd48edac1271c9551f, type: 3}
+  actionIcon: {fileID: 21300000, guid: f881b611f88215eee9f976d421a82395, type: 3}
   requiredItems:
   - requiredItem: {fileID: 11400000, guid: 4ceedfbca7092e5a980203376f3b679c, type: 2}
     amount: 5
+  - requiredItem: {fileID: 11400000, guid: bb8a0066d01bc0a98b13df575b0a4043, type: 2}
+    amount: 3
   genericValue: 0
-  resultItem: {fileID: 11400000, guid: 568c430ab80f82d4293cd5822a0b886d, type: 2}
+  resultItem: {fileID: 11400000, guid: a7504c63b3981fb3f958c3fa3cfdd249, type: 2}
   targetState: Completed

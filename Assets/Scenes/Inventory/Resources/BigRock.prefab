@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 8618758662507539584}
   - component: {fileID: 2447433332096682608}
   - component: {fileID: 3133309138063333580}
-  - component: {fileID: 8652515933099126109}
   - component: {fileID: 1749986359523561199}
+  - component: {fileID: 8751557941455326582}
   m_Layer: 0
   m_Name: BigRock
   m_TagString: Untagged
@@ -91,28 +91,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &8652515933099126109
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1322386221077638774}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300002, guid: 532788c369e551d44a067aa3c8bb182c, type: 3}
 --- !u!114 &1749986359523561199
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -129,4 +107,24 @@ MonoBehaviour:
   currentHealth: 0
   MaxHealth: 0
   requiredToolType: 0
-  wrongToolMessage: "Ai nevoie de unealta corect\u0103 pentru a recolta acest lucru!"
+--- !u!65 &8751557941455326582
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1322386221077638774}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1.1521542, y: 0.7191034, z: 1.0869876}
+  m_Center: {x: -0.05797881, y: 0.26065972, z: 0.054930806}

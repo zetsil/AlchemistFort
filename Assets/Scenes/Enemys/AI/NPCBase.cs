@@ -123,7 +123,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             // ChangeState se folosește de noul currentStateLvl pentru a valida tranziția
             ChangeState(firstStateOfNewLevel);
 
-            Debug.Log($"{gameObject.name} a trecut la Nivelul {currentStateLvl} și a început cu {CurrentStateID}");
         }
         else
         {
@@ -203,7 +202,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             currentState = newState;
             CurrentStateID = newState.StateID;
 
-            Debug.Log($"{gameObject.name} intră în starea: {CurrentStateID}");
         }
         else
         {
@@ -216,7 +214,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
                 currentState = firstState;
                 CurrentStateID = firstState.StateID;
 
-                Debug.Log($"Stare invalidă ({newState.StateID}) pe nivelul {currentStateLvl}. Resetare la prima stare: {CurrentStateID}");
             }
             else
             {
@@ -305,7 +302,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             {
                 Agent.isStopped = true;
                 Agent.ResetPath();
-                Debug.LogWarning($"{gameObject.name} a intrat în starea Attack, dar nu are țintă. Agent oprit.");
             }
         }
     }
@@ -342,7 +338,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
         // 1. Validare Target
         if (Target == null)
         {
-            Debug.LogWarning($"{gameObject.name} nu are țintă pentru manevră. Trecere la Idle.");
             ToIdle();
             return true; // Considerat finalizat (eșuat)
         }
