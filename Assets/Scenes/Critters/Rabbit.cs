@@ -234,7 +234,6 @@ public class RunToHideState : INPCState
             npc.Agent.SetDestination(basePointUser.BasePoint.position);
             npc.SetSpeed(npc.Speed * 2.5f); // Crește viteza pentru a simula fuga
 
-            Debug.Log($"{npc.GetType().Name} a intrat în RunToHide. Aleargă spre {basePointUser.BasePoint.position}.");
         }
         else
         {

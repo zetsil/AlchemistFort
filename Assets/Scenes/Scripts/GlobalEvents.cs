@@ -32,6 +32,8 @@ public static class GlobalEvents
 
     public static event Action<string> OnPlaySound;
 
+    public static event Action<string, Vector3> OnParticleEffectRequested;
+
 
 
     public static void RequestEquip(ToolItem tool)
@@ -111,5 +113,9 @@ public static class GlobalEvents
         }
     }
 
+    public static void RequestParticle(string effectName, Vector3 position)
+    {
+        OnParticleEffectRequested?.Invoke(effectName, position);
+    }
 
 }

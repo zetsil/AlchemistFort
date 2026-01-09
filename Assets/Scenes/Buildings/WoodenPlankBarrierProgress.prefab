@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 2361688931516661822}
   - component: {fileID: 7982184371830802698}
   - component: {fileID: 2967859796042834616}
+  - component: {fileID: -1282751250282017727}
   m_Layer: 0
   m_Name: WoodenPlankBarrierProgress
   m_TagString: Untagged
@@ -106,7 +107,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
   entityData: {fileID: 11400000, guid: d130e1ac4d98f38acbd948a9c933adca, type: 2}
   currentHealth: 0
-  MaxHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
+  brokenBuildingPrefab: {fileID: 0}
 --- !u!114 &7982184371830802698
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -119,12 +126,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 0}
+  uiForItemPickUp: 0
+  customUIHeight: 0.8
   actionLevels:
   - recipes:
     - {fileID: 11400000, guid: 11b4a6ee1b6aa017fa9cda411c10e5b7, type: 2}
   currentActionLevel: 0
   actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
-  uiAnchor: {fileID: 0}
 --- !u!114 &2967859796042834616
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,3 +149,18 @@ MonoBehaviour:
   requiredSteps:
   - {fileID: 11400000, guid: 11b4a6ee1b6aa017fa9cda411c10e5b7, type: 2}
   finalBuildingPrefab: {fileID: 68976531792516741, guid: 081e7af218f68ce38935964f80ee8aff, type: 3}
+--- !u!114 &-1282751250282017727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6430176215752336561}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1

@@ -180,6 +180,8 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             Debug.LogWarning($"Blocat ChangeState recursiv spre {newState.StateID} de la {CurrentStateID}");
             return;
         }
+        // if (!this.Agent.enabled || !this.Agent.isOnNavMesh) return;
+
         // Ieși dacă starea nu se schimbă
         if (currentState == newState) return;
         isChangingState = true;
@@ -225,6 +227,8 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
 
     protected override void Update() // <- Folosim override pentru a extinde funcționalitatea din Entity
     {
+        if (Agent == null || !Agent.enabled || !Agent.isOnNavMesh) return;
+        
         base.Update(); // Executăm logica de bază (dacă există)
         TickStateMachine();
     }

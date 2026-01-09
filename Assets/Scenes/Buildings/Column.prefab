@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 1724906160052453940}
   - component: {fileID: 2498886293232524706}
   - component: {fileID: 6183102877605224841}
+  - component: {fileID: 2675142966574020529}
+  - component: {fileID: -2137349899646992216}
   m_Layer: 0
   m_Name: Column
   m_TagString: Untagged
@@ -89,3 +91,40 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &2675142966574020529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2121873909853797937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9940c93c7c3cbddfaf37f01080b35fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
+  entityData: {fileID: 11400000, guid: 0593690ce5b43f329a2ae8cf96d147ef, type: 2}
+  currentHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
+  brokenBuildingPrefab: {fileID: 0}
+--- !u!114 &-2137349899646992216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2121873909853797937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 

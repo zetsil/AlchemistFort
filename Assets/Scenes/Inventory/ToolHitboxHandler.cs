@@ -36,42 +36,44 @@ public class ToolHitboxHandler : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // Ieșire rapidă dacă nu avem sursa de date sau dacă obiectul nu este activ.
         if (weaponDataSource == null || !gameObject.activeInHierarchy) return;
+        if (hitTargets.Contains(other)) return;
+        if (other.CompareTag("Player")) return;
 
-        // 1. Prevenirea Multi-Hit: Verificăm registrul
-        if (hitTargets.Contains(other))
-        {
-            return; 
-        }
-
-        // 2. Identificare Țintă: Căutăm Entități sau Resurse pe obiectul lovit.
-        // *NOTĂ: Asigură-te că Resource.cs și Entity.cs există în proiectul tău.*
-        Resource resource = other.GetComponent<Resource>();
-        Entity entity = other.GetComponent<Entity>();
+        // Deoarece Resource moștenește din Entity, acest apel le prinde pe ambele!
+        Entity targetEntity = other.GetComponent<Entity>();
         
-        // Verificăm dacă am lovit o țintă validă
-        if (resource != null || entity != null)
+        if (targetEntity != null && !targetEntity.isDead && targetEntity.entityData != null)
         {
-            // Preluăm datele atacului de la sursa de date (ToolController)
             float damage = weaponDataSource.GetAttackDamage();
             ToolType toolType = weaponDataSource.GetToolType();
 
-            // Aplicăm damage-ul/recoltarea
-            if (resource != null)
+            // 1. Preluăm numele curat din Scriptable Object-ul comun
+            string targetName = targetEntity.entityData.name; 
+
+            // 2. Construim cheia: ex. "Hit_Pickaxe_Rock" sau "Hit_Sword_Goblin"
+            string particleKey = $"Hit_{toolType}_{targetName}";
+
+            // 3. Punctul de impact
+            Vector3 impactPoint = other.ClosestPoint(transform.position);
+
+            // 4. Trimitem semnalul către ParticleMap
+            GlobalEvents.RequestParticle(particleKey, impactPoint);
+
+            // 5. Aplicăm logica de damage/recoltare
+            // Dacă ținta este Resource, folosim Harvest, altfel TakeDamage
+            if (targetEntity is Resource resource)
             {
                 resource.Harvest(damage, toolType);
+                weaponDataSource.ApplyToolDurabilityLoss();
+
             }
-            else if (entity != null) 
+            else
             {
-                entity.TakeDamage(damage, toolType);
+                targetEntity.TakeDamage(damage, toolType);
+                weaponDataSource.ApplyToolDurabilityLoss();
             }
 
-            // Aplicăm Uzura: Cerem sursei de date (ToolController) să aplice uzura pe slot.
-            // Aceasta va scădea durabilitatea pe InventorySlot.
-            weaponDataSource.ApplyToolDurabilityLoss();
-            
-            // 3. Adăugăm ținta în registru pentru a preveni loviturile multiple în același swing.
             hitTargets.Add(other);
         }
     }

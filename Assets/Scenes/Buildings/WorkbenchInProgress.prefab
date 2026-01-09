@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4505404832445707916}
   - component: {fileID: 4108576058634826444}
   - component: {fileID: 3917934438845835660}
+  - component: {fileID: -4508184059433702548}
   m_Layer: 0
   m_Name: WorkbenchInProgress
   m_TagString: Untagged
@@ -132,6 +133,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 0}
+  uiForItemPickUp: 0
+  customUIHeight: 1.5
   actionLevels:
   - recipes:
     - {fileID: 11400000, guid: 8f99e8ee9188d002b90b3dc204f8787b, type: 2}
@@ -154,6 +158,22 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8f99e8ee9188d002b90b3dc204f8787b, type: 2}
   - {fileID: 11400000, guid: 026bb404fa8b42f35a9d35dcd3fa4db5, type: 2}
   finalBuildingPrefab: {fileID: 2952132277915072184, guid: f1c0e9c0290198473bc57c8597cffc5a, type: 3}
+--- !u!114 &-4508184059433702548
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1905276664617003496}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 
 --- !u!1 &3024801700185634351
 GameObject:
   m_ObjectHideFlags: 0

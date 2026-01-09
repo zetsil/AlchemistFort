@@ -49,7 +49,7 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         }
         else
         {
-            Debug.LogError("❌ Zombie nu a găsit niciun obiect cu tag-ul 'Base' (Cristalul)!");
+            Debug.Log("❌ Zombie nu a găsit niciun obiect cu tag-ul 'Base' (Cristalul)!");
         }
 
         base.Awake();
@@ -163,15 +163,16 @@ public class ZombieMoveToState : INPCState
 {
     public NPCBase.NPCStateID StateID => NPCBase.NPCStateID.MoveToBase; 
     
-    // Constante ajustate pentru gameplay
-    private const float ATTACK_RANGE_THRESHOLD = 2.0f;
+    // ❌ AM ȘTERS: private const float ATTACK_RANGE_THRESHOLD = 2.0f;
+    
+    // Păstrăm restul constantelor care nu țin de stats
     private const float PLAYER_AGGRO_RANGE = 10.0f;
     private const float PLAYER_FLEE_RANGE = 12.0f;
     private const int ALLY_LAYER_MASK = 1 << 8;
 
     private const float ZOMBIE_WIDTH = 0.5f;
     private const float DETECT_RANGE = 1.5f;
-    private const float BASE_ACCESS_RADIUS = 8f; // Cât de departe de cristal stau punctele de acces
+    private const float BASE_ACCESS_RADIUS = 8f;
 
     public void EnterState(NPCBase npc)
     {
@@ -179,6 +180,11 @@ public class ZombieMoveToState : INPCState
         if (zombie == null || npc.Target == null) { npc.ToIdle(); return; }
 
         npc.Agent.isStopped = false;
+
+        // Când intrăm în urmărire, setăm distanța de oprire a agentului
+        // să fie egală cu raza de atac, ca să nu intre în player
+        npc.Agent.stoppingDistance = npc.attackStopRange;
+
         if (npc.animator != null) npc.animator.SetInteger("State", (int)StateID);
     }
 
@@ -187,17 +193,14 @@ public class ZombieMoveToState : INPCState
         ZombieNPC zombie = npc as ZombieNPC;
         if (zombie == null) return;
 
-        // 1. Re-evaluăm prioritatea țintei
         ReevaluateTargetPriority(zombie);
 
         if (npc.Target == null) 
         {
-            // Dacă ținta a dispărut, oprim agentul ca să nu alerge spre "nimic"
             if (npc.Agent.isOnNavMesh) npc.Agent.isStopped = true;
             return; 
         }
         
-        // 2. Executăm mișcarea către ținta curentă (care poate fi Player, Ally sau AccessPoint)
         if (npc.Target != null && npc.Agent.isOnNavMesh)
         {
             npc.Agent.SetDestination(npc.Target.transform.position);
@@ -206,8 +209,9 @@ public class ZombieMoveToState : INPCState
         // 3. Verificăm tranziția către Atac
         float distToTarget = Vector3.Distance(npc.transform.position, npc.Target.transform.position);
         
-        // Dacă am ajuns la țintă (și ținta NU este punctul de acces intermediar)
-        if (distToTarget <= ATTACK_RANGE_THRESHOLD && npc.Target != zombie.baseAccessPoint)
+        // ✅ MODIFICARE AICI: Folosim npc.attackStopRange în loc de constanta fixă
+        // Aceasta este valoarea setată în Inspector pe ZombieNPC
+        if (distToTarget <= npc.attackStopRange && npc.Target != zombie.baseAccessPoint)
         {
             npc.ToAttack(npc.Target); 
         }

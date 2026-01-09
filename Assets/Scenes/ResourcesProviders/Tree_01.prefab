@@ -212,6 +212,7 @@ GameObject:
   - component: {fileID: 6526042276984932023}
   - component: {fileID: 2702649100872288012}
   - component: {fileID: 7602523963339874106}
+  - component: {fileID: 8202675037480874889}
   m_Layer: 0
   m_Name: Tree_01
   m_TagString: Untagged
@@ -294,6 +295,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Resource
   entityData: {fileID: 11400000, guid: 05776d9b41a4197cdb81e24e3148ed8d, type: 2}
   currentHealth: 10
-  MaxHealth: 0
-  requiredToolType: 0
-  wrongToolMessage: "Ai nevoie de unealta corect\u0103 pentru a recolta acest lucru!"
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 1, g: 1, b: 1, a: 1}
+    duration: 0.1
+    targetRenderers: []
+  requiredToolType: 1
+--- !u!114 &8202675037480874889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8125909822754851846}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1

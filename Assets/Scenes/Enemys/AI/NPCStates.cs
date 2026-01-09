@@ -116,7 +116,7 @@ public class AttackState : INPCState
     
     // O marjă de eroare: Dacă ținta se îndepărtează puțin (ex: 1 metru) peste raza de atac,
     // nu ieșim imediat din stare. Doar dacă fuge clar.
-    private const float ATTACK_EXIT_BUFFER = 2.0f; 
+    private const float ATTACK_EXIT_BUFFER = 1.2f; 
 
     public void EnterState(NPCBase npc)
     {

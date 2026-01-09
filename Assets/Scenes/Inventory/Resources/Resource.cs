@@ -48,19 +48,19 @@ public class Resource : Entity
         
     // Suprascriem metoda Die pentru a adăuga logica specifică resurselor, 
     // cum ar fi schimbarea modelului vizual (de la copac întreg la ciot)
-    protected override void Die()
-    {
-        Debug.Log($"Resursa {gameObject.name} a fost epuizată.");
+    // protected override void Die()
+    // {
+    //     Debug.Log($"Resursa {gameObject.name} a fost epuizată.");
 
-        // Aici poți adăuga logică specifică resursei, cum ar fi:
-        // * Schimbarea vizualului (ex: dezactivează modelul copacului, activează modelul ciotului).
-        // * Dacă vrei ca resursa să reapară (respawn)
+    //     // Aici poți adăuga logică specifică resursei, cum ar fi:
+    //     // * Schimbarea vizualului (ex: dezactivează modelul copacului, activează modelul ciotului).
+    //     // * Dacă vrei ca resursa să reapară (respawn)
 
-        // Apelăm DropLoot din clasa de bază Entity
-        DropLoot();
+    //     // Apelăm DropLoot din clasa de bază Entity
+    //     DropLoot();
 
-        // O resursă ar putea să nu se distrugă imediat, ci să dispară doar vizual.
-        // Pentru simplitate, menținem distrugerea obiectului, ca în Entity:
-        Destroy(gameObject);
-    }
+    //     // O resursă ar putea să nu se distrugă imediat, ci să dispară doar vizual.
+    //     // Pentru simplitate, menținem distrugerea obiectului, ca în Entity:
+    //     Destroy(gameObject);
+    // }
 }

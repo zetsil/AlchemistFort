@@ -20,4 +20,4 @@ MonoBehaviour:
   maxDurability: 50
   durabilityLossPerUse: 1
   toolCategory: 2
-  attackDamage: 0.2
+  attackDamage: 1

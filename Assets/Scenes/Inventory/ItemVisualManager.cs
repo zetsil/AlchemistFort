@@ -43,12 +43,12 @@ public class ItemVisualManager : MonoBehaviour
     [Tooltip("Asociază fiecare Item ScriptableObject cu modelul său 3D corespunzător.")]
     [SerializeField]
     private List<ItemVisualMapping> itemVisuals = new List<ItemVisualMapping>();
-    
+
     [Header("2. Mapări Vizual Persoana Întâi")]
     [Tooltip("Asociază ScriptableObject-ul de vizualizare FP cu Prefab-ul său.")]
     [SerializeField]
     private List<FirstPersonVisualMapping> firstPersonVisuals = new List<FirstPersonVisualMapping>();
-    
+
     [Header("3. Mapări Entități/Inamici")]
     [Tooltip("Asociază fiecare EntityData ScriptableObject cu Prefab-ul său de inamic/NPC.")]
     [SerializeField]
@@ -85,7 +85,7 @@ public class ItemVisualManager : MonoBehaviour
                 prefabMap_Items.TryAdd(map.itemData, map.visualPrefab);
             }
         }
-        
+
         // 2. Mapare Vizual Persoana Întâi
         prefabMap_FirstPersonVisuals.Clear();
         foreach (var map in firstPersonVisuals)
@@ -95,7 +95,7 @@ public class ItemVisualManager : MonoBehaviour
                 prefabMap_FirstPersonVisuals.TryAdd(map.visualData, map.visualPrefab);
             }
         }
-        
+
         // 3. Mapare Entități/Inamici
         prefabMap_Entities.Clear();
         foreach (var map in entityVisuals)
@@ -111,7 +111,7 @@ public class ItemVisualManager : MonoBehaviour
     // ==============================================================================
     // METODE PUBLICE DE ACCES
     // ==============================================================================
-    
+
     /// <summary>
     /// Returnează Prefab-ul vizual pentru un Item (Lume/Inventar).
     /// </summary>
@@ -119,7 +119,7 @@ public class ItemVisualManager : MonoBehaviour
     {
         return GetPrefab(item, prefabMap_Items, nameof(Item));
     }
-    
+
     /// <summary>
     /// Returnează Prefab-ul vizual pentru un obiect ținut în mână la Persoana Întâi.
     /// </summary>
@@ -135,7 +135,7 @@ public class ItemVisualManager : MonoBehaviour
     {
         return GetPrefab(entityData, prefabMap_Entities, nameof(EntityData));
     }
-    
+
     // Metodă generică privată pentru a gestiona logica de căutare și avertizare
     private GameObject GetPrefab<T>(T key, Dictionary<T, GameObject> map, string keyTypeName) where T : UnityEngine.Object
     {
@@ -152,4 +152,32 @@ public class ItemVisualManager : MonoBehaviour
         Debug.LogWarning($"Prefab-ul vizual pentru {keyTypeName} '{key.name}' nu a fost găsit în {nameof(ItemVisualManager)}.");
         return null;
     }
+
+
+    public Item GetItemDataByName(string itemName)
+    {
+        foreach (var item in prefabMap_Items.Keys)
+        {
+            if (item.itemName == itemName) // Sau item.name
+            {
+                return item;
+            }
+        }
+
+        return null;
+    }
+
+    public EntityData GetEntityDataByName(string entityName)
+    {
+        foreach (var entity in prefabMap_Entities.Keys)
+        {
+            if (entity.name == entityName) 
+            {
+                return entity;
+            }
+        }
+        return null;
+    }
+
+    
 }

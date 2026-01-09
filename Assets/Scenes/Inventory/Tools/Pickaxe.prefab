@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4091273902958379863}
   - component: {fileID: 8488777618753625850}
   - component: {fileID: 5737621617378009454}
+  - component: {fileID: 4347994774716908243}
   m_Layer: 0
   m_Name: Pickaxe
   m_TagString: Pickable
@@ -154,3 +155,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
   itemData: {fileID: 11400000, guid: a7504c63b3981fb3f958c3fa3cfdd249, type: 2}
+--- !u!114 &4347994774716908243
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 467405679585541269}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldItem
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentDurability: -1

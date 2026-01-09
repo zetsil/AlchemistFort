@@ -20,7 +20,6 @@ public class LogicLightBonfireSO : AbstractActionLogicSO
             return false;
         }
         
-        Debug.Log("✅ Verificări de resurse trecute.");
         return true; 
     }
     

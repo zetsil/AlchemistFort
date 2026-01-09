@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 2394880010531069197}
   - component: {fileID: 4476601869977101299}
   - component: {fileID: 558218640239726122}
+  - component: {fileID: -353377718005812368}
   m_Layer: 0
   m_Name: Coal
   m_TagString: Pickable
@@ -154,3 +155,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
   itemData: {fileID: 11400000, guid: f68c9599d7c8c32d0b5fb678ecefb00b, type: 2}
+--- !u!114 &-353377718005812368
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4082525369344043261}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldItem
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentDurability: -1

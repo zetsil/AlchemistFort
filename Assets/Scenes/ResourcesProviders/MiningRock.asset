@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e492c7aa95d2af2db2363f6ae3330ac, type: 3}
   m_Name: MiningRock
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
-  maxHealth: 8
+  maxHealth: 4
   name: MiningRock
   baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 2
-    damageMultiplier: 5
+    damageMultiplier: 1
   possibleDrops:
   - item: {fileID: 11400000, guid: bb8a0066d01bc0a98b13df575b0a4043, type: 2}
     dropChance: 1

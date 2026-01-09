@@ -1,0 +1,47 @@
+/* Containerul care ține toate pătratele */
+.grid-container {
+    flex-direction: row;
+    flex-wrap: wrap; /* Esențial pentru Grid */
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* Stilul Pătratului Mare */
+.save-slot-card {
+    width: 250px;
+    height: 250px;
+    margin: 15px;
+    padding: 0;
+    border-width: 2px;
+    border-color: #333;
+    background-color: #1a1a1a;
+    transition-duration: 0.2s;
+    overflow: hidden;
+}
+
+.save-slot-card:hover {
+    border-color: #00FF00; /* Verde intens la hover */
+    scale: 1.05;
+}
+
+/* Zona unde va veni imaginea */
+.slot-image {
+    flex-grow: 1;
+    background-color: #2a2a2a;
+    /* Aici poți pune o imagine de tip "no-image" default */
+}
+
+/* Butonul de Back */
+.menu-button {
+    width: 180px;
+    height: 50px;
+    background-color: #333;
+    color: white;
+    border-width: 1px;
+    border-color: #555;
+    font-size: 18px;
+}
+
+.menu-button:hover {
+    background-color: #cc3333;
+}

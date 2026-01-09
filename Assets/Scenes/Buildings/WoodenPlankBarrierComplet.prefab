@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 3534512537537573704}
   - component: {fileID: 5349425113103752370}
   - component: {fileID: 8720073676498118364}
+  - component: {fileID: -8033239964479753372}
   m_Layer: 8
   m_Name: WoodenPlankBarrierComplet
   m_TagString: Untagged
@@ -128,7 +129,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
   entityData: {fileID: 11400000, guid: d130e1ac4d98f38acbd948a9c933adca, type: 2}
   currentHealth: 0
-  MaxHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
+  brokenBuildingPrefab: {fileID: 6430176215752336561, guid: b5524a899e11098428278a54a07c8ee5, type: 3}
 --- !u!54 &8720073676498118364
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -156,3 +163,18 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-8033239964479753372
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 68976531792516741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1

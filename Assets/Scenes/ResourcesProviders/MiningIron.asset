@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6e492c7aa95d2af2db2363f6ae3330ac, type: 3}
+  m_Name: MiningIron
+  m_EditorClassIdentifier: Assembly-CSharp::EntityData
+  maxHealth: 10
+  name: MiningIron
+  baseAttackDamage: 1
+  toolEffectivenesses:
+  - toolType: 2
+    damageMultiplier: 1
+  possibleDrops:
+  - item: {fileID: 11400000, guid: 74960f8887246da63a294b0297c62c27, type: 2}
+    dropChance: 1
+    minQuantity: 2
+    maxQuantity: 5

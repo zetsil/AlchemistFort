@@ -7,6 +7,7 @@ TagManager:
   - Pickable
   - Base
   - Climbable
+  - Enemy
   layers:
   - Default
   - TransparentFX

@@ -150,6 +150,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: beb0bdce422232945b855895c908c00e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2608623232928849267}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: beb0bdce422232945b855895c908c00e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3267950616205081060}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: beb0bdce422232945b855895c908c00e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3542048932742576127}
   m_SourcePrefab: {fileID: 100100000, guid: beb0bdce422232945b855895c908c00e, type: 3}
 --- !u!4 &2572615346261847042 stripped
 Transform:
@@ -173,13 +179,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 0}
+  uiForItemPickUp: 0
+  customUIHeight: 1.5
   actionLevels:
   - recipes:
     - {fileID: 11400000, guid: d09f997a25ed012f1aeb54d2df346003, type: 2}
     - {fileID: 11400000, guid: c666b8750bc0f71528f37759db1f128b, type: 2}
+    - {fileID: 11400000, guid: bbfd1e563fffbb68aa9614a9a130b709, type: 2}
   currentActionLevel: 0
   actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
-  uiAnchor: {fileID: 0}
 --- !u!114 &2608623232928849267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -193,6 +202,43 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PrefabSpawner
   spawnDistance: 2
+--- !u!114 &3267950616205081060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2952132277915072184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 
+--- !u!114 &3542048932742576127
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2952132277915072184}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9940c93c7c3cbddfaf37f01080b35fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
+  entityData: {fileID: 11400000, guid: a8431531c9aa828b1b896a5f061436df, type: 2}
+  currentHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
+  brokenBuildingPrefab: {fileID: 0}
 --- !u!1001 &3090287419446819710
 PrefabInstance:
   m_ObjectHideFlags: 0

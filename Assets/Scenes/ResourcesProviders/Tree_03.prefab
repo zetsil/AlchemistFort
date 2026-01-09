@@ -123,6 +123,7 @@ GameObject:
   - component: {fileID: 7087442423809296684}
   - component: {fileID: 5428044532239234657}
   - component: {fileID: 5176534856685121282}
+  - component: {fileID: -7116760422573363552}
   m_Layer: 0
   m_Name: Tree_03
   m_TagString: Untagged
@@ -184,9 +185,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Resource
   entityData: {fileID: 11400000, guid: 05776d9b41a4197cdb81e24e3148ed8d, type: 2}
   currentHealth: 10
-  MaxHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
   requiredToolType: 1
-  wrongToolMessage: "Ai nevoie de unealta corect\u0103 pentru a recolta acest lucru!"
 --- !u!65 &5176534856685121282
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -208,6 +213,21 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 5.158061, z: 1}
   m_Center: {x: 0, y: 2.0790305, z: 0}
+--- !u!114 &-7116760422573363552
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1197207848014711075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
 --- !u!1 &6225869791408383885
 GameObject:
   m_ObjectHideFlags: 0

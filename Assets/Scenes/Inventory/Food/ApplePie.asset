@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ebc377b7ef04579e6a411b51497017b3, type: 3}
+  m_Name: ApplePie
+  m_EditorClassIdentifier: Assembly-CSharp::Food
+  itemName: Apple Pie
+  icon: {fileID: 21300000, guid: 5341dd21e499e74f5b3086fa51197a9a, type: 3}
+  description: Much more filling than a raw apple!
+  stackSize: 10
+  amount: 1
+  maxDurability: 1
+  durabilityLossPerUse: 0
+  healthRestored: 40

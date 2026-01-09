@@ -10,14 +10,14 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
     public EnemyHitboxHandler hitboxHandler;
     
     // Referința la componenta NPC (pentru a obține Damage-ul)
-    private ZombieNPC npcController; 
+    private NPCBase npcController; 
     
     // Variabilă de stare pentru fereastra de atac
     private bool isAttackWindowOpen = false; 
 
     private void Awake()
     {
-        npcController = GetComponentInParent<ZombieNPC>();
+        npcController = GetComponentInParent<NPCBase>();
 
         if (npcController == null)
         {

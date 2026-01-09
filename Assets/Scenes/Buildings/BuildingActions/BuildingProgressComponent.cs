@@ -94,11 +94,33 @@ public class BuildingProgressComponent : MonoBehaviour
     private void CompleteBuilding()
     {
         Debug.Log($"🎉 Construcție finalizată pentru {gameObject.name}! Se înlocuiește Prefab-ul.");
-        
+
+
+
+
         if (finalBuildingPrefab != null)
         {
-            // Instanțiază clădirea finală la poziția și rotația obiectului temporar.
-            Instantiate(finalBuildingPrefab, transform.position, transform.rotation);
+            // 1. Instanțiază clădirea finală la poziția și rotația obiectului temporar.
+            GameObject newBuilding = Instantiate(finalBuildingPrefab, transform.position, transform.rotation);
+
+            // 2. IMPORTANT: Marchează obiectul ca fiind spawnat la runtime pentru SaveManager
+
+            // 3. Înregistrează clădirea GHOST (cea curentă) ca fiind distrusă în SaveManager
+            // Presupunând că obiectul ghost are un uniqueID de la editor
+            WorldEntityState ghostState = GetComponent<WorldEntityState>();
+            if (ghostState != null && SaveManager.Instance != null)
+            {
+                SaveManager.Instance.RegisterDestroyedWorldItem(ghostState.uniqueID);
+            }
+
+            WorldEntityState state = newBuilding.GetComponent<WorldEntityState>();
+            if (state != null)
+            {
+                state.isSpawnedAtRuntime = true;
+                // Opțional: Dacă vrei să generezi un ID unic imediat
+                state.uniqueID = "Built_" + ghostState.uniqueID;
+            }
+        
         }
         else
         {

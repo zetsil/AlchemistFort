@@ -311,7 +311,7 @@ GameObject:
   - component: {fileID: 4061093268528985876}
   m_Layer: 9
   m_Name: Zombie 1
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -369,7 +369,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ZombieNPC
   entityData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
   currentHealth: 0
-  MaxHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 2100000, guid: 0b8c3231586d0eb46990edffa763666e, type: 2}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
   defaultSpeed: 3.5
   Agent: {fileID: 0}
   attackStopRange: 2
