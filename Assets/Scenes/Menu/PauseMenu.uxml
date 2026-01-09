@@ -1,0 +1,14 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scenes/Menu/PauseMenu.uss?fileID=7433441132597879392&amp;guid=b3a306067b2611d32bab7e24541c98ba&amp;type=3#PauseMenu" />
+    <ui:VisualElement name="Overlay" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center;">
+        <ui:VisualElement name="MenuContainer" style="background-color: rgb(40, 40, 40); padding: 40px; border-radius: 15px; border-width: 2px; border-color: rgb(80, 80, 80); width: 300px;">
+            <ui:Label text="PAUSED" style="color: white; -unity-font-style: bold; font-size: 30px; -unity-text-align: middle-center; margin-bottom: 30px;" />
+            <ui:Button name="BtnContinue" text="Continue" style="margin-bottom: 10px; padding: 10px; height: 40px;" />
+            <ui:Button name="BtnSave" text="Save Game" style="margin-bottom: 10px; padding: 10px; height: 40px;" />
+            <ui:Button name="BtnLoad" text="Load Game" style="margin-bottom: 10px; padding: 10px; height: 40px;" />
+            <ui:Button name="BtnRestart" text="Restart Level" style="margin-bottom: 10px; padding: 10px; height: 40px;" />
+            <ui:VisualElement style="height: 2px; background-color: rgb(70, 70, 70); margin: 15px 0;" />
+            <ui:Button name="BtnMainMenu" text="Main Menu" style="padding: 10px; height: 40px; background-color: rgb(150, 40, 40); color: white;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

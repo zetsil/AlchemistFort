@@ -188,6 +188,7 @@ public class EquippedManager : MonoBehaviour
         // 3. Curățarea EquippedManager
         slotToDestroy.ToolItemData?.Unequip(); 
         currentEquippedSlot = null;
+        GlobalEvents.TriggerPlaySound("broke");
         
         // 4. Anunță Dezechiparea (pentru UI, etc.)
         OnSlotEquippedStateChanged?.Invoke(null);

@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Pickaxe
   m_EditorClassIdentifier: Assembly-CSharp::ToolItem
   itemName: Pickaxe
-  icon: {fileID: 21300000, guid: 82f8c57c4d04c7a2ab6d11bc2274f322, type: 3}
+  icon: {fileID: 21300000, guid: f881b611f88215eee9f976d421a82395, type: 3}
   description: Use it to mine
   stackSize: 1
   amount: 1
   maxDurability: 50
   durabilityLossPerUse: 1
   toolCategory: 2
-  attackDamage: 0.2
+  attackDamage: 1

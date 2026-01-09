@@ -11,7 +11,8 @@ public class EnemyHitboxHandler : MonoBehaviour
     private NPCBase npcController; 
     
     // Registru pentru a stoca obiectele deja lovite într-o fereastră de atac.
-    private HashSet<GameObject> hitRegistry = new HashSet<GameObject>();
+    HashSet<AllyEntity> hitRegistry = new HashSet<AllyEntity>();
+
 
     private void Awake()
     {
@@ -29,40 +30,25 @@ public class EnemyHitboxHandler : MonoBehaviour
     /// </summary>
     private void OnTriggerEnter(Collider other)
     {
-        // 1. Verificăm dacă a fost deja lovit
-        if (hitRegistry.Contains(other.gameObject))
-        {
-            Debug.Log($"Am lovit {gameObject.name}");
+        AllyEntity damageableTarget = other.GetComponentInParent<AllyEntity>();
 
-            return;
-        }
-
-        // 2. Încercăm să obținem interfața IDamageable (Player, Bază, alt NPC)
-        AllyEntity damageableTarget = other.GetComponent<AllyEntity>();
-        
-        // Dacă nu este o țintă validă, ignorăm coliziunea
         if (damageableTarget == null)
         {
-            Debug.Log($"Nu am gasit pe obiect  damageableTarget{gameObject.name}");
+            Debug.Log($"Nu am gasit AllyEntity pe {other.name}");
             return;
         }
-        
-        Debug.Log($"Am lovit {gameObject.name}");
 
+        if (hitRegistry.Contains(damageableTarget))
+            return;
 
-        // 3. Aplicăm Daunele
-
-        // Obținem datele de atac direct de la NPC
         float damage = npcController.Damage;
-        ToolType toolType = ToolType.Claw; // Presupunem un tip fix pentru inamic
+        ToolType toolType = ToolType.Claw;
 
-        // Aplicăm damage-ul țintei
         damageableTarget.TakeDamage(damage, toolType);
 
-        // 4. Înregistrăm ținta
-        hitRegistry.Add(other.gameObject);
-        
-        // Debug.Log($"Lovitură NPC aplicată: {other.gameObject.name} (Damage: {damage})");
+        hitRegistry.Add(damageableTarget);
+
+        Debug.Log($"Lovit {damageableTarget.name} cu {damage} damage");
     }
 
     /// <summary>

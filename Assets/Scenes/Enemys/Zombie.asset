@@ -18,4 +18,10 @@ MonoBehaviour:
   toolEffectivenesses:
   - toolType: 1
     damageMultiplier: 1
+  - toolType: 6
+    damageMultiplier: 1
+  - toolType: 2
+    damageMultiplier: 0.3
+  - toolType: 4
+    damageMultiplier: 1.5
   possibleDrops: []

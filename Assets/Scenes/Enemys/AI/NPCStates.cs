@@ -23,7 +23,6 @@ public class IdleState : INPCState
         currentIdleDuration = Random.Range(minDuration, maxDuration);
         idleTimer = 0f; // Resetăm timer-ul
 
-        Debug.Log($"{npc.GetType().Name} a intrat în Idle. Va aștepta {currentIdleDuration:F2} secunde.");
 
         // Asigură-te că NPC-ul stă pe loc
         if (npc.Agent != null)
@@ -37,7 +36,6 @@ public class IdleState : INPCState
     {
         // Timer pentru idle
         idleTimer += Time.deltaTime;
-        Debug.Log($"{npc.GetType().Name} stă pe loc...");
 
         // După ce a stat o perioadă, trece în Wander
         if (idleTimer >= currentIdleDuration)
@@ -81,7 +79,6 @@ public class WanderState : INPCState
             if (newDestination != Vector3.zero)
             {
                 npc.Agent.SetDestination(newDestination);
-                Debug.Log($"{npc.GetType().Name} rătăcește către {newDestination}");
             }
             else
             {
@@ -119,7 +116,7 @@ public class AttackState : INPCState
     
     // O marjă de eroare: Dacă ținta se îndepărtează puțin (ex: 1 metru) peste raza de atac,
     // nu ieșim imediat din stare. Doar dacă fuge clar.
-    private const float ATTACK_EXIT_BUFFER = 2.0f; 
+    private const float ATTACK_EXIT_BUFFER = 1.2f; 
 
     public void EnterState(NPCBase npc)
     {
@@ -262,7 +259,6 @@ public class RunState : INPCState
             if (safePosition != Vector3.zero)
             {
                 npc.Agent.SetDestination(safePosition);
-                Debug.Log($"{npc.GetType().Name} fuge către {safePosition}");
             }
             else
             {
@@ -310,7 +306,6 @@ public class HideState : INPCState
             c.enabled = false;
         }
 
-        Debug.Log($"{npc.name} s-a ascuns în HideState (invizibil și fără coliziune)!");
     }
 
     public void DoState(NPCBase npc)
@@ -332,7 +327,7 @@ public class HideState : INPCState
             c.enabled = true;
         }
 
-        Debug.Log($"{npc.name} a ieşit din HideState (vizibil și activ din nou)!");
+
     }
 }
 
@@ -353,7 +348,6 @@ public class MoveToState : INPCState
         // 1. Verifică ținta
         if (npc.Target == null)
         {
-            Debug.LogWarning($"{npc.name} nu are țintă. Trecere la Idle.");
             npc.ToIdle();
             return;
         }
@@ -366,7 +360,6 @@ public class MoveToState : INPCState
             // Setează destinația inițială
             npc.Agent.SetDestination(npc.Target.transform.position);
             
-            Debug.Log($"{npc.GetType().Name} intră în MoveTo, urmărind: {npc.Target.name}");
         }
         else
         {
@@ -395,7 +388,6 @@ public class MoveToState : INPCState
         
         if (distance <= DestinationTolerance)
         {
-            Debug.Log($"{npc.name} a atins ținta ({npc.Target.name}). Trecere la Idle.");
             // A ajuns la destinație, trece în Idle (sau în starea următoare, ex: Attack)
             npc.ToIdle(); 
             return;
@@ -404,7 +396,6 @@ public class MoveToState : INPCState
         // 4. Verifică calea invalidă
         if (npc.Agent.isOnNavMesh && npc.Agent.pathStatus == NavMeshPathStatus.PathInvalid)
         {
-            Debug.LogWarning($"{npc.name}: Cale invalidă către țintă. Trecere la Idle.");
             npc.ToIdle();
         }
     }

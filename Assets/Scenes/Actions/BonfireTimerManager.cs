@@ -36,6 +36,10 @@ public class BonfireTimerManager : MonoBehaviour
     private Coroutine timerCoroutine;
     private float currentTimerTime = 0f; // NOU: Timpul real rămas
 
+
+    [Tooltip("Obiectul care conține Shader-ul de Shield (Energy Field).")]
+    public GameObject energyField;
+
     void Start()
     {
         if (NewActionUIGenerator == null)
@@ -44,15 +48,17 @@ public class BonfireTimerManager : MonoBehaviour
             if (NewActionUIGenerator == null)
             {
                 Debug.LogError("[BonfireTimerManager] NewActionUIGenerator nu a fost găsit în scenă.");
-                enabled = false; 
+                enabled = false;
                 return;
             }
         }
-        
+
         if (uiContainerParent != null)
         {
             uiContainerParent.SetActive(false);
         }
+        
+        if (energyField != null) energyField.SetActive(false);
     }
 
     void Update()
@@ -110,23 +116,23 @@ public class BonfireTimerManager : MonoBehaviour
 
     private void StartLevelOneTimer()
     {
-        if (isTimerRunning) return; 
+        if (isTimerRunning) return;
 
         isTimerRunning = true;
         Debug.Log("[BonfireTimerManager] Nivelul 1 (Bonfire) a început. Pornire Timer...");
 
         // Setează timpul inițial (dacă nu e deja setat prin AddTimeToTimer într-un scenariu special)
-        if (currentTimerTime <= 0) 
+        if (currentTimerTime <= 0)
         {
-             currentTimerTime = levelOneDuration;
+            currentTimerTime = levelOneDuration;
         }
-        
+
         // Afișează containerul UI al barei de progres
         if (uiContainerParent != null)
         {
-             uiContainerParent.SetActive(true);
+            uiContainerParent.SetActive(true);
         }
-        
+
         // Activează efectele
         SetBonfireEffectsActive(true);
 
@@ -136,6 +142,8 @@ public class BonfireTimerManager : MonoBehaviour
             StopCoroutine(timerCoroutine);
         }
         timerCoroutine = StartCoroutine(CountdownRoutine());
+        
+        
     }
 
     private void StopLevelOneTimer(bool expired)
@@ -186,7 +194,7 @@ public class BonfireTimerManager : MonoBehaviour
         currentTimerTime = 0f; 
         StopLevelOneTimer(true);
     }
-    
+
     private void SetBonfireEffectsActive(bool active)
     {
         if (bonfireParticles != null)
@@ -197,6 +205,14 @@ public class BonfireTimerManager : MonoBehaviour
         if (bonfireLight != null)
         {
             bonfireLight.SetActive(active);
+        }
+        
+        if (energyField != null)
+        {
+            energyField.SetActive(active);
+            
+            // Opțional: Dacă vrei un efect de particule când apare scutul
+            if (active) GlobalEvents.RequestParticle("Shield_Start_Effect", energyField.transform.position);
         }
     }
 }

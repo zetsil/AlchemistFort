@@ -14,6 +14,9 @@ GameObject:
   - component: {fileID: 7463768237717122502}
   - component: {fileID: 511466217851170889}
   - component: {fileID: 8645449648904178498}
+  - component: {fileID: -1595668955261381789}
+  - component: {fileID: -321137928454693191}
+  - component: {fileID: 7085296896087387863}
   m_Layer: 0
   m_Name: Wood
   m_TagString: Pickable
@@ -154,3 +157,54 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
   itemData: {fileID: 11400000, guid: 4ceedfbca7092e5a980203376f3b679c, type: 2}
+--- !u!114 &-1595668955261381789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476889259477902988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 0}
+  uiForItemPickUp: 1
+  customUIHeight: 0.8
+  actionLevels:
+  - recipes:
+    - {fileID: 11400000, guid: e13b3c1bd8b91cab98c9c2831f19e55d, type: 2}
+  currentActionLevel: 0
+  actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
+--- !u!114 &-321137928454693191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476889259477902988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36b591c764de67ac2b8b001b7b4fe96e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisibilityRangeController
+  activationDistance: 4
+  hideOnlyInteractionButtons: 1
+  recheckInterval: 1
+  shouldReinitialize: 1
+--- !u!114 &7085296896087387863
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3476889259477902988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldItem
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentDurability: -1

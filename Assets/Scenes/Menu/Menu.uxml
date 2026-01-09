@@ -1,0 +1,12 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="Overlay" style="flex-grow: 1; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.4); color: rgb(0, 0, 0);">
+        <ui:VisualElement name="MenuPanel" style="width: 371px; padding: 40px; background-color: rgba(118, 42, 118, 0.26); border-width: 4px; border-color: rgb(180, 140, 70); border-radius: 10px; color: rgb(0, 0, 0); height: 383px;">
+            <ui:VisualElement name="ButtonContainer">
+                <ui:Button text="NEW GAME" name="BtnPlay" style="margin-bottom: 10px; padding: 10px; background-color: rgb(123, 61, 123);" />
+                <ui:Button text="LOAD GAME" name="BtnLoad" style="margin-bottom: 10px; padding: 10px; background-color: rgb(123, 61, 123);" />
+                <ui:Button text="RESTART" name="BtnRestart" style="margin-bottom: 10px; padding: 10px; background-color: rgb(123, 61, 123);" />
+                <ui:Button text="QUIT" name="BtnExit" style="padding: 10px; background-color: rgb(155, 30, 30);" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

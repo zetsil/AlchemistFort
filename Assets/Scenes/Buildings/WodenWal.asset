@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: WodenWal
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 5
+  name: WodenWall
   baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 5

@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scenes/Menu/saveSlot.uss?fileID=7433441132597879392&amp;guid=10117ba3ba04980c3bdbf84d0b113dee&amp;type=3#saveSlot" />
+    <ui:Button name="SlotButton" class="save-slot-card">
+        <ui:VisualElement name="ScreenshotPlaceholder" class="slot-image" />
+        <ui:VisualElement name="SlotInfo" style="background-color: rgba(0, 0, 0, 0.7); padding: 10px;">
+            <ui:Label name="FolderName" text="Save_01" style="color: white; font-size: 18px; -unity-text-align: middle-center;" />
+        </ui:VisualElement>
+    </ui:Button>
+</ui:UXML>

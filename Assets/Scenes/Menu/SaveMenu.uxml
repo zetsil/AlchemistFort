@@ -1,0 +1,18 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
+    <ui:VisualElement name="Background" style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.85); justify-content: space-between;">
+        
+        <ui:VisualElement name="Header" style="height: 100px; justify-content: center; align-items: center;">
+            <ui:Label name="HeaderLabel" text="LOAD GAME" style="font-size: 40px; color: white; -unity-font-style: bold;" />
+        </ui:VisualElement>
+
+        <ui:ScrollView name="SaveList" style="flex-grow: 1; padding: 40px;">
+            <ui:VisualElement name="SlotContainer" class="grid-container" />
+        </ui:ScrollView>
+
+        <ui:VisualElement name="Footer" style="padding: 40px; background-color: rgba(20, 20, 20, 0.9); flex-direction: row; justify-content: space-between; align-items: center;">
+            <ui:Label name="SelectedSaveName" text="SELECT A SLOT" style="color: #AAAAAA; font-size: 20px;" />
+            <ui:Button name="BackButton" text="BACK" class="menu-button" />
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>

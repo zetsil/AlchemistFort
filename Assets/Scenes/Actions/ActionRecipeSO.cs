@@ -61,6 +61,7 @@ public class ActionRecipeSO : ScriptableObject
         
         if (success)
         {
+            GlobalEvents.TriggerPlaySound("build");
             Debug.Log($"Acțiunea '{actionName}' executată cu succes pe {initiator.name}.");
         }
 

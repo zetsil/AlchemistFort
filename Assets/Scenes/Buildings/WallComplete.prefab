@@ -11,10 +11,11 @@ GameObject:
   - component: {fileID: 914678728381643063}
   - component: {fileID: 3936153242967986896}
   - component: {fileID: 1482217580773663789}
-  - component: {fileID: 7744174019946973136}
   - component: {fileID: 4771342160281773609}
   - component: {fileID: 4673330323981340183}
-  m_Layer: 0
+  - component: {fileID: -5601741248129614767}
+  - component: {fileID: -3842480932413898370}
+  m_Layer: 8
   m_Name: WallComplete
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -92,21 +93,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &7744174019946973136
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8866365951013264202}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a817b192a9308587c95764db9b5a4b51, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::BuildingProgressComponent
-  requiredSteps:
-  - {fileID: 11400000, guid: 6a222bcd3d2769258b5955ed05926897, type: 2}
-  finalBuildingPrefab: {fileID: 0}
 --- !u!65 &4771342160281773609
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -155,3 +141,40 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &-5601741248129614767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8866365951013264202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9940c93c7c3cbddfaf37f01080b35fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
+  entityData: {fileID: 11400000, guid: a91b5da2161ea7df38a75bfc77181be6, type: 2}
+  currentHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
+  brokenBuildingPrefab: {fileID: 8866365951013264202, guid: a653a10d0f43edd35acbeaf2b72047b2, type: 3}
+--- !u!114 &-3842480932413898370
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8866365951013264202}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 

@@ -20,5 +20,5 @@ MonoBehaviour:
   - requiredItem: {fileID: 11400000, guid: 4ceedfbca7092e5a980203376f3b679c, type: 2}
     amount: 5
   genericValue: 0
-  resultItem: {fileID: 11400000, guid: f97873581bdd01f878ddf3a50d19c6e8, type: 2}
+  resultItem: {fileID: 11400000, guid: 568c430ab80f82d4293cd5822a0b886d, type: 2}
   targetState: Completed

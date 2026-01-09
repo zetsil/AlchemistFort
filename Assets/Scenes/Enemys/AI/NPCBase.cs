@@ -123,7 +123,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             // ChangeState se folosește de noul currentStateLvl pentru a valida tranziția
             ChangeState(firstStateOfNewLevel);
 
-            Debug.Log($"{gameObject.name} a trecut la Nivelul {currentStateLvl} și a început cu {CurrentStateID}");
         }
         else
         {
@@ -181,6 +180,8 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             Debug.LogWarning($"Blocat ChangeState recursiv spre {newState.StateID} de la {CurrentStateID}");
             return;
         }
+        // if (!this.Agent.enabled || !this.Agent.isOnNavMesh) return;
+
         // Ieși dacă starea nu se schimbă
         if (currentState == newState) return;
         isChangingState = true;
@@ -203,7 +204,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             currentState = newState;
             CurrentStateID = newState.StateID;
 
-            Debug.Log($"{gameObject.name} intră în starea: {CurrentStateID}");
         }
         else
         {
@@ -216,7 +216,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
                 currentState = firstState;
                 CurrentStateID = firstState.StateID;
 
-                Debug.Log($"Stare invalidă ({newState.StateID}) pe nivelul {currentStateLvl}. Resetare la prima stare: {CurrentStateID}");
             }
             else
             {
@@ -228,6 +227,8 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
 
     protected override void Update() // <- Folosim override pentru a extinde funcționalitatea din Entity
     {
+        if (Agent == null || !Agent.enabled || !Agent.isOnNavMesh) return;
+        
         base.Update(); // Executăm logica de bază (dacă există)
         TickStateMachine();
     }
@@ -305,7 +306,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             {
                 Agent.isStopped = true;
                 Agent.ResetPath();
-                Debug.LogWarning($"{gameObject.name} a intrat în starea Attack, dar nu are țintă. Agent oprit.");
             }
         }
     }
@@ -342,7 +342,6 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
         // 1. Validare Target
         if (Target == null)
         {
-            Debug.LogWarning($"{gameObject.name} nu are țintă pentru manevră. Trecere la Idle.");
             ToIdle();
             return true; // Considerat finalizat (eșuat)
         }

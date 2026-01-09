@@ -205,70 +205,54 @@ public class InventoryManager : MonoBehaviour
     public bool DropItem(InventorySlot slot, int amount)
     {
         if (slot == null || slot.itemData == null) return false;
-        if (amount <= 0 || amount > slot.count) amount = slot.count; // Aruncă maxim cât are
+        if (amount <= 0 || amount > slot.count) amount = slot.count;
 
-        // 1. Obținerea Prefab-ului Vizual
         if (ItemVisualManager.Instance == null)
         {
-            Debug.LogError("ItemVisualManager nu este instanțiat. Nu se poate arunca item-ul.");
+            Debug.LogError("ItemVisualManager lipsește!");
             return false;
         }
 
         GameObject itemPrefab = ItemVisualManager.Instance.GetItemVisualPrefab(slot.itemData);
-        if (itemPrefab == null)
-        {
-            Debug.LogWarning($"Nu s-a găsit Prefab-ul vizual pentru '{slot.itemData.itemName}'. Item-ul nu poate fi aruncat.");
-            // Cu toate acestea, item-ul este eliminat din inventar
-        }
+        if (itemPrefab == null) return false;
 
-        // 2. Localizarea Poziției de Aruncare
         Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (playerTransform == null)
-        {
-            Debug.LogError("Obiectul cu tag-ul 'Player' nu a fost găsit. Item-ul nu poate fi aruncat în fața jucătorului.");
-            return false;
-        }
+        if (playerTransform == null) return false;
 
-        // Calculăm poziția în fața camerei/jucătorului
-        // Presupunem că InventoryManager este pe un obiect de la același nivel sau știm cum să ajungem la cameră.
-        // O abordare comună este de a folosi Camera.main
         Camera mainCamera = Camera.main;
-        Vector3 dropPosition;
+        Vector3 dropPosition = (mainCamera != null) 
+            ? mainCamera.transform.position + mainCamera.transform.forward * dropDistance 
+            : playerTransform.position + playerTransform.forward * dropDistance;
 
-        if (mainCamera != null)
+        // --- LOGICA DE INSTANȚIERE ȘI SALVARE ---
+        GameObject droppedObject = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
+
+        // 1. Accesăm componenta de stare pentru salvare
+        WorldEntityState state = droppedObject.GetComponent<WorldEntityState>();
+        if (state != null)
         {
-            dropPosition = mainCamera.transform.position + mainCamera.transform.forward * dropDistance;
+            // 2. Marcăm obiectul ca fiind spawnat la runtime (pentru a fi inclus în Whitelist)
+            state.isSpawnedAtRuntime = true;
+
+            // 3. Generăm ID-ul unic pentru acest obiect nou
+            state.uniqueID = System.Guid.NewGuid().ToString();
+
+            // 4. Păstrăm starea obiectului (ex: durabilitatea dacă este o unealtă)
+            if (slot.state != null)
+            {
+                state.currentHealthOrDurability = slot.state.currentDurability;
+            }
+
+            Debug.Log($"✅ [SAVE SYSTEM] Referință salvată pentru {slot.itemData.itemName} (ID: {state.uniqueID})");
         }
-        else
-        {
-            // Fallback la poziția jucătorului
-            dropPosition = playerTransform.position + playerTransform.forward * dropDistance;
-        }
+        // ----------------------------------------
 
-
-        // 3. Instanțierea Item-ului în Lume
-        if (itemPrefab != null)
-        {
-            GameObject droppedObject = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
-
-            // Opțional: Poți seta count-ul pe un script "WorldItem" atașat la prefab
-            // WorldItem worldItem = droppedObject.GetComponent<WorldItem>();
-            // if (worldItem != null) { worldItem.SetAmount(amount); }
-
-            Debug.Log($"✅ Aruncat {amount} x {slot.itemData.itemName} la poziția {dropPosition}.");
-        }
-
-
-        // 4. Eliminarea Item-ului din Inventar
-        // Pentru simplitate, folosim DecreaseCount care gestionează și eliminarea slotului gol
-        // Creăm o funcție separată în InventorySlot care nu face RemoveSlot la sfârșit.
-        // Sau, mai simplu, apelăm DecreaseCount direct.
+        // Eliminarea din inventar
         DecreaseItem(slot.itemData.itemName, amount);
-
 
         return true;
     }
-    
+
     public bool AddExistingSlot(InventorySlot slot)
     {
         // Verificăm dacă inventarul este plin, ignorând faptul că slotul există deja
@@ -291,7 +275,7 @@ public class InventoryManager : MonoBehaviour
 
         // 2. Incrementăm numărul de sloturi folosite
         current_slots++;
-        
+
         // 3. Ne asigurăm că slotIndex-ul nu se suprapune cu următoarele sloturi noi
         // Deși nu ar trebui să se întâmple dacă EquippedManager gestionează corect,
         // actualizăm indexul global pentru siguranță, deși acest slot are deja un index.
@@ -303,6 +287,15 @@ public class InventoryManager : MonoBehaviour
         Debug.Log($"✅ Slotul {slot.itemData.itemName} a fost reintegrat în inventar.");
         UpdateDebugList();
         return true;
+    }
+    
+    public void ClearInventory()
+    {
+        inventory.Clear();
+        allSlots.Clear();
+        current_slots = 0;
+        // nextSlotIndex = 0; // Opțional: dacă vrei să resetezi și ID-urile sloturilor
+        UpdateDebugList();
     }
 }
 

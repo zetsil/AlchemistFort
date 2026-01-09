@@ -45,6 +45,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisibilityRangeController
   activationDistance: 4
+  hideOnlyInteractionButtons: 0
   recheckInterval: 1
   shouldReinitialize: 1
 --- !u!1 &7566831446799141906
@@ -61,6 +62,7 @@ GameObject:
   - component: {fileID: 1075004856736954018}
   - component: {fileID: -2402533281350819172}
   - component: {fileID: 3736554226224360912}
+  - component: {fileID: -1944673483701288673}
   m_Layer: 0
   m_Name: ColumnBuild
   m_TagString: Untagged
@@ -152,12 +154,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 5479162335682468464}
+  uiForItemPickUp: 0
+  customUIHeight: 1.5
   actionLevels:
   - recipes:
     - {fileID: 11400000, guid: 6a222bcd3d2769258b5955ed05926897, type: 2}
   currentActionLevel: 0
   actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
-  uiAnchor: {fileID: 5479162335682468464}
 --- !u!114 &-2402533281350819172
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -186,5 +190,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::VisibilityRangeController
   activationDistance: 4
+  hideOnlyInteractionButtons: 0
   recheckInterval: 1
   shouldReinitialize: 0
+--- !u!114 &-1944673483701288673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7566831446799141906}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 

@@ -1,0 +1,75 @@
+/* Containerul care acoperă tot ecranul */
+.overlay {
+    flex-grow: 1;
+    background-color: rgba(0, 0, 0, 0.75); /* Fundal negru semi-transparent */
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+/* Caseta centrală a meniului */
+.menu-container {
+    background-color: rgb(35, 35, 35);
+    padding: 30px;
+    border-radius: 15px;
+    border-width: 2px;
+    border-color: rgb(100, 100, 100);
+    width: 350px;
+    /* Efect de umbră ușoară */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Stilul titlului "PAUSED" */
+.menu-title {
+    color: white;
+    font-size: 32px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin-bottom: 25px;
+    letter-spacing: 5px;
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Stil general pentru butoane */
+.button-standard {
+    background-color: rgb(60, 60, 60);
+    color: rgb(220, 220, 220);
+    border-radius: 8px;
+    border-width: 0;
+    margin-bottom: 12px;
+    padding: 12px;
+    font-size: 16px;
+    transition-duration: 0.1s; /* Animație scurtă la hover */
+}
+
+/* Efect când treci cu mouse-ul peste butoane */
+.button-standard:hover {
+    background-color: rgb(80, 80, 80);
+    color: white;
+    scale: 1.05; /* Se mărește puțin */
+}
+
+/* Efect când apeși pe buton */
+.button-standard:active {
+    background-color: rgb(45, 120, 255);
+    color: white;
+}
+
+/* Stil special pentru butonul de Exit/Main Menu */
+.button-exit {
+    background-color: rgba(180, 40, 40, 0.8);
+    margin-top: 10px;
+}
+
+.button-exit:hover {
+    background-color: rgb(220, 50, 50);
+}
+
+/* Linia de separare */
+.divider {
+    height: 1px;
+    background-color: rgb(80, 80, 80);
+    margin: 10px 0 20px 0;
+}

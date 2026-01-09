@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 1614287634640032233}
   - component: {fileID: 4804929406406403851}
   - component: {fileID: 2861394587600286992}
+  - component: {fileID: 7341985969127118897}
   m_Layer: 0
   m_Name: RockMosel1
   m_TagString: Untagged
@@ -128,9 +129,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Resource
   entityData: {fileID: 11400000, guid: f5ba10788d48d5009a88d23cacf3e1f6, type: 2}
   currentHealth: 0
-  MaxHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
   requiredToolType: 2
-  wrongToolMessage: You need a pickaxe to mine this resource
 --- !u!65 &2861394587600286992
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -152,3 +157,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.2424467, y: 1.0955719, z: 1.337328}
   m_Center: {x: -0.012832522, y: 0.44889402, z: 0.045449078}
+--- !u!114 &7341985969127118897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 91509788849209292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1

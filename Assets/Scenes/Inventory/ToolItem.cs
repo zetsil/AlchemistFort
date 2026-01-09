@@ -10,6 +10,7 @@ public enum ToolType
     Shovel,     // Lopată (pentru săpat pământ)
     Sword,      // Sabie (pentru luptă)
     Claw,
+    Shield,
     // Adaugă orice alte tipuri necesare
 }
 

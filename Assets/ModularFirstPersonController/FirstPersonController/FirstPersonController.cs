@@ -236,6 +236,7 @@ public class FirstPersonController : MonoBehaviour
     private void Update()
     {
         #region Camera
+        
 
         // Control camera movement
         if (cameraCanMove)
