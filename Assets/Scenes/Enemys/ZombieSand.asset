@@ -13,11 +13,15 @@ MonoBehaviour:
   m_Name: ZombieSand
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 4
-  name: Entity
+  name: Zombie Sand
   baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 4
     damageMultiplier: 2
   - toolType: 1
     damageMultiplier: 1
-  possibleDrops: []
+  possibleDrops:
+  - item: {fileID: 11400000, guid: 41325a4a1e525dc458004f4fe594c50e, type: 2}
+    dropChance: 0.3
+    minQuantity: 0
+    maxQuantity: 3

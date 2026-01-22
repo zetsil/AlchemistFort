@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerStats : AllyEntity
 {
@@ -51,11 +52,52 @@ public class PlayerStats : AllyEntity
 
     protected override void Die()
     {
-        // Overridem Die ca să nu distrugem obiectul Player instant (Destroy(gameObject))
-        // Mai bine activăm un ecran de Game Over sau respawn
-        Debug.Log("Jucătorul a murit! Încărcare ecran Game Over...");
+        if (isDead) return;
+        
+        isDead = true;
+        Debug.Log("💀 PlayerStats: Jucătorul a murit!");
+
+        // 1. Dezactivăm controalele
         controller.playerCanMove = false;
         controller.cameraCanMove = false;
-        // base.Die(); // NU apelăm base.Die() dacă nu vrem să dispară Player-ul de pe ecran
+        controller.enableSprint = false;
+
+        // 2. Declanșăm efectul de "cădere" a camerei
+        StartCoroutine(FallToGroundRoutine());
+
+        // 3. Trimitem semnalul global
+        GlobalEvents.NotifyPlayerDeath();
+    }
+
+    private IEnumerator FallToGroundRoutine()
+    {
+        Transform camTransform = Camera.main.transform;
+        Vector3 startPosition = camTransform.localPosition;
+        Quaternion startRotation = camTransform.localRotation;
+
+        // Definirea poziției de "mort la pământ"
+        Vector3 targetPosition = new Vector3(startPosition.x, -0.8f, startPosition.z); // Coboară camera spre picioare
+        Quaternion targetRotation = Quaternion.Euler(startRotation.eulerAngles.x, startRotation.eulerAngles.y, 60f); // Înclinație laterală
+
+        float elapsed = 0f;
+        float duration = 1.2f; // Cât de repede cade la pământ
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+
+            // Folosim un SmoothStep pentru o cădere mai naturală (accelerează la început)
+            float curve = t * t; 
+
+            camTransform.localPosition = Vector3.Lerp(startPosition, targetPosition, curve);
+            camTransform.localRotation = Quaternion.Slerp(startRotation, targetRotation, curve);
+
+            yield return null;
+        }
+        
+        // Asigurăm poziția finală
+        camTransform.localPosition = targetPosition;
+        camTransform.localRotation = targetRotation;
     }
 }

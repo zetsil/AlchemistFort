@@ -11,7 +11,7 @@ public abstract class Entity : MonoBehaviour
 
     // === STATISTICI DINAMICE ===
     [Header("Statistici Dinamice")]
-    [SerializeField] protected int currentHealth;
+    [SerializeField] public int currentHealth;
     public int CurrentHealth => currentHealth;
     public bool isDead = false;
     public int MaxHealth { get; private set; }
