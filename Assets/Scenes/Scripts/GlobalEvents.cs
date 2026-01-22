@@ -33,14 +33,39 @@ public static class GlobalEvents
     public static event Action<string> OnPlaySound;
 
     public static event Action<string, Vector3> OnParticleEffectRequested;
+    public static event Action OnPlayerDeath;
+    public static event Action OnGameWin;
+    public static event Action<Entity> OnEnemyDeath;
 
-
+    public static void NotifyEnemyDeath(Entity enemy)
+    {
+        OnEnemyDeath?.Invoke(enemy);
+    }
 
     public static void RequestEquip(ToolItem tool)
     {
         // Prin default, este cerere de echipare standard (nu directă)
         OnEquipRequested?.Invoke(tool, false);
         // NOTĂ: Acest apel NU va mai fi folosit pentru a echipa uneltele din inventar!
+    }
+
+    /// <summary>
+    /// Se apelează când sănătatea jucătorului ajunge la 0.
+    /// Poate opri gameplay-ul sau afișa ecranul de Game Over.
+    /// </summary>
+    public static void NotifyPlayerDeath()
+    {
+        Debug.Log("💀 GlobalEvents: Player has died.");
+        OnPlayerDeath?.Invoke();
+    }
+
+    /// <summary>
+    /// Se apelează când toate valurile au fost terminate sau obiectivul a fost atins.
+    /// </summary>
+    public static void NotifyGameWin()
+    {
+        Debug.Log("🏆 GlobalEvents: Victory achieved!");
+        OnGameWin?.Invoke();
     }
 
     public static void RequestDirectEquipFromWorld(ToolItem tool)

@@ -126,7 +126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LinearProjectile
   ownerNPC: {fileID: 0}
-  speed: 5
+  speed: 13
   maxLifetime: 5
   impactDamage: 5
 --- !u!54 &-5326601368380485795

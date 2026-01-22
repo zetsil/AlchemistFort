@@ -512,9 +512,8 @@ public class FirstPersonController : MonoBehaviour
         Vector3 direction = transform.TransformDirection(Vector3.down);
         float distance = .75f;
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, distance))
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, distance, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Ignore))
         {
-            Debug.DrawRay(origin, direction * distance, Color.red);
             isGrounded = true;
         }
         else

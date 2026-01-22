@@ -60,7 +60,7 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         hasReachedAccessPoint = false;
         // Optional: sterge si punctul vechi daca vrei unul nou de fiecare data
     }
-    
+
 
     private void OnDestroy()
     {
@@ -115,7 +115,7 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         // folosește logica complexă din ZombieMoveToState.
         Target = target;
         animator.SetTrigger("DoMove");
-        ChangeState(zombieMoveToState); 
+        ChangeState(zombieMoveToState);
     }
 
     protected override void Update()
@@ -146,6 +146,15 @@ public class ZombieNPC : NPCBase, IHasBasePoint
                 ChangeLevel(0);
             }
         }
+    }
+    
+    protected override void Die()
+    {
+        // Notificăm sistemul de wave că un inamic a murit înainte de a fi distrus obiectul
+        GlobalEvents.NotifyEnemyDeath(this);
+        
+        // Apelăm logica de bază (animații, distrugere loot, etc.)
+        base.Die();
     }
 
     // Metodă helper pentru a trece în starea de atac normală (spre player)

@@ -1,6 +1,39 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements">
-    <ui:VisualElement name="HUDContainer" style="flex-grow: 1; justify-content: flex-end; flex-direction: row; padding: 20px;">
+    <ui:VisualElement name="HUDContainer" style="flex-grow: 1; padding: 20px;">
         
+        <ui:VisualElement name="TimeContainer" style="position: absolute; top: 30px; left: 50%; width: 400px; translate: -200px 0;">
+            <ui:Label name="TimeLabel" text="TIME UNTIL NEXT PHASE" style="color: white; -unity-font-style: bold; font-size: 10px; -unity-text-align: middle-center; margin-bottom: 5px; letter-spacing: 2px;" />
+            <ui:VisualElement name="TimeBG" style="background-color: rgba(0, 0, 0, 0.6); height: 12px; border-width: 1px; border-color: rgba(255, 255, 255, 0.5); border-radius: 5px; overflow: hidden;">
+                <ui:VisualElement name="TimeFill" style="background-color: rgb(0, 190, 255); width: 100%; height: 100%; transition: width 0.1s linear;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="GameOverScreen" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.8); align-items: center; justify-content: center; display: none;">
+            <ui:Label text="YOU DIED" style="color: rgb(255, 0, 0); -unity-font-style: bold; font-size: 80px; -unity-text-outline-width: 2px; -unity-text-outline-color: black; letter-spacing: 10px;" />
+            <ui:Label text="The night was too strong..." style="color: white; font-size: 20px; -unity-font-style: italic; margin-bottom: 20px;" />
+            <!-- <ui:Label text="PRESS R TO RESTART" style="color: rgba(255, 255, 255, 0.5); font-size: 14px; letter-spacing: 2px;" /> -->
+        </ui:VisualElement>
+
+        <!-- WIN SCREEN -->
+        <ui:VisualElement name="WinScreen" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 20, 0, 0.85); align-items: center; justify-content: center; display: none;">
+            <ui:Label text="VICTORY" style="color: rgb(255, 215, 0); -unity-font-style: bold; font-size: 80px; -unity-text-outline-width: 2px; -unity-text-outline-color: black; letter-spacing: 15px;" />
+            <ui:Label text="You have survived the ultimate challenge!" style="color: white; font-size: 22px; -unity-font-style: italic; margin-bottom: 20px;" />
+            <ui:Label text="ALL DAYS COMPLETED" style="color: rgba(255, 255, 255, 0.6); font-size: 14px; letter-spacing: 3px;" />
+        </ui:VisualElement>
+
+        <ui:VisualElement name="WaveContainer" style="position: absolute; top: 30px; right: 40px; align-items: flex-end;">
+            <ui:Label name="WaveTitle" text="WAVE 1" style="color: white; -unity-font-style: bold; font-size: 20px;" />
+            <ui:VisualElement style="flex-direction: row; align-items: center;">
+                <ui:Label text="ENEMIES REMAINING:" style="color: rgba(255, 255, 255, 0.7); font-size: 12px; margin-right: 5px;" />
+                <ui:Label name="EnemyCount" text="12" style="color: rgb(255, 50, 50); -unity-font-style: bold; font-size: 16px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="NightWarning" style="position: absolute; top: 150px; left: 0; right: 0; align-items: center; display: none;">
+            <ui:Label text="PREPARE FOR NIGHT" style="color: rgb(255, 40, 40); -unity-font-style: bold; font-size: 32px; -unity-text-outline-width: 1px; -unity-text-outline-color: black; letter-spacing: 5px;" />
+            <ui:Label text="Find shelter or gear up!" style="color: white; font-size: 14px; -unity-font-style: italic;" />
+        </ui:VisualElement>
+
         <ui:VisualElement name="HealthContainer" style="position: absolute; left: 40px; bottom: 40px; width: 250px;">
             <ui:VisualElement name="HealthBG" style="background-color: rgba(0, 0, 0, 0.6); height: 25px; border-width: 2px; border-color: rgb(255, 255, 255);">
                 <ui:VisualElement name="HealthFill" style="background-color: rgb(200, 30, 30); width: 100%; height: 100%; transition: width 0.2s ease-out-sine;" />

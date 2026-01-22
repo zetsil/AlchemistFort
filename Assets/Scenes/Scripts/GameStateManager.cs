@@ -23,6 +23,10 @@ public class GameStateManager : MonoBehaviour
     [SerializeField] public float timeRemaining;
 
     public bool IsNight => currentState == GameState.Night;
+    private Coroutine cycleCoroutine;
+
+    [Header("Runtime Status")]
+    public bool isRestoringFromSave = false; // Steag pentru a preveni logica de "New Day"
 
 
     private void Awake()
@@ -42,14 +46,44 @@ public class GameStateManager : MonoBehaviour
     {
         StartCycle(GameState.Day); 
     }
+    
+    public void SetStateManually(GameState newState, float remainingTime)
+    {
+        if (cycleCoroutine != null) StopCoroutine(cycleCoroutine);
+
+        // Activăm steagul de restaurare
+        isRestoringFromSave = true;
+
+        currentState = newState;
+        timeRemaining = remainingTime;
+
+        // Notificăm sistemele
+        if (currentState == GameState.Day) GlobalEvents.NotifyDayStart();
+        else GlobalEvents.NotifyNightStart();
+
+        // Repornim timer-ul
+        cycleCoroutine = StartCoroutine(CycleTimerCoroutine());
+        
+        // Resetăm steagul după ce evenimentele au fost procesate
+        // Folosim un mic delay sau pur și simplu la finalul frame-ului
+        StartCoroutine(ResetRestoringFlag());
+
+        Debug.Log($"<color=yellow>[GameStateManager] Restaurare: {newState}, Timp: {remainingTime}s. Wave progression blocked.</color>");
+    }
 
 
+    private IEnumerator ResetRestoringFlag()
+    {
+        yield return new WaitForEndOfFrame();
+        isRestoringFromSave = false;
+    }
 
+    
     private void StartCycle(GameState initialState)
     {
         currentState = initialState;
         timeRemaining = (initialState == GameState.Day) ? dayDuration : nightDuration;
-        
+
         // Asigură-te că evenimentul inițial este declanșat
         if (initialState == GameState.Day)
         {
