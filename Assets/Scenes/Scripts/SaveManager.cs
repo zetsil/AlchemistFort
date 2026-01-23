@@ -220,40 +220,56 @@ public class SaveManager : MonoBehaviour
         StartCoroutine(LoadSequence(folderPath));
     }
     
-    public void PerformAutoSave()
+    public void PerformAutoSave(string sceneName)
     {
         string previousSaveName = currentSaveName;
-        currentSaveName = AUTOSAVE_FOLDER_NAME;
+        currentSaveName = GetAutoSaveFolder(sceneName);
 
         string folderPath = GetCurrentSaveFolderPath();
 
-        // IMPORTANT: Actualizăm lista globală înainte de scriere
-        // Aceasta asigură că dacă am distrus ceva în scena curentă, se scrie în fișierul comun
         SaveInventory();
         SavePlayerPosition(folderPath);
         SaveWorldItemState(folderPath);
 
         currentSaveName = previousSaveName;
+
+        Debug.Log($"<color=cyan>[AutoSave] Saved scene: {sceneName}</color>");
     }
 
+
 // Funcție pentru a încărca din AutoSave (la intrarea într-o scenă nouă)
-    public bool HasAutoSave()
+    public bool HasAutoSaveForScene(string sceneName)
     {
-        string path = Path.Combine(baseSavePath, AUTOSAVE_FOLDER_NAME, "world_items.json");
+        string path = Path.Combine(
+            baseSavePath,
+            GetAutoSaveFolder(sceneName),
+            "world_items.json"
+        );
         return File.Exists(path);
     }
 
-    public void LoadFromAutoSave()
+
+    public bool HasAutoSave()
     {
-        if (!HasAutoSave()) return;
+        string currentScene = SceneManager.GetActiveScene().name;
+        return HasAutoSaveForScene(currentScene);
+    }
+
+    
+
+    public void LoadAutoSaveForScene(string sceneName)
+    {
+        if (!HasAutoSaveForScene(sceneName)) return;
 
         string previousSaveName = currentSaveName;
-        currentSaveName = AUTOSAVE_FOLDER_NAME;
+        currentSaveName = GetAutoSaveFolder(sceneName);
 
         string folderPath = GetCurrentSaveFolderPath();
         StartCoroutine(LoadSequence(folderPath));
 
         currentSaveName = previousSaveName;
+
+        Debug.Log($"<color=green>[AutoSave] Loaded scene: {sceneName}</color>");
     }
 
     private IEnumerator LoadSequence(string folderPath)
@@ -519,6 +535,12 @@ public class SaveManager : MonoBehaviour
         string filePath = Path.Combine(GetCurrentSaveFolderPath(), "inventory.json");
         File.WriteAllText(filePath, JsonUtility.ToJson(saveData, true));
     }
+
+    private string GetAutoSaveFolder(string sceneName)
+    {
+        return $"AutoSave_{sceneName}";
+    }
+
 
     public void LoadInventory()
     {

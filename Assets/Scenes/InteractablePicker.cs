@@ -87,7 +87,25 @@ public class InteractablePicker : MonoBehaviour
                         PickUpObject(pickable.gameObject);
                     }
                 }
+                else
+                {
+                    // 🆕 Tranziție de scenă (ușă / portal)
+                    SceneTransitionDoor door = hit.transform.GetComponent<SceneTransitionDoor>();
+
+                    if (door != null)
+                    {
+                        canInteract = true;
+
+                        if (Input.GetKeyDown(pickUpKey))
+                        {
+                            door.TriggerTransition();
+                        }
+                    }
+                }
             }
+
+
+            
         }
         
         // Actualizăm UI-ul de prompt (la final, după ce canInteract a fost setat)
