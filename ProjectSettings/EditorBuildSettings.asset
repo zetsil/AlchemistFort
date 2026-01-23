@@ -11,5 +11,11 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Forest.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
+  - enabled: 1
+    path: Assets/Scenes/Tavi/Main.unity
+    guid: 3d28c0b6833c76d468a96763c82d5a96
+  - enabled: 1
+    path: Assets/Scenes/Tavi/Mine.unity
+    guid: b82f34a1c2323514caac49a707d4eb63
   m_configObjects: {}
   m_UseUCBPForAssetBundles: 0
