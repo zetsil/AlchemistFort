@@ -87,6 +87,21 @@ public class InteractablePicker : MonoBehaviour
                         PickUpObject(pickable.gameObject);
                     }
                 }
+                else 
+                {
+                    SceneTransition transition = hit.transform.GetComponent<SceneTransition>();
+                    if (transition != null)
+                    {
+                        canInteract = true;
+                        // Poți seta un mesaj custom pentru UI Prompt
+                        // resourceCostMessage = "Enter " + transition.targetSceneName;
+
+                        if (Input.GetKeyDown(pickUpKey))
+                        {
+                            transition.ExecuteTransition();
+                        }
+                    }
+                }
             }
         }
         
