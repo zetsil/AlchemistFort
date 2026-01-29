@@ -180,6 +180,12 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             Debug.LogWarning($"Blocat ChangeState recursiv spre {newState.StateID} de la {CurrentStateID}");
             return;
         }
+
+        if (Agent == null || !Agent.enabled || !Agent.isOnNavMesh)
+        {
+            // Debug.LogWarning($"Agentul {gameObject.name} nu este încă gata pentru NavMesh.");
+            return; 
+        }
         // if (!this.Agent.enabled || !this.Agent.isOnNavMesh) return;
 
         // Ieși dacă starea nu se schimbă

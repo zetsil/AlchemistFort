@@ -90,7 +90,7 @@ public class PlayerHUD_Toolkit_Victory : MonoBehaviour
     private void UpdatePlayerStats()
     {
         if (playerStats == null) return;
-        healthFill.style.width = Length.Percent((float)playerStats.CurrentHealth / playerStats.MaxHealth * 100f);
+        healthFill.style.width = Length.Percent((float)playerStats.currentHealth / playerStats.MaxHealth * 100f);
         staminaFill.style.width = Length.Percent(playerStats.currentStamina / playerStats.maxStamina * 100f);
     }
 

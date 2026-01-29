@@ -8,6 +8,7 @@ TagManager:
   - Base
   - Climbable
   - Enemy
+  - Charge
   layers:
   - Default
   - TransparentFX

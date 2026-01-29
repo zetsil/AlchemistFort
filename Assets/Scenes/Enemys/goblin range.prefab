@@ -79,6 +79,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 116cff2be6965419c9b9c1c011187b1b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpawnPrefabAhead
+  ownerNPC: {fileID: 0}
   prefabToSpawn: {fileID: 6647797519169802918, guid: 10838c168e77213278c2a366ed53c2c3, type: 3}
   distanceAhead: 2
   heightOffset: 0.2
@@ -696,6 +697,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2199852700555836431}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4072376319693204502}
   m_SourcePrefab: {fileID: 100100000, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
 --- !u!1 &1755543383139863348 stripped
 GameObject:
@@ -836,6 +840,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttackController
   hitboxHandler: {fileID: 2370889176061143415}
+--- !u!114 &-4072376319693204502
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1755543383139863348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 
 --- !u!4 &7904644886674298680 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8732312633007382877, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}

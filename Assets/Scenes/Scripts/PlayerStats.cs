@@ -8,6 +8,8 @@ public class PlayerStats : AllyEntity
     public float currentStamina;
     public float staminaRegenRate = 20f;
     public float sprintCost = 30f;
+    public static event System.Action<PlayerStats> OnPlayerStatsReady;
+
 
     private FirstPersonController controller;
 
@@ -16,6 +18,8 @@ public class PlayerStats : AllyEntity
         base.Start(); // Apelează Start-ul din Entity (setează viața din SO)
         currentStamina = maxStamina;
         controller = GetComponent<FirstPersonController>();
+
+        OnPlayerStatsReady?.Invoke(this);
     }
 
     protected override void Update()
