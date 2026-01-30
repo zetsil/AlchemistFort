@@ -70,7 +70,6 @@ public class TerritorialEnemy : NPCBase, IHasBasePoint
     // Facem Override la ToWander pentru a folosi Patrol-ul nostru specific, nu cel generic
     public override void ToWander()
     {
-        Debug.Log("Wander wtf wander !!!!");
         ChangeState(patrolState);
         Agent.isStopped = false;
     }
