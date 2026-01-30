@@ -120,7 +120,7 @@ public class ChargeState : INPCState
         npc.Agent.SetDestination(tactical.activeChargePoint.position);
         
         if (npc.animator != null) 
-            npc.animator.SetInteger("State", (int)NPCBase.NPCStateID.MoveToBase); 
+            npc.animator.SetInteger("State", (int)NPCBase.NPCStateID.Wander); 
     }
 
     public void DoState(NPCBase npc)
