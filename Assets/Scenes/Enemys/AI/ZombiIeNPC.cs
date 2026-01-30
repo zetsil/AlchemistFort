@@ -202,6 +202,12 @@ public class ZombieMoveToState : INPCState
         ZombieNPC zombie = npc as ZombieNPC;
         if (zombie == null) return;
 
+        // if (npc is TacticalZombieNPC tactical &&
+        //     tactical.wasAttackWindowOpen)
+        // {
+        //     return; // ❌ NU ataca în Charge
+        // }
+
         ReevaluateTargetPriority(zombie);
 
         if (npc.Target == null) 
@@ -229,6 +235,12 @@ public class ZombieMoveToState : INPCState
     private void ReevaluateTargetPriority(ZombieNPC zombie)
     {
         Vector3 zombiePos = zombie.transform.position;
+
+        // if (zombie is TacticalZombieNPC tactical &&
+        // tactical.currentState == tactical.chargeState)
+        // {
+        //     return;
+        // }
 
         // --- PASUL A: Detecție Aliați (SphereCast) ---
         // Prioritatea 1: Dacă are ceva imediat în față, se oprește să îl bată

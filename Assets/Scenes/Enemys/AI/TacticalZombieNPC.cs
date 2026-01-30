@@ -6,14 +6,14 @@ public class TacticalZombieNPC : ZombieNPC
     [Header("Tactical Settings")]
     [Tooltip("Punctul spre care fuge după atac. Dacă e null, va căuta automat tag-ul 'Charge'.")]
     public Transform specificChargePoint;
-    
+    // hello
     // Variabile mutate aici pentru a nu polua ZombieNPC
     [HideInInspector] public Transform activeChargePoint;
     [HideInInspector] public bool hasFinishedAttackTrigger = true;
     public readonly ChargeState chargeState = new ChargeState();
 
     private EnemyAttackController attackController;
-    private bool wasAttackWindowOpen = false;
+    public bool wasAttackWindowOpen = false;
 
 
     public new void Awake()
@@ -42,23 +42,28 @@ public class TacticalZombieNPC : ZombieNPC
 
     protected override void Update()
     {
-        base.Update();
+
 
         if (attackController == null) return;
 
         // Detectăm momentul când fereastra de atac se închide
-        // (A fost deschisă cadrul trecut, dar acum e închisă)
         if (wasAttackWindowOpen && !attackController.IsAttackWindowOpen)
         {
-            if (currentState == attackState)
+            // ❌ AM SCOS condiția: if (currentState == attackState)
+            // Motiv: Uneori AttackState iese automat în Idle înainte să apucăm noi să verificăm.
+
+            // Verificăm doar să nu fim deja în Charge sau morți
+            if (currentHealth > 0)
             {
-                Debug.Log($"[Tactical] Hitbox închis. Fug la încărcare!");
+                Debug.Log($"[Tactical] Hitbox închis. FORȚEZ fuga la încărcare!");
                 ChangeState(chargeState);
             }
         }
 
         // Salvăm starea curentă pentru cadrul următor
         wasAttackWindowOpen = attackController.IsAttackWindowOpen;
+        
+        base.Update(); // Apelează logica din ZombieNPC/NPCBase
     }
 
     public Transform FindBestChargePoint()
@@ -132,5 +137,8 @@ public class ChargeState : INPCState
         }
     }
 
-    public void ExitState(NPCBase npc) { }
+    public void ExitState(NPCBase npc)
+    {
+        
+     }
 }

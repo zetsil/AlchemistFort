@@ -17,6 +17,9 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
     protected int currentStateLvl = 0;
     public enum NPCStateLvl { Safe, Atack, Run };
 
+    public bool IsStateLocked { get; protected set; } = false;
+
+
     // Lista de stări pe nivele (INPCState trebuie să fie interfața ta)
     public List<List<INPCState>> StateLevels = new List<List<INPCState>>();
 
@@ -54,8 +57,19 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
     public MoveToState moveToState = new MoveToState();
 
 
+    public void LockState()
+    {
+        IsStateLocked = true;
+    }
 
-    protected INPCState currentState;
+    public void UnlockState()
+    {
+        IsStateLocked = false;
+    }
+
+
+
+    public INPCState currentState;
     public NPCStateID CurrentStateID { get; private set; }
     private NPCStateID previousStateID;
     public Animator animator;
@@ -186,6 +200,10 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
             // Debug.LogWarning($"Agentul {gameObject.name} nu este încă gata pentru NavMesh.");
             return; 
         }
+
+        if (IsStateLocked && currentState != newState)
+        return;
+
         // if (!this.Agent.enabled || !this.Agent.isOnNavMesh) return;
 
         // Ieși dacă starea nu se schimbă
