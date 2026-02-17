@@ -67,15 +67,33 @@ public class AudioManager : MonoBehaviour
             currentTime = 0f; // Resetăm la începutul unei noi zile
         }
     }
-    
+
     private void OnEnable()
     {
         GlobalEvents.OnPlaySound += PlaySound;
+        GlobalEvents.OnPlaySoundAtPosition += PlaySoundAtPosition;
     }
 
     private void OnDisable()
     {
         GlobalEvents.OnPlaySound -= PlaySound;
+        GlobalEvents.OnPlaySoundAtPosition -= PlaySoundAtPosition;
+    }
+
+    public void PlaySoundAtPosition(string soundName, Vector3 position)
+    {
+        if (soundMap.TryGetValue(soundName, out SoundClipData soundData))
+        {
+            AudioClip clip = soundData.GetNextClip();
+
+            if (clip != null)
+            {
+                // PlayClipAtPoint creează automat un obiect temporar în scenă,
+                // setează sunetul ca fiind 3D (Spatial Blend 1.0) și îl distruge după terminare.
+                // Volumul este preluat din setările effectsAudioSource pentru consistență.
+                AudioSource.PlayClipAtPoint(clip, position, effectsAudioSource.volume);
+            }
+        }
     }
 
     // ====================================================================================

@@ -9,6 +9,12 @@ public class AllyEntity : Entity
     // 1. Override TakeDamage (opțional dacă nu adaugi logică extra)
     public override void TakeDamage(float baseDamage, ToolType attackingToolType)
     {
+
+        if (gameObject.CompareTag("Player"))
+        {
+            GlobalEvents.RequestScreenShake(0.2f, 0.1f);
+        }
+
         base.TakeDamage(baseDamage, attackingToolType);
     }
 

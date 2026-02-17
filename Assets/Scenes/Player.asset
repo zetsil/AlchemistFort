@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Player
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 100
-  name: Entity
+  name: Player
   baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 5

@@ -149,6 +149,32 @@ public abstract class Entity : MonoBehaviour
         flashCoroutine = StartCoroutine(FlashRoutine());
     }
 
+    public void ResetFlashMaterials()
+    {
+        if (flashSettings.flashMaterial != null)
+        {
+            foreach (var r in flashSettings.targetRenderers)
+            {
+                // Resets the material swap
+                if (r != null && originalMaterialsMap.ContainsKey(r))
+                    r.materials = originalMaterialsMap[r];
+            }
+        }
+        else
+        {
+            // Resets the color tinting
+            foreach (var mat in instanceMaterials)
+            {
+                if (mat == null) continue;
+                Color originalCol = originalColorsMap.ContainsKey(mat) ? originalColorsMap[mat] : Color.white;
+
+                if (mat.HasProperty("_Color")) mat.color = originalCol;
+                if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", originalCol);
+                if (mat.HasProperty("_EmissionColor")) mat.SetColor("_EmissionColor", Color.black);
+            }
+        }
+    }
+
     private IEnumerator FlashRoutine()
     {
         // 1. APLICARE FLASH

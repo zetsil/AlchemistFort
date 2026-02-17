@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: MiningCoal
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 4
-  name: Entity
+  name: MiningCoal
   baseAttackDamage: 1
   toolEffectivenesses:
   - toolType: 2

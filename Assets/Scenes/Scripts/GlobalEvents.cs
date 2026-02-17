@@ -36,6 +36,13 @@ public static class GlobalEvents
     public static event Action OnPlayerDeath;
     public static event Action OnGameWin;
     public static event Action<Entity> OnEnemyDeath;
+    public static event Action<float, float> OnScreenShakeRequested;
+    public static event Action<string, Vector3> OnPlaySoundAtPosition;
+
+    public static void TriggerPlaySoundAtPosition(string soundName, Vector3 position)
+    {
+        OnPlaySoundAtPosition?.Invoke(soundName, position);
+    }
 
     public static void NotifyEnemyDeath(Entity enemy)
     {
@@ -57,6 +64,11 @@ public static class GlobalEvents
     {
         Debug.Log("💀 GlobalEvents: Player has died.");
         OnPlayerDeath?.Invoke();
+    }
+
+    public static void RequestScreenShake(float intensity, float duration)
+    {
+        OnScreenShakeRequested?.Invoke(intensity, duration);
     }
 
     /// <summary>

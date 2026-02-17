@@ -317,6 +317,18 @@ public abstract class NPCBase : Entity // <-- MODIFICARE CHEIE AICI
 
         ChangeState(attackState);
 
+
+        float attackSoundChance = 0.4f; 
+    
+        if (UnityEngine.Random.value <= attackSoundChance && entityData != null)
+        {
+            // Construim numele sunetului: Attack_Zombie (sau orice nume are entityData)
+            string attackSoundName = "Attack_" + entityData.name;
+            
+            // Folosim noul eveniment pozițional pe care l-am creat anterior
+            GlobalEvents.TriggerPlaySoundAtPosition(attackSoundName, transform.position);
+        }
+
         // 2. Logică NavMeshAgent
         // Agentul trebuie să fie activ dacă avem o țintă
         if (Target != null && Agent != null)

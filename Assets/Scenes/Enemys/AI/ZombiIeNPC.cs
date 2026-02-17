@@ -15,6 +15,12 @@ public class ZombieNPC : NPCBase, IHasBasePoint
     [HideInInspector] public bool zombieChoseBase = false;
 
 
+    [Header("Death & Ragdoll")]
+    [SerializeField] private float destroyDelay = 5f; 
+    private Rigidbody[] ragdollRigidbodies;
+    private Collider[] ragdollColliders;
+
+
     // Proprietăți pentru interfață și logică
     public Transform BasePoint => hidePoint;
     public Transform CrystalTarget { get; private set; }
@@ -32,6 +38,13 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         // Setări specifice Zombie
         SetSpeed(1.5f);
         AttackSpeed = 2f;
+
+        // Cache all bone components
+        ragdollRigidbodies = GetComponentsInChildren<Rigidbody>();
+        ragdollColliders = GetComponentsInChildren<Collider>();
+        
+        // Ensure bones don't move on their own at start
+        ToggleRagdoll(false);
 
         // 1. Găsirea punctului de ascundere (Cripta) - ZIUA
         if (hidePoint == null)
@@ -148,13 +161,69 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         }
     }
     
+    private void ToggleRagdoll(bool isDead)
+    {
+        foreach (var rb in ragdollRigidbodies)
+        {
+            rb.isKinematic = !isDead; // Physics on when dead
+            rb.useGravity = isDead;
+        }
+        foreach (var col in ragdollColliders)
+        {
+            // Don't disable the main CapsuleCollider if it's on the root
+            if (col.gameObject != this.gameObject) 
+            {
+                col.enabled = isDead;
+            }
+        }
+    }
+    
     protected override void Die()
     {
-        // Notificăm sistemul de wave că un inamic a murit înainte de a fi distrus obiectul
+        ResetFlashMaterials();
+        // 1. STOP the knockback logic immediately
+        StopAllCoroutines(); 
+        isDead = true;
+
+        // 2. Shut down AI and Main Physics
+        if (Agent != null) 
+        {
+            Agent.isStopped = true;
+            Agent.enabled = false;
+        }
+
+        // You MUST disable the main Rigidbody and Collider 
+        // so they don't interfere with the ragdoll bones
+        Rigidbody mainRb = GetComponent<Rigidbody>();
+        if (mainRb != null) mainRb.isKinematic = true; 
+
+        Collider mainCol = GetComponent<Collider>();
+        if (mainCol != null) mainCol.enabled = false;
+
+        // 3. Disable Animator
+        if (animator != null) animator.enabled = false;
+
+        // 4. Activate Ragdoll
+        ToggleRagdoll(true);
+
+        // 5. THE FIX: Clear all velocity from the "ApplyKnockbackFromCenter"
+        foreach (var rb in ragdollRigidbodies)
+        {
+            rb.linearVelocity = Vector3.zero; // Clear stored knockback
+            rb.angularVelocity = Vector3.zero;
+            rb.Sleep(); 
+            rb.WakeUp(); // Force a fresh physics state
+        }
+
+        // 6. Base Logic (Loot and State)
+        WorldEntityState state = GetComponent<WorldEntityState>();
+        if (state != null) state.OnDeathOrPickup();
+
+        DropLoot();
         GlobalEvents.NotifyEnemyDeath(this);
-        
-        // Apelăm logica de bază (animații, distrugere loot, etc.)
-        base.Die();
+
+        // Destroy after 5 seconds
+        Destroy(gameObject, 5f);
     }
 
     // Metodă helper pentru a trece în starea de atac normală (spre player)

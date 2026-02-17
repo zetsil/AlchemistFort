@@ -18,4 +18,12 @@ MonoBehaviour:
   - timeInSeconds: 20
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
     spawnCount: 1
-    spawnRadius: 5
+    spawnRadius: 2
+  - timeInSeconds: 100
+    enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
+    spawnCount: 2
+    spawnRadius: 2
+  - timeInSeconds: 120
+    enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
+    spawnCount: 1
+    spawnRadius: 2
