@@ -87,6 +87,14 @@ public class PauseMenuManager : MonoBehaviour
     void RestartLevel()
     {
         Time.timeScale = 1f;
+
+        // 1. Curățăm datele din SaveManager înainte de load
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.ClearRuntimeCache();
+        }
+
+        // 2. Reîncărcăm scena
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 

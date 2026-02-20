@@ -307,6 +307,41 @@ public class SaveManager : MonoBehaviour
         hasCachedPlayerStats = false;
     }
 
+    // Adaugă această metodă în interiorul clasei SaveManager
+    public void ClearRuntimeCache()
+    {
+        // 1. Golim datele despre scene și obiecte
+        runtimeSceneCache.Clear();
+        currentSceneDestroyedIds.Clear();
+
+        // 2. Resetăm statisticile jucătorului
+        hasCachedPlayerStats = false;
+        cachedPlayerStats = null;
+
+        // 3. Resetăm starea globală a jocului
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.isRestoringFromSave = false;
+        }
+
+        // 4. Resetăm Inventarul (Rucsacul)
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.ClearInventory();
+        }
+
+        // 5. RESETĂM ECHIPAMENTUL (Unealta din mână)
+        if (EquippedManager.Instance != null)
+        {
+            EquippedManager.Instance.ClearEquippedSlot();
+        }
+
+        // 6. Resetăm poziția de spawn forțat
+        hasPendingSpawn = false;
+
+        Debug.Log("<color=orange>[SaveManager] Cache-ul complet (inclusiv Echipament) a fost golit pentru Restart!</color>");
+    }
+
 
 
     /// <summary>
@@ -424,12 +459,15 @@ public class SaveManager : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
 
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForSeconds(0.1f);
+
         // 3. Aplicăm datele specifice scenei curente din Cache
-        ApplyCurrentSceneState();
+        // ApplyCurrentSceneState();
 
         // 4. Inventar și Player
-        LoadInventory();
         LoadPlayerPosition(folderPath);
+        LoadInventory();
         ApplyPendingPlayerSpawn();
 
 
@@ -606,14 +644,51 @@ public class SaveManager : MonoBehaviour
     // ... (Inventory Methods - copy paste din codul tău vechi, nu necesită schimbări)
     public void SaveInventory() 
     {
-        InventorySaveData saveData = new InventorySaveData();
-        foreach (InventorySlot slot in InventoryManager.Instance.allSlots) {
-            if (slot.itemData != null && slot.count > 0) saveData.slots.Add(new SlotSaveData(slot));
+        if (InventoryManager.Instance == null)
+        {
+            Debug.LogError("<color=red>[SaveInventory] InventoryManager este NULL!</color>");
+            return;
         }
-        InventorySlot equipped = EquippedManager.Instance.GetEquippedSlot();
-        if (equipped != null && equipped.itemData != null) saveData.equippedSlot = new SlotSaveData(equipped);
-        
-        File.WriteAllText(Path.Combine(GetCurrentSaveFolderPath(), "inventory.json"), JsonUtility.ToJson(saveData, true));
+
+        InventorySaveData saveData = new InventorySaveData();
+        Debug.Log("<color=cyan>[SaveInventory] Începe procesul de salvare...</color>");
+
+        // 1. Salvare sloturi din rucsac
+        int slotsSaved = 0;
+        foreach (InventorySlot slot in InventoryManager.Instance.allSlots) 
+        {
+            if (slot.itemData != null && slot.count > 0) 
+            {
+                SlotSaveData slotData = new SlotSaveData(slot);
+                saveData.slots.Add(slotData);
+                
+                // Log special pentru unelte (Tools) să vedem durabilitatea
+                string durabilityInfo = (slotData.durability != -1f) ? $" | Durabilitate: {slotData.durability}" : "";
+                Debug.Log($"[Save] Slot Rucsac: {slotData.itemName} x{slotData.amount}{durabilityInfo} | Index: {slotData.slotIndex}");
+                
+                slotsSaved++;
+            }
+        }
+
+        // 2. Salvare obiect echipat (Unealta din mână)
+        InventorySlot equipped = EquippedManager.Instance != null ? EquippedManager.Instance.GetEquippedSlot() : null;
+        if (equipped != null && equipped.itemData != null) 
+        {
+            saveData.equippedSlot = new SlotSaveData(equipped);
+            string durabilityInfo = (saveData.equippedSlot.durability != -1f) ? $" | Durabilitate: {saveData.equippedSlot.durability}" : "";
+            Debug.Log($"<color=green>[Save] ECHIPAT: {saveData.equippedSlot.itemName}{durabilityInfo}</color>");
+        }
+        else
+        {
+            Debug.Log("[Save] Niciun obiect echipat de salvat.");
+        }
+
+        // 3. Scrierea efectivă pe disc
+        string path = Path.Combine(GetCurrentSaveFolderPath(), "inventory.json");
+        string json = JsonUtility.ToJson(saveData, true);
+        File.WriteAllText(path, json);
+
+        Debug.Log($"<color=cyan>[SaveInventory] Fișier salvat la: {path}. Total sloturi rucsac: {slotsSaved}</color>");
     }
 
     public void LoadInventory()
@@ -629,6 +704,7 @@ public class SaveManager : MonoBehaviour
                 InventorySlot newSlot = new InventorySlot(itemSO, data.slotIndex);
                 newSlot.count = data.amount;
                 if (newSlot.state != null && data.durability != -1f) newSlot.state.currentDurability = data.durability;
+                Debug.Log($"[Load] Slot rucsac: {data.itemName} | Durabilitate setată: {data.durability}");
                 InventoryManager.Instance.AddExistingSlot(newSlot);
             }
         }

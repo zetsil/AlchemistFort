@@ -2,6 +2,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
+
 [Serializable]
 public class WaveSpawnEntry
 {
@@ -25,17 +26,16 @@ public class WaveManager : MonoBehaviour
     // 1. Singleton Instance
     public static WaveManager Instance { get; private set; }
 
-    [Header("Resurse")]
-    [Tooltip("Lista de ScriptableObject-uri DayWaveData pentru fiecare zi.")]
-    public List<DayWaveData> allDayWaves;
-
-    [Tooltip("Punctul de referință (Transform) în jurul căruia se vor spawna inamicii.")]
-    public Transform spawnCenter;
+    [Header("Configurare Spawn-uri Multiple")]
+    [Tooltip("Lista punctelor de unde se vor spawna inamicii.")]
+    public List<MultiSpawnPoint> spawnPoints;
 
     // --- Stare Internă ---
     private int currentDayIndex = 0;
-    private DayWaveData currentDayData;
-    private HashSet<WaveSpawnEntry> spawnedEvents = new HashSet<WaveSpawnEntry>();
+    
+    // Urmărim ce am spawnat folosind o pereche PunctSpawn + WaveSpawnEntry
+    // Acum trebuie să știm și DIN CE punct a fost spawnat un entry pentru a nu se repeta.
+    private HashSet<(MultiSpawnPoint, WaveSpawnEntry)> spawnedEvents = new HashSet<(MultiSpawnPoint, WaveSpawnEntry)>();
 
     // Contorizare pentru condiția de victorie
     private int enemiesActive = 0;
@@ -54,13 +54,8 @@ public class WaveManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-    }
-
     private void OnEnable()
     {
-        // Ne abonăm la evenimentele de timp și moarte inamic
         GlobalEvents.OnTimeUpdate += HandleTimeUpdate;
         GlobalEvents.OnNightStart += StartNewDay;
         GlobalEvents.OnEnemyDeath += HandleEnemyDeath;
@@ -75,57 +70,55 @@ public class WaveManager : MonoBehaviour
 
     private void StartNewDay()
     {
-        
         if (GameStateManager.Instance != null && GameStateManager.Instance.isRestoringFromSave)
         {
             Debug.Log("[WaveManager] Load detectat. Se păstrează ziua curentă: " + currentDayIndex);
             return;
         }
 
-        // RefreshActiveEnemies();
-        
         currentDayIndex++;
         spawnedEvents.Clear();
         allDayEventsTriggered = false;
         winSignalSent = false;
 
-        if (currentDayIndex >= 1 && currentDayIndex <= allDayWaves.Count)
-        {
-            currentDayData = allDayWaves[currentDayIndex - 1];
-            Debug.Log($"WaveManager: A început Ziua {currentDayIndex}.");
-        }
-        else
-        {
-            currentDayData = null;
-        }
+        Debug.Log($"WaveManager: A început Ziua {currentDayIndex} pentru toate punctele de spawn.");
     }
 
     private void HandleTimeUpdate(float percentRemaining)
     {
-        if (currentDayData == null) return;
-
         float percentElapsed = 1f - percentRemaining;
-        float timeElapsed = percentElapsed * currentDayData.dayDurationSeconds;
-
         bool anyUnspawned = false;
 
-        foreach (var entry in currentDayData.spawnEntries)
+        // Iterăm prin TOATE punctele de spawn
+        foreach (var point in spawnPoints)
         {
-            if (!spawnedEvents.Contains(entry))
+            DayWaveData dayData = point.GetWaveDataForDay(currentDayIndex);
+            
+            // Dacă punctul curent nu are wave-uri pentru ziua de azi, trecem mai departe
+            if (dayData == null) continue;
+
+            float timeElapsed = percentElapsed * dayData.dayDurationSeconds;
+
+            foreach (var entry in dayData.spawnEntries)
             {
-                if (timeElapsed >= entry.timeInSeconds)
+                var eventKey = (point, entry);
+
+                if (!spawnedEvents.Contains(eventKey))
                 {
-                    TriggerWaveSpawn(entry);
-                    spawnedEvents.Add(entry);
-                }
-                else
-                {
-                    anyUnspawned = true;
+                    if (timeElapsed >= entry.timeInSeconds)
+                    {
+                        TriggerWaveSpawn(point, entry);
+                        spawnedEvents.Add(eventKey);
+                    }
+                    else
+                    {
+                        anyUnspawned = true;
+                    }
                 }
             }
         }
 
-        // Dacă toate entry-urile de spawn pentru azi au fost declanșate
+        // Dacă nicio intrare de spawn din NICIUN punct nu a rămas nespawnată pentru azi
         if (!anyUnspawned)
         {
             allDayEventsTriggered = true;
@@ -136,7 +129,7 @@ public class WaveManager : MonoBehaviour
     {
         enemiesActive--;
         Debug.Log("ba ai murit fmmm !!!!!!");
-        // Safety check: dacă contorul a luat-o razna (e negativ), îl resetăm
+        
         if (enemiesActive < 0) enemiesActive = 0;
         
         Debug.Log("cati is activi");
@@ -145,23 +138,79 @@ public class WaveManager : MonoBehaviour
         CheckWinConditions();
     }
 
+    // În WaveManager.cs
+
+    public int GetRemainingEnemiesToSpawn()
+    {
+        int remaining = 0;
+        
+        foreach (var point in spawnPoints)
+        {
+            DayWaveData dayData = point.GetWaveDataForDay(currentDayIndex);
+            if (dayData == null) continue;
+
+            foreach (var entry in dayData.spawnEntries)
+            {
+                // Dacă acest entry nu a fost încă spawnat, adunăm numărul de inamici
+                if (!spawnedEvents.Contains((point, entry)))
+                {
+                    remaining += entry.spawnCount;
+                }
+            }
+        }
+        return remaining;
+    }
+
+    // Returnează numărul de inamici care sunt DEJA în scenă (vii)
+    public int GetActiveEnemiesCount()
+    {
+        // Găsim toți zombii din scenă
+        ZombieNPC[] allZombies = UnityEngine.Object.FindObjectsByType<ZombieNPC>(FindObjectsSortMode.None);
+        
+        int activeAndVisible = 0;
+
+        foreach (var zombie in allZombies)
+        {
+            // Verificăm dacă zombiul este valid și NU se află în HideState
+            // Presupunem că ai o proprietate 'CurrentState' în NPCBase sau ZombieNPC
+            if (zombie != null && zombie.CurrentStateID != NPCBase.NPCStateID.Hide)
+            {
+                activeAndVisible++;
+            }
+        }
+
+        // Actualizăm și variabila internă pentru a fi sincronizată cu realitatea din teren
+        enemiesActive = activeAndVisible;
+        
+        return activeAndVisible;
+    }
+
     public void RefreshActiveEnemies()
     {
-        // Căutăm toate obiectele de tip ZombieNPC (sau clasa ta de bază pentru inamici)
         ZombieNPC[] enemies = UnityEngine.Object.FindObjectsByType<ZombieNPC>(FindObjectsSortMode.None);
-        
-        // Setăm contorul exact la numărul de inamici găsiți în scenă
         enemiesActive = enemies.Length;
-        
         Debug.Log($"<color=orange>[WaveManager] Contor inamici actualizat post-load: {enemiesActive}</color>");
-        
+    }
+
+    public int GetTotalEnemiesRemaining()
+    {
+        return enemiesActive;
     }
 
     private void CheckWinConditions()
     {
-        // 1. Log de diagnostic general (se execută la fiecare apel)
+        // 1. Găsim câte zile are în total campania (cel mai lung set de wave-uri dintre toate punctele)
+        int maxDaysInCampaign = 0;
+        foreach (var point in spawnPoints)
+        {
+            if (point.allDayWaves.Count > maxDaysInCampaign)
+            {
+                maxDaysInCampaign = point.allDayWaves.Count;
+            }
+        }
+
         Debug.Log($"<color=cyan>[WaveManager Debug]</color> " +
-                $"Ziua: {currentDayIndex}/{allDayWaves.Count} | " +
+                $"Ziua: {currentDayIndex}/{maxDaysInCampaign} | " +
                 $"Inamici: {enemiesActive} | " +
                 $"Spawn Terminat: {allDayEventsTriggered} | " +
                 $"Win Deja Trimis: {winSignalSent}");
@@ -169,8 +218,7 @@ public class WaveManager : MonoBehaviour
         // Verificăm condiția principală
         if (allDayEventsTriggered && enemiesActive <= 0 && !winSignalSent)
         {
-            // Verificăm dacă a fost ultima zi din lista totală
-            if (currentDayIndex >= allDayWaves.Count)
+            if (currentDayIndex >= maxDaysInCampaign)
             {
                 winSignalSent = true;
                 Debug.Log("<color=gold>🏆 WaveManager: CONDIȚII DE VICTORIE ÎNDEPLINITE! JOC CÂȘTIGAT!</color>");
@@ -178,12 +226,11 @@ public class WaveManager : MonoBehaviour
             }
             else
             {
-                Debug.Log($"<color=green>WaveManager: Ziua {currentDayIndex} terminată.</color> Se așteaptă ziua următoare (Total zile: {allDayWaves.Count}).");
+                Debug.Log($"<color=green>WaveManager: Ziua {currentDayIndex} terminată.</color> Se așteaptă ziua următoare.");
             }
         }
         else
         {
-            // 2. Log de eroare logică (ne spune DE CE nu dă win)
             if (!winSignalSent)
             {
                 string failReason = "";
@@ -198,38 +245,42 @@ public class WaveManager : MonoBehaviour
             }
         }
     }
+
     private void RecalculateDayStateAfterLoad()
     {
-        if (currentDayData == null)
-            return;
-
         if (enemiesActive <= 0)
         {
             RefreshActiveEnemies();
         }
 
-        // 1️⃣ Verificăm dacă mai există spawn-uri care NU ar fi trebuit declanșate
         bool hasUnspawnedEvents = false;
+        int totalSpawnEventsForToday = 0;
 
-        foreach (var entry in currentDayData.spawnEntries)
+        foreach (var point in spawnPoints)
         {
-            if (!spawnedEvents.Contains(entry))
+            DayWaveData dayData = point.GetWaveDataForDay(currentDayIndex);
+            if (dayData == null) continue;
+
+            totalSpawnEventsForToday += dayData.spawnEntries.Count;
+
+            foreach (var entry in dayData.spawnEntries)
             {
-                hasUnspawnedEvents = true;
-                break;
+                if (!spawnedEvents.Contains((point, entry)))
+                {
+                    hasUnspawnedEvents = true;
+                    // Nu dăm break aici pentru a putea itera prin toate și a vedea log-ul corect la final
+                }
             }
         }
 
-        // 2️⃣ Dacă NU mai sunt spawn-uri → ziua e complet declanșată
         allDayEventsTriggered = !hasUnspawnedEvents;
 
         Debug.Log(
             $"[WaveManager] Recalc after load | Day: {currentDayIndex} | " +
-            $"SpawnedEvents: {spawnedEvents.Count}/{currentDayData.spawnEntries.Count} | " +
+            $"SpawnedEvents: {spawnedEvents.Count}/{totalSpawnEventsForToday} | " +
             $"AllTriggered: {allDayEventsTriggered} | EnemiesAlive: {enemiesActive}"
         );
     }
-
 
     // --- Metode Publice ---
 
@@ -238,40 +289,43 @@ public class WaveManager : MonoBehaviour
     public void SetCurrentDay(int dayIndex)
     {
         currentDayIndex = dayIndex;
-        currentDayData = (currentDayIndex >= 1 && currentDayIndex <= allDayWaves.Count) ? allDayWaves[currentDayIndex - 1] : null;
-
         spawnedEvents.Clear();
 
-        // ADAUGĂ ACEASTA: Verifică timpul curent și marchează spawn-urile vechi ca fiind "făcute"
-        if (currentDayData != null && GameStateManager.Instance != null)
+        if (GameStateManager.Instance != null)
         {
             float totalDuration = GameStateManager.Instance.IsNight ? GameStateManager.Instance.nightDuration : GameStateManager.Instance.dayDuration;
             float percentElapsed = 1f - Mathf.Clamp01(GameStateManager.Instance.timeRemaining / totalDuration);
-            float timeElapsed = percentElapsed * currentDayData.dayDurationSeconds;
 
-            foreach (var entry in currentDayData.spawnEntries)
+            // Verificăm timpul curent pentru fiecare punct de spawn și marcăm spawn-urile vechi ca fiind "făcute"
+            foreach (var point in spawnPoints)
             {
-                if (timeElapsed >= entry.timeInSeconds)
+                DayWaveData dayData = point.GetWaveDataForDay(currentDayIndex);
+                if (dayData == null) continue;
+
+                float timeElapsed = percentElapsed * dayData.dayDurationSeconds;
+
+                foreach (var entry in dayData.spawnEntries)
                 {
-                    spawnedEvents.Add(entry); // Skip la spawn natural, îi vom încărca din JSON
+                    if (timeElapsed >= entry.timeInSeconds)
+                    {
+                        spawnedEvents.Add((point, entry)); // Skip la spawn natural, îi vom încărca din JSON
+                    }
                 }
             }
         }
 
         RecalculateDayStateAfterLoad();
-        
-
     }
 
-    private void TriggerWaveSpawn(WaveSpawnEntry entry)
+    private void TriggerWaveSpawn(MultiSpawnPoint point, WaveSpawnEntry entry)
     {
-        if (entry.enemyData == null || spawnCenter == null) return;
+        if (entry.enemyData == null || point.transform == null) return;
 
         for (int i = 0; i < entry.spawnCount; i++)
         {
             Vector3 randomOffset = UnityEngine.Random.insideUnitSphere * entry.spawnRadius;
             randomOffset.y = 0;
-            Vector3 spawnPosition = spawnCenter.position + randomOffset;
+            Vector3 spawnPosition = point.transform.position + randomOffset;
 
             if (EnemySpawner.Instance != null)
             {
@@ -280,16 +334,22 @@ public class WaveManager : MonoBehaviour
             }
         }
     }
-    
+
     public int GetTotalEnemiesForCurrentDay()
     {
-        if (currentDayData == null) return 0;
-
         int totalEnemies = 0;
-        foreach (var entry in currentDayData.spawnEntries)
+
+        foreach (var point in spawnPoints)
         {
-            totalEnemies += entry.spawnCount;
+            DayWaveData dayData = point.GetWaveDataForDay(currentDayIndex);
+            if (dayData == null) continue;
+
+            foreach (var entry in dayData.spawnEntries)
+            {
+                totalEnemies += entry.spawnCount;
+            }
         }
+
         return totalEnemies;
     }
 }

@@ -71,6 +71,8 @@ public class InventoryManager : MonoBehaviour
 
         if (remain > 0)
         {
+
+            GlobalEvents.TriggerPlaySound("Inventory_Full");
             Debug.LogWarning($"⚠️ Inventarul este plin! Nu s-au putut adăuga {remain} bucăți din {key}.");
             return false;
         }
@@ -204,89 +206,143 @@ public class InventoryManager : MonoBehaviour
 
     public bool DropItem(InventorySlot slot, int amount)
     {
-        if (slot == null || slot.itemData == null) return false;
-        if (amount <= 0 || amount > slot.count) amount = slot.count;
+        Debug.Log($"<color=cyan>[DropItem] Tentativă drop: {(slot != null && slot.itemData != null ? slot.itemData.itemName : "NULL/GOL")}, Cantitate solicitată: {amount}</color>");
+
+        if (slot == null)
+        {
+            Debug.LogError("[DropItem] Referința 'slot' este NULL!");
+            return false;
+        }
+
+        if (slot.itemData == null)
+        {
+            Debug.LogError($"[DropItem] Slotul index {slot.slotIndex} are 'itemData' NULL!");
+            return false;
+        }
+
+        if (amount <= 0 || amount > slot.count) 
+        {
+            Debug.Log($"[DropItem] Ajustare cantitate de la {amount} la {slot.count}");
+            amount = slot.count;
+        }
 
         if (ItemVisualManager.Instance == null)
         {
-            Debug.LogError("ItemVisualManager lipsește!");
+            Debug.LogError("[DropItem] ItemVisualManager lipsește din scenă!");
             return false;
         }
 
         GameObject itemPrefab = ItemVisualManager.Instance.GetItemVisualPrefab(slot.itemData);
-        if (itemPrefab == null) return false;
+        if (itemPrefab == null)
+        {
+            Debug.LogError($"[DropItem] Nu s-a găsit prefab pentru {slot.itemData.itemName} în ItemVisualManager!");
+            return false;
+        }
 
         Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (playerTransform == null) return false;
+        if (playerTransform == null)
+        {
+            Debug.LogWarning("[DropItem] Player-ul nu a fost găsit (Tag 'Player'). Folosesc Vector3.zero.");
+        }
 
         Camera mainCamera = Camera.main;
         Vector3 dropPosition = (mainCamera != null) 
             ? mainCamera.transform.position + mainCamera.transform.forward * dropDistance 
-            : playerTransform.position + playerTransform.forward * dropDistance;
+            : (playerTransform != null ? playerTransform.position + playerTransform.forward * dropDistance : Vector3.zero);
 
         // --- LOGICA DE INSTANȚIERE ȘI SALVARE ---
         GameObject droppedObject = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
+        Debug.Log($"[DropItem] Obiect spawned în lume la {dropPosition}");
 
-        // 1. Accesăm componenta de stare pentru salvare
         WorldEntityState state = droppedObject.GetComponent<WorldEntityState>();
         if (state != null)
         {
-            // 2. Marcăm obiectul ca fiind spawnat la runtime (pentru a fi inclus în Whitelist)
             state.isSpawnedAtRuntime = true;
-
-            // 3. Generăm ID-ul unic pentru acest obiect nou
             state.uniqueID = System.Guid.NewGuid().ToString();
 
-            // 4. Păstrăm starea obiectului (ex: durabilitatea dacă este o unealtă)
             if (slot.state != null)
             {
                 state.currentHealthOrDurability = slot.state.currentDurability;
+                Debug.Log($"[DropItem] Durabilitate transferată pe obiect: {state.currentHealthOrDurability}");
             }
 
             Debug.Log($"✅ [SAVE SYSTEM] Referință salvată pentru {slot.itemData.itemName} (ID: {state.uniqueID})");
         }
-        // ----------------------------------------
+        else
+        {
+            Debug.LogWarning($"[DropItem] Prefab-ul {slot.itemData.itemName} NU are componenta WorldEntityState! Nu se va salva la Load.");
+        }
 
-        // Eliminarea din inventar
-        DecreaseItem(slot.itemData.itemName, amount);
+        // --- ELIMINAREA ---
+        string nameToDecrease = slot.itemData.itemName;
+        Debug.Log($"[DropItem] Încerc eliminarea a {amount} bucăți de {nameToDecrease} din inventar...");
+        
+        // ATENȚIE: Dacă slotul are index -1 (echipat), DecreaseItem s-ar putea să nu îl găsească 
+        // în listele normale de inventar!
+        bool removed = DecreaseItem(nameToDecrease, amount);
+        
+        if (removed)
+            Debug.Log($"<color=green>[DropItem] Succes total: {nameToDecrease} aruncat și eliminat.</color>");
+        else
+            Debug.LogWarning($"<color=orange>[DropItem] Obiectul a fost aruncat, dar 'DecreaseItem' a returnat FALSE (posibilă problemă la liste).</color>");
 
         return true;
     }
 
     public bool AddExistingSlot(InventorySlot slot)
     {
-        // Verificăm dacă inventarul este plin, ignorând faptul că slotul există deja
-        if (current_slots >= max_slots)
+        if (slot == null || slot.itemData == null) return false;
+        
+        // VERIFICARE CRITICĂ: Forțăm count-ul la 1 dacă e o unealtă care se întoarce
+        if (slot.count <= 0) 
         {
-            Debug.LogError($"⚠️ Inventarul este plin! Nu se poate returna slotul {slot.itemData.itemName}.");
+            Debug.Log($"[Inventory] Fix: Am setat count la 1 pentru {slot.itemData.itemName} care era 0.");
+            slot.count = 1;
+        }
+
+        if (current_slots >= max_slots) 
+        {
+            Debug.LogWarning("Inventar plin!");
             return false;
         }
 
-        string key = slot.itemData.itemName;
+        // Găsim un index vizual valid (0-5)
+        slot.slotIndex = GetFirstAvailableIndex(); 
 
-        if (!inventory.ContainsKey(key))
+        if (!allSlots.Contains(slot))
         {
-            inventory[key] = new List<InventorySlot>();
+            allSlots.Add(slot);
+            string key = slot.itemData.itemName;
+            if (!inventory.ContainsKey(key)) inventory[key] = new List<InventorySlot>();
+            inventory[key].Add(slot);
+            current_slots++;
         }
 
-        // 1. Adăugăm slotul în map-ul de inventar și în lista globală
-        inventory[key].Add(slot);
-        allSlots.Add(slot);
-
-        // 2. Incrementăm numărul de sloturi folosite
-        current_slots++;
-
-        // 3. Ne asigurăm că slotIndex-ul nu se suprapune cu următoarele sloturi noi
-        // Deși nu ar trebui să se întâmple dacă EquippedManager gestionează corect,
-        // actualizăm indexul global pentru siguranță, deși acest slot are deja un index.
-        if (slot.slotIndex >= nextSlotIndex)
-        {
-            nextSlotIndex = slot.slotIndex + 1;
-        }
-
-        Debug.Log($"✅ Slotul {slot.itemData.itemName} a fost reintegrat în inventar.");
         UpdateDebugList();
+        Debug.Log($"✅ {slot.itemData.itemName} a revenit în inventar la slot {slot.slotIndex} cu count {slot.count}.");
         return true;
+    }
+
+    // Metodă nouă pentru a găsi primul slot liber între 0 și max_slots
+    private int GetFirstAvailableIndex()
+    {
+        // Creăm un set cu indecșii deja ocupați
+        HashSet<int> occupiedIndices = new HashSet<int>();
+        foreach (var s in allSlots)
+        {
+            occupiedIndices.Add(s.slotIndex);
+        }
+
+        // Căutăm prima cifră liberă de la 0 la 5
+        for (int i = 0; i < max_slots; i++)
+        {
+            if (!occupiedIndices.Contains(i))
+            {
+                return i;
+            }
+        }
+
+        return 0; // Fallback
     }
     
     public void ClearInventory()

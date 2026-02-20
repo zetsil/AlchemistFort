@@ -128,11 +128,30 @@ public class PlayerHUD_Toolkit_Victory : MonoBehaviour
         int currentDay = waveManager.GetCurrentDayIndex(); 
         waveTitleLabel.text = $"DAY {currentDay}";
 
-        // Numărăm inamicii vii folosind clasa de bază sau specifică
-        int aliveEnemies = Object.FindObjectsByType<ZombieNPC>(FindObjectsSortMode.None).Length;
-        int totalEnemiesInWave = waveManager.GetTotalEnemiesForCurrentDay();
+        // 1. Inamicii care sunt deja spawnați și umblă prin scenă
+        int currentlyActive = waveManager.GetActiveEnemiesCount();
+        
+        // 2. Inamicii care urmează să apară până la finalul zilei (din coada de spawn)
+        int pendingSpawn = waveManager.GetRemainingEnemiesToSpawn();
 
-        enemyCountLabel.text = $"{aliveEnemies} / {totalEnemiesInWave}";
-        enemyCountLabel.style.color = aliveEnemies > 0 ? new StyleColor(Color.red) : new StyleColor(Color.white);
+        // 3. Totalul real pe care jucătorul trebuie să îl elimine pentru a termina ziua/jocul
+        int totalToEliminate = currentlyActive + pendingSpawn;
+
+        // Afișaj: 0 / 15 (unde 15 scade spre 0 pe măsură ce mor)
+        enemyCountLabel.text = $"{currentlyActive}/ {totalToEliminate}";
+
+        // Schimbăm culoarea în funcție de gravitate
+        if (totalToEliminate > 0)
+        {
+            // Roșu dacă sunt mulți, alb dacă sunt puțini
+            enemyCountLabel.style.color = totalToEliminate > 5 
+                ? new StyleColor(Color.red) 
+                : new StyleColor(new Color(1f, 0.7f, 0.7f)); // Un roșu pal/roz
+        }
+        else
+        {
+            enemyCountLabel.style.color = new StyleColor(Color.green);
+            enemyCountLabel.text = "CLEARED";
+        }
     }
 }

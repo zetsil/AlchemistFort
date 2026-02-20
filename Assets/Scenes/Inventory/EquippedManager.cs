@@ -88,6 +88,23 @@ public class EquippedManager : MonoBehaviour
 
         Debug.Log($"[EquippedManager] Unealta {currentEquippedSlot.itemData.itemName} a fost echipată.");
     }
+    
+    // Adaugă asta în EquippedManager.cs
+    public void ClearEquippedSlot()
+    {
+        if (currentEquippedSlot != null)
+        {
+            // Notificăm unealta că a fost dezechipată (pentru a opri animații/sunete)
+            currentEquippedSlot.ToolItemData?.Unequip();
+        }
+
+        currentEquippedSlot = null;
+        
+        // Anunțăm UI-ul să golească slotul vizual de echipament
+        OnSlotEquippedStateChanged?.Invoke(null);
+        
+        Debug.Log("<color=cyan>[EquippedManager] Slotul de echipament a fost resetat.</color>");
+    }
 
     /// <summary>
     /// Încearcă să returneze slotul echipat înapoi în inventarul stocabil.
@@ -95,34 +112,40 @@ public class EquippedManager : MonoBehaviour
     public void UnequipTool()
     {
         if (currentEquippedSlot == null) return;
-        
-        InventorySlot slotToUnequip = currentEquippedSlot;
-        
-        // 1. Încearcă să returnezi slotul înapoi în inventar
-        bool success = InventoryManager.Instance.AddExistingSlot(slotToUnequip);
+
+        // Păstrăm referința locală solidă
+        InventorySlot slotToReturn = currentEquippedSlot;
+
+        // IMPORTANT: Nu setăm currentEquippedSlot pe null încă! 
+        // Îl ținem până când știm sigur că a ajuns în siguranță în inventar.
+
+        // 1. Încercăm mutarea
+        bool success = InventoryManager.Instance.AddExistingSlot(slotToReturn);
 
         if (success)
         {
-            // 2. Deconectare și Curățare
-            ToolController equippedController = FindToolControllerInScene(); 
+            // 2. Curățăm controlerul vizual
+            ToolController equippedController = FindToolControllerInScene();
             if (equippedController != null)
             {
-                // equippedController.equippedSlot = null;
+                // Opțional: Spune-i controlerului să se oprească din randare
+                // equippedController.ClearVisuals(); 
             }
 
-            slotToUnequip.ToolItemData?.Unequip(); 
-            
+            // 3. Notificăm ScriptableObject-ul (doar date)
+            slotToReturn.ToolItemData?.Unequip();
+
+            // 4. ABIA ACUM eliberăm referința din EquippedManager
             currentEquippedSlot = null;
-            
-            // Anunță dezechiparea
+
+            // 5. Forțăm reîmprospătarea UI-ului pentru a lega noile butoane de noua referință din rucsac
             OnSlotEquippedStateChanged?.Invoke(null);
             
-            Debug.Log($"[EquippedManager] Slotul {slotToUnequip.itemData.itemName} a fost dezechipat și returnat.");
+            Debug.Log($"<color=green>[EquippedManager] {slotToReturn.itemData.itemName} a fost transferat cu succes în InventoryManager.</color>");
         }
         else
         {
-            // Dezechipare eșuată (inventar plin) - Slotul rămâne ECHIPAT.
-            Debug.LogError($"⚠️ Dezechiparea {slotToUnequip.itemData.itemName} a eșuat! Inventarul stocabil este plin.");
+            Debug.LogError("⚠️ Inventar plin! Unealta rămâne în mână.");
         }
     }
 
