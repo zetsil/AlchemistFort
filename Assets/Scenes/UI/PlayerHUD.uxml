@@ -29,9 +29,9 @@
             </ui:VisualElement>
         </ui:VisualElement>
 
-        <ui:VisualElement name="NightWarning" style="position: absolute; top: 150px; left: 0; right: 0; align-items: center; display: none;">
-            <ui:Label text="PREPARE FOR NIGHT" style="color: rgb(255, 40, 40); -unity-font-style: bold; font-size: 32px; -unity-text-outline-width: 1px; -unity-text-outline-color: black; letter-spacing: 5px;" />
-            <ui:Label text="Find shelter or gear up!" style="color: white; font-size: 14px; -unity-font-style: italic;" />
+        <ui:VisualElement name="NightWarning" style="position: absolute; top: 80px; left: 0; right: 0; align-items: center; display: none;">
+            <ui:Label text="GO DEFEND THE CRYSTAL" style="color: rgb(255, 180, 0); -unity-font-style: bold; font-size: 24px; -unity-text-outline-width: 1px; -unity-text-outline-color: black; letter-spacing: 3px;" />
+            <ui:Label text="The creatures of the night are coming!" style="color: rgba(255, 255, 255, 0.9); font-size: 13px; -unity-font-style: italic; letter-spacing: 1px;" />
         </ui:VisualElement>
 
         <ui:VisualElement name="HealthContainer" style="position: absolute; left: 40px; bottom: 40px; width: 250px;">

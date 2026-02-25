@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc820c202704a3dd492607e19cff509f, type: 3}
   m_Name: LightBonfireRE
   m_EditorClassIdentifier: Assembly-CSharp::ActionRecipeSO
-  actionName: Actiune Generica
-  description: Descriere pentru UI
+  actionName: Invoke the Shield
+  description: Raise the walls of light and seal the perimeter before the first claw
+    strikes.
   actionLogic: {fileID: 11400000, guid: 9586aac93593c619e8d02c9da012ef81, type: 2}
   actionIcon: {fileID: 21300000, guid: 83dfb64ee3665c249adb7d6ea2a61573, type: 3}
   requiredItems:

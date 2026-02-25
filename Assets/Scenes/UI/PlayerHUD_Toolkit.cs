@@ -20,6 +20,7 @@ public class PlayerHUD_Toolkit_Victory : MonoBehaviour
 
     [Header("Setări Alertă")]
     public float nightWarningThreshold = 0.2f;
+    private bool isNightNow = false;
 
     void OnEnable()
     {
@@ -37,10 +38,12 @@ public class PlayerHUD_Toolkit_Victory : MonoBehaviour
 
         gameOverScreen = root.Q<VisualElement>("GameOverScreen");
         winScreen = root.Q<VisualElement>("WinScreen");
+        
 
         // ABONARE LA EVENIMENTE
         GlobalEvents.OnPlayerDeath += HandlePlayerDeath;
         GlobalEvents.OnGameWin += HandleGameWin;
+        GlobalEvents.OnTimeUpdate += HandleTimeUpdate;
 
         // Referințe Scripturi
         GameObject player = GameObject.FindWithTag("Player");
@@ -58,8 +61,29 @@ public class PlayerHUD_Toolkit_Victory : MonoBehaviour
     void Update()
     {
         UpdatePlayerStats();
-        UpdateTimeUI();
+        // UpdateTimeUI();
         UpdateWaveInfo();
+    }
+
+    private void HandleTimeUpdate(float percentRemaining, bool isNight)
+    {
+        isNightNow = isNight;
+        
+        // Actualizăm Progress Bar-ul de timp aici (e mai eficient decât în Update)
+        timeFill.style.width = Length.Percent(percentRemaining * 100f);
+
+        if (isNight)
+        {
+            timeFill.style.backgroundColor = new StyleColor(new Color(0.5f, 0f, 0.8f));
+            timeLabel.text = "SURVIVE THE NIGHT";
+            nightWarning.style.display = DisplayStyle.None;
+        }
+        else
+        {
+            timeFill.style.backgroundColor = new StyleColor(new Color(0f, 0.75f, 1f));
+            timeLabel.text = "TIME UNTIL NIGHT";
+            nightWarning.style.display = (percentRemaining <= nightWarningThreshold) ? DisplayStyle.Flex : DisplayStyle.None;
+        }
     }
 
     private void HandlePlayerDeath()
@@ -123,30 +147,38 @@ public class PlayerHUD_Toolkit_Victory : MonoBehaviour
     private void UpdateWaveInfo()
     {
         if (waveManager == null) waveManager = WaveManager.Instance;
-        if (waveManager == null) return;
+        if (waveManager == null || GameStateManager.Instance == null) return;
 
-        int currentDay = waveManager.GetCurrentDayIndex(); 
+        int currentDay = GameStateManager.Instance.currentDay;
+        bool isNight = GameStateManager.Instance.IsNight;
+
+        // Actualizăm titlul zilei (asta poate rămâne vizibilă mereu)
         waveTitleLabel.text = $"DAY {currentDay}";
 
-        // 1. Inamicii care sunt deja spawnați și umblă prin scenă
-        int currentlyActive = waveManager.GetActiveEnemiesCount();
-        
-        // 2. Inamicii care urmează să apară până la finalul zilei (din coada de spawn)
-        int pendingSpawn = waveManager.GetRemainingEnemiesToSpawn();
+        // --- LOGICA DE ASCUNDERE ---
+        if (!isNight)
+        {
+            // Ascunde complet label-ul de inamici pe timpul zilei
+            enemyCountLabel.style.display = DisplayStyle.None;
+            return; 
+        }
+        else
+        {
+            // Afișează label-ul când vine noaptea
+            enemyCountLabel.style.display = DisplayStyle.Flex;
+        }
 
-        // 3. Totalul real pe care jucătorul trebuie să îl elimine pentru a termina ziua/jocul
+        // --- LOGICA DE NOAPTE (Numărare inamici) ---
+        int currentlyActive = waveManager.GetActiveEnemiesCount();
+        int pendingSpawn = waveManager.GetRemainingEnemiesToSpawn();
         int totalToEliminate = currentlyActive + pendingSpawn;
 
-        // Afișaj: 0 / 15 (unde 15 scade spre 0 pe măsură ce mor)
-        enemyCountLabel.text = $"{currentlyActive}/ {totalToEliminate}";
-
-        // Schimbăm culoarea în funcție de gravitate
         if (totalToEliminate > 0)
         {
-            // Roșu dacă sunt mulți, alb dacă sunt puțini
+            enemyCountLabel.text = $"{currentlyActive} / {totalToEliminate}";
             enemyCountLabel.style.color = totalToEliminate > 5 
                 ? new StyleColor(Color.red) 
-                : new StyleColor(new Color(1f, 0.7f, 0.7f)); // Un roșu pal/roz
+                : new StyleColor(new Color(1f, 0.7f, 0.7f));
         }
         else
         {

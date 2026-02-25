@@ -159,6 +159,7 @@ GameObject:
   - component: {fileID: 272386472035071800}
   - component: {fileID: 1824453566446265569}
   - component: {fileID: 1112612402122867124}
+  - component: {fileID: 8843783499230907641}
   m_Layer: 0
   m_Name: SimpleRock (1)
   m_TagString: Pickable
@@ -315,12 +316,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 6714627336755734540}
+  uiForItemPickUp: 0
+  customUIHeight: 0.8
   actionLevels:
   - recipes:
     - {fileID: 11400000, guid: c0060c6dec06c7925a749aff8b096fb1, type: 2}
   currentActionLevel: 0
   actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
-  uiAnchor: {fileID: 6714627336755734540}
 --- !u!114 &1112612402122867124
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -337,6 +340,22 @@ MonoBehaviour:
   hideOnlyInteractionButtons: 1
   recheckInterval: 1
   shouldReinitialize: 1
+--- !u!114 &8843783499230907641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2939073326991924188}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 
 --- !u!1 &3344489364071539739
 GameObject:
   m_ObjectHideFlags: 0

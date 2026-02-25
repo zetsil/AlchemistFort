@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a06461ad318fee03b380eb2dab2f000, type: 3}
+  m_Name: BloodBall
+  m_EditorClassIdentifier: Assembly-CSharp::Item
+  itemName: BloodBall
+  icon: {fileID: 21300000, guid: 85067ddaf1d89238fa4491e388e2cbde, type: 3}
+  description: A floating sphere of condensed sanguine energy. Once cast, the Blood
+    Ball hovers at the target location, autonomously scanning for threats. It unleashes
+    rapid bolts of life-force at any nearby enemies within its radius.
+  stackSize: 10
+  amount: 1
+  maxDurability: 1
+  durabilityLossPerUse: 0

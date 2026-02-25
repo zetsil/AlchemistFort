@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e492c7aa95d2af2db2363f6ae3330ac, type: 3}
   m_Name: WodenWal
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
-  maxHealth: 5
+  maxHealth: 50
   name: WodenWall
   baseAttackDamage: 1
   toolEffectivenesses:

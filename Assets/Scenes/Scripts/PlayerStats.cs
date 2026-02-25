@@ -10,8 +10,50 @@ public class PlayerStats : AllyEntity
     public float sprintCost = 30f;
     public static event System.Action<PlayerStats> OnPlayerStatsReady;
 
+    private bool isInToxicGas = false;
+
 
     private FirstPersonController controller;
+
+
+    private void OnEnable()
+    {
+        // Ne abonăm la semnalele specifice emise de ToxicityListener
+        GlobalEvents.OnToxicGasStart += StartToxicityEffect;
+        GlobalEvents.OnToxicGasStop += StopToxicityEffect;
+    }
+
+    private void OnDisable()
+    {
+        // Dezabonare pentru a evita memory leaks
+        GlobalEvents.OnToxicGasStart -= StartToxicityEffect;
+        GlobalEvents.OnToxicGasStop -= StopToxicityEffect;
+    }
+
+
+    private void StartToxicityEffect()
+    {
+        isInToxicGas = true;
+        Debug.Log("<color=green>PlayerStats: Recieved Toxic Gas Start Signal!</color>");
+        // Aici poți adăuga un efect vizual pe cameră (ex: overlay verde)
+    }
+
+    private void StopToxicityEffect()
+    {
+        isInToxicGas = false;
+        Debug.Log("<color=red>PlayerStats: Recieved Toxic Gas Stop Signal!</color>");
+    }
+
+    public void TakeToxicDamage(float amount)
+    {
+        if (isDead) return;
+
+        base.TakeDamage(amount, ToolType.Claw);
+        
+        Debug.Log($"<color=purple>☣️ Player taking {amount} toxic damage! Health remaining: {currentHealth}</color>");
+        
+        // OPȚIONAL: Poți adăuga un "screen shake" mic sau un sunet de tuse aici
+    }
 
     protected override void Start()
     {

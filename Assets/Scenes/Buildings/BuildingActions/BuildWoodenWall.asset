@@ -18,7 +18,7 @@ MonoBehaviour:
   actionIcon: {fileID: 21300000, guid: 2607800ccb7863079b43e4255d07669f, type: 3}
   requiredItems:
   - requiredItem: {fileID: 11400000, guid: 4ceedfbca7092e5a980203376f3b679c, type: 2}
-    amount: 4
+    amount: 5
   genericValue: 0
   resultItem: {fileID: 0}
   targetState: Completed

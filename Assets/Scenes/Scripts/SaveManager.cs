@@ -4,21 +4,18 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.SceneManagement;
 
-
-
 // =========================================================
-// 1. INVENTAR & PLAYER (Rămân neschimbate)
+// 1. INVENTAR & PLAYER
 // =========================================================
 
 [System.Serializable]
 public class SlotSaveData
 {
-    public string itemName;      // ID-ul (numele din ScriptableObject)
-    public int amount;           // Cantitatea
-    public int slotIndex;        // Indexul slotului (-1 pt echipament, 0-x pt rucsac)
-    public float durability;     // Durabilitate (dacă e cazul)
+    public string itemName;
+    public int amount;
+    public int slotIndex;
+    public float durability;
 
-    // Constructor gol pentru JSON
     public SlotSaveData() { }
 
     public SlotSaveData(InventorySlot slot)
@@ -57,61 +54,47 @@ public class PlayerPositionData
 
 
 // =========================================================
-// 2. OBIECTE DIN LUME (Dropate / Inamici)
+// 2. SISTEM UNIFICAT DE ENTITĂȚI (Inamici, Copaci, Drop-uri)
 // =========================================================
 
 [System.Serializable]
-public class DroppedItemSaveData
+public class EntitySaveData
 {
-    public string itemName;
-    public Vector3 position;
-    public Vector3 rotation;
-    public float durability;
-
-    public DroppedItemSaveData() { }
-
-    public DroppedItemSaveData(WorldEntityState worldState)
-    {
-        // 1. Încercăm să luăm numele de pe ItemPickup (item mic)
-        var pickup = worldState.GetComponent<ItemPickup>();
-        if (pickup != null && pickup.itemData != null)
-        {
-            this.itemName = pickup.itemData.itemName;
-        }
-        else
-        {
-            // 2. Dacă nu e pickup, verificăm dacă e Entity (structură construită)
-            var entity = worldState.GetComponent<Entity>();
-            if (entity != null && entity.entityData != null)
-            {
-                this.itemName = entity.entityData.name;
-            }
-        }
-
-        this.position = worldState.transform.position;
-        this.rotation = worldState.transform.eulerAngles;
-        this.durability = worldState.currentHealthOrDurability;
-    }
-}
-
-[System.Serializable]
-public class EnemySaveData
-{
-    public string enemyName; // Numele din EntityData (ex: "Zombie_Basic")
+    public string entityName;      // Numele din EntityData sau ItemData
+    public string uniqueID;        // ID-ul (pentru obiectele statice din scenă)
     public Vector3 position;
     public Vector3 rotation;
     public float currentHealth;
+    public bool isSpawnedAtRuntime;
 
-    public EnemySaveData() { }
+    public EntitySaveData() { }
 
-    public EnemySaveData(ZombieNPC enemy)
+    public EntitySaveData(Entity entity)
     {
-        if (enemy.entityData != null)
-            this.enemyName = enemy.entityData.name;
-        
-        this.position = enemy.transform.position;
-        this.rotation = enemy.transform.eulerAngles;
-        this.currentHealth = enemy.CurrentHealth; 
+        // 1. Numele entității
+        var pickup = entity.GetComponent<ItemPickup>();
+        if (pickup != null && pickup.itemData != null)
+            this.entityName = pickup.itemData.itemName;
+        else if (entity.entityData != null)
+            this.entityName = entity.entityData.name;
+
+        // 2. ID-ul și Starea
+        var worldState = entity.GetComponent<WorldEntityState>();
+        if (worldState != null)
+        {
+            this.uniqueID = worldState.uniqueID;
+            this.isSpawnedAtRuntime = worldState.isSpawnedAtRuntime;
+        }
+        else
+        {
+            // Dacă entitatea nu are WorldEntityState (ex: Zombie simplu), o considerăm de runtime
+            this.isSpawnedAtRuntime = true;
+        }
+
+        // 3. Poziție și Viață
+        this.position = entity.transform.position;
+        this.rotation = entity.transform.eulerAngles;
+        this.currentHealth = entity.currentHealth;
     }
 }
 
@@ -122,36 +105,26 @@ public class EnemySaveData
 [System.Serializable]
 public class GameProgressSaveData
 {
-    // Starea Ciclului Zi/Noapte
     public GameStateManager.GameState currentState;
     public float timeRemaining;
-
-    // Starea Valurilor
     public int currentDayIndex;
-
-    // Scena în care s-a dat Save
     public string currentSceneName;
 }
 
 // =========================================================
-// 4. SISTEMUL NOU DE SCENE (IERARHIC)
+// 4. SISTEMUL DE SCENE (IERARHIC)
 // =========================================================
 
-// Datele specifice UNEI SINGURE scene (ce ținem în Cache)
 [System.Serializable]
 public class SceneSaveData
 {
-    // Obiectele originale distruse în ACEASTĂ scenă (copaci, pietre)
+    // Obiectele originale distruse în ACEASTĂ scenă (copaci morți, pietre sparte)
     public List<string> destroyedOriginals = new List<string>();
 
-    // Obiectele noi apărute în ACEASTĂ scenă (drop-uri, construcții)
-    public List<DroppedItemSaveData> droppedItems = new List<DroppedItemSaveData>();
-
-    // Inamicii activi în ACEASTĂ scenă
-    public List<EnemySaveData> activeEnemies = new List<EnemySaveData>();
+    // TOATE entitățile care sunt în viață (Statice lovite, Drop-uri, Zombii)
+    public List<EntitySaveData> activeEntities = new List<EntitySaveData>();
 }
 
-// Wrapper pentru a salva Dictionary-ul în JSON (JsonUtility nu știe Dictionary simplu)
 [System.Serializable]
 public class SceneSaveEntry
 {
@@ -165,22 +138,15 @@ public class SceneSaveEntry
     }
 }
 
-// Structura finală a fișierului "world_items.json"
 [System.Serializable]
 public class WorldSaveData
 {
-    // 1. Progresul General (valabil pentru tot jocul)
     public GameProgressSaveData gameProgress = new GameProgressSaveData();
-
-    // 2. Lista cu datele fiecărei scene vizitate (Forest, Cave, etc.)
-    // Aceasta înlocuiește listele vechi "plate"
     public List<SceneSaveEntry> sceneDataList = new List<SceneSaveEntry>();
 }
 
 public class SaveManager : MonoBehaviour
 {
-
-    // Spawn temporar folosit DOAR la tranziții
     private bool hasPendingSpawn = false;
     private Vector3 pendingSpawnPosition;
     private float pendingSpawnYaw;
@@ -200,14 +166,8 @@ public class SaveManager : MonoBehaviour
     private string baseSavePath;
     public string currentSaveName = "Salvarea_1";
     
-    // CACHE-UL: Aici ținem minte datele tuturor scenelor vizitate în sesiunea curentă
-    // Key = Numele Scenei, Value = Datele (obiecte distruse, inamici, etc.)
     private Dictionary<string, SceneSaveData> runtimeSceneCache = new Dictionary<string, SceneSaveData>();
-
-    // Lista locală pentru scena CURENTĂ (pentru acces rapid la distrugeri)
     public List<string> currentSceneDestroyedIds = new List<string>();
-
-    private const string AUTOSAVE_FOLDER_NAME = "AutoSave_Transition";
 
     private void Awake()
     {
@@ -232,122 +192,71 @@ public class SaveManager : MonoBehaviour
     // 1. LOGICA DE CACHE (MEMORIE)
     // ----------------------------------------------------------------
 
-    /// <summary>
-    /// Această funcție "fotografiază" starea scenei curente și o pune în RAM (Cache).
-    /// Se apelează înainte de Save pe disc sau înainte de schimbarea scenei.
-    /// </summary>
     public void CacheCurrentSceneState()
     {
         string currentSceneName = SceneManager.GetActiveScene().name;
         SceneSaveData dataToCache = new SceneSaveData();
 
-        // A. Salvăm ID-urile distruse (din lista locală)
         dataToCache.destroyedOriginals = new List<string>(currentSceneDestroyedIds);
 
-        // B. Salvăm obiectele dropate/construite
-        WorldEntityState[] allStates = GameObject.FindObjectsOfType<WorldEntityState>();
-        foreach (WorldEntityState state in allStates)
+        // Aici unificăm salvarea: Găsim TOATE entitățile
+        Entity[] allEntities = Object.FindObjectsByType<Entity>(FindObjectsSortMode.None);
+        foreach (Entity entity in allEntities)
         {
-            if (state.isSpawnedAtRuntime)
-            {
-                dataToCache.droppedItems.Add(new DroppedItemSaveData(state));
-            }
+            // Nu salvăm Player-ul aici sau uneltele din mâna lui
+            if (entity.CompareTag("Player") || entity.transform.root.CompareTag("Player")) continue;
+            
+            // Nu salvăm entitățile deja moarte
+            if (entity.currentHealth <= 0) continue;
+
+            dataToCache.activeEntities.Add(new EntitySaveData(entity));
         }
 
-        // C. Salvăm Inamicii
-        ZombieNPC[] enemies = Object.FindObjectsByType<ZombieNPC>(FindObjectsSortMode.None);
-        foreach (var enemy in enemies)
-        {
-            if (enemy.CurrentHealth > 0)
-            {
-                dataToCache.activeEnemies.Add(new EnemySaveData(enemy));
-            }
-        }
-
-        // D. Introducem în Cache
         if (runtimeSceneCache.ContainsKey(currentSceneName))
-        {
             runtimeSceneCache[currentSceneName] = dataToCache;
-        }
         else
-        {
             runtimeSceneCache.Add(currentSceneName, dataToCache);
-        }
 
-        Debug.Log($"<color=yellow>[Cache] Scena '{currentSceneName}' a fost salvată în memorie.</color>");
+        Debug.Log($"<color=yellow>[Cache] Scena '{currentSceneName}' a fost salvată. Entități: {dataToCache.activeEntities.Count}</color>");
     }
     
     private void CachePlayerRuntimeStats()
     {
         if (FirstPersonController.Instance == null) return;
-
         PlayerStats stats = FirstPersonController.Instance.GetComponent<PlayerStats>();
         if (stats == null) return;
 
         cachedPlayerStats = new PlayerRuntimeStats
         {
-            health = stats.currentHealth,   // din Entity
+            health = stats.currentHealth,
             stamina = stats.currentStamina
         };
-
         hasCachedPlayerStats = true;
     }
     
     private void ApplyCachedPlayerRuntimeStats(PlayerStats stats)
     {
         if (!hasCachedPlayerStats) return;
-
         stats.currentHealth = (int)cachedPlayerStats.health;
-        stats.currentStamina = Mathf.Clamp(
-            cachedPlayerStats.stamina,
-            0f,
-            stats.maxStamina
-        );
-
+        stats.currentStamina = Mathf.Clamp(cachedPlayerStats.stamina, 0f, stats.maxStamina);
         hasCachedPlayerStats = false;
     }
 
-    // Adaugă această metodă în interiorul clasei SaveManager
     public void ClearRuntimeCache()
     {
-        // 1. Golim datele despre scene și obiecte
         runtimeSceneCache.Clear();
         currentSceneDestroyedIds.Clear();
-
-        // 2. Resetăm statisticile jucătorului
         hasCachedPlayerStats = false;
         cachedPlayerStats = null;
 
-        // 3. Resetăm starea globală a jocului
-        if (GameStateManager.Instance != null)
-        {
-            GameStateManager.Instance.isRestoringFromSave = false;
-        }
+        if (GameStateManager.Instance != null) GameStateManager.Instance.isRestoringFromSave = false;
+        if (InventoryManager.Instance != null) InventoryManager.Instance.ClearInventory();
+        if (EquippedManager.Instance != null) EquippedManager.Instance.ClearEquippedSlot();
 
-        // 4. Resetăm Inventarul (Rucsacul)
-        if (InventoryManager.Instance != null)
-        {
-            InventoryManager.Instance.ClearInventory();
-        }
-
-        // 5. RESETĂM ECHIPAMENTUL (Unealta din mână)
-        if (EquippedManager.Instance != null)
-        {
-            EquippedManager.Instance.ClearEquippedSlot();
-        }
-
-        // 6. Resetăm poziția de spawn forțat
         hasPendingSpawn = false;
-
-        Debug.Log("<color=orange>[SaveManager] Cache-ul complet (inclusiv Echipament) a fost golit pentru Restart!</color>");
+        Debug.Log("<color=orange>[SaveManager] Cache-ul complet a fost golit!</color>");
     }
 
-
-
-    /// <summary>
-    /// Aceasta trebuie apelată CÂND PLECI din scenă (Tranziție).
-    /// Doar actualizează memoria, nu scrie pe disc.
-    /// </summary>
     public void HandleSceneTransition()
     {
         CacheCurrentSceneState();
@@ -363,8 +272,7 @@ public class SaveManager : MonoBehaviour
 
     private void ApplyPendingPlayerSpawn()
     {
-        if (!hasPendingSpawn) return;
-        if (FirstPersonController.Instance == null) return;
+        if (!hasPendingSpawn || FirstPersonController.Instance == null) return;
 
         var player = FirstPersonController.Instance;
         Rigidbody rb = player.GetComponent<Rigidbody>();
@@ -374,7 +282,6 @@ public class SaveManager : MonoBehaviour
         player.transform.localEulerAngles = new Vector3(0, pendingSpawnYaw, 0);
         player.playerCamera.transform.localEulerAngles = Vector3.zero;
 
-        // sincronizăm yaw / pitch interne
         var fpcType = player.GetType();
         var yawField = fpcType.GetField("yaw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var pitchField = fpcType.GetField("pitch", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -392,19 +299,12 @@ public class SaveManager : MonoBehaviour
     public void PerformFullSave()
     {
         string folderPath = GetCurrentSaveFolderPath();
-
-        // 1. Mai întâi actualizăm Cache-ul cu ce vedem acum pe ecran
         CacheCurrentSceneState();
-
-        // 2. Scriem fișierele
         CaptureAndSaveScreenshot(folderPath);
         SaveInventory();
         SavePlayerPosition(folderPath);
-
-        // 3. Scriem World Data (care acum ia totul din Cache)
         SaveWorldItemStateToDisk(folderPath);
         SavePlayerStats(folderPath);
-
         Debug.Log($"<color=cyan>[SaveManager] Full Save Complete: {currentSaveName}</color>");
     }
 
@@ -417,41 +317,37 @@ public class SaveManager : MonoBehaviour
 
     private IEnumerator LoadSequence(string folderPath)
     {
-        // 1. Citim fișierul world_items.json pentru a afla SCENA și a popula CACHE-ul
         string worldDataPath = Path.Combine(folderPath, "world_items.json");
         string sceneToLoad = "Forest"; 
+        WorldSaveData loadedData = null;
 
-        // Curățăm cache-ul vechi înainte de încărcare
         runtimeSceneCache.Clear();
 
         if (File.Exists(worldDataPath))
         {
-            string json = File.ReadAllText(worldDataPath);
-            WorldSaveData loadedData = JsonUtility.FromJson<WorldSaveData>(json);
-
+            loadedData = JsonUtility.FromJson<WorldSaveData>(File.ReadAllText(worldDataPath));
             if (!string.IsNullOrEmpty(loadedData.gameProgress.currentSceneName))
                 sceneToLoad = loadedData.gameProgress.currentSceneName;
 
-            // RECONSTRUIM CACHE-UL DIN FIȘIER
             foreach (var entry in loadedData.sceneDataList)
             {
                 if (!runtimeSceneCache.ContainsKey(entry.sceneName))
-                {
                     runtimeSceneCache.Add(entry.sceneName, entry.data);
-                }
             }
-
-            // Setăm și stările globale (timp, zi)
-            ApplyGlobalState(loadedData.gameProgress);
             LoadPlayerStats(folderPath);
         }
 
-        // 2. Încărcăm scena
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad);
         while (!asyncLoad.isDone) yield return null;
         yield return new WaitForEndOfFrame();
 
-        // Așteptăm InventoryManager
+        if (loadedData != null)
+        {
+            if (GameStateManager.Instance != null) GameStateManager.Instance.isRestoringFromSave = true;
+            ApplyGlobalState(loadedData.gameProgress);
+            if (GameStateManager.Instance != null) GameStateManager.Instance.isRestoringFromSave = false;
+        }
+
         int attempts = 0;
         while (InventoryManager.Instance == null && attempts < 20)
         {
@@ -459,19 +355,9 @@ public class SaveManager : MonoBehaviour
             yield return new WaitForSeconds(0.05f);
         }
 
-        yield return new WaitForEndOfFrame();
-        yield return new WaitForSeconds(0.1f);
-
-        // 3. Aplicăm datele specifice scenei curente din Cache
-        // ApplyCurrentSceneState();
-
-        // 4. Inventar și Player
         LoadPlayerPosition(folderPath);
         LoadInventory();
         ApplyPendingPlayerSpawn();
-
-
-        Debug.Log($"<color=green>[SaveManager] Load Complete!</color>");
     }
     
     private void OnEnable()
@@ -486,11 +372,7 @@ public class SaveManager : MonoBehaviour
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    private void OnPlayerStatsReady(PlayerStats stats)
-    {
-        ApplyCachedPlayerRuntimeStats(stats);
-    }
-
+    private void OnPlayerStatsReady(PlayerStats stats) => ApplyCachedPlayerRuntimeStats(stats);
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         ApplyCurrentSceneState();
@@ -501,77 +383,139 @@ public class SaveManager : MonoBehaviour
     // 3. DETALII IMPLEMENTARE (SAVE / LOAD SPECIFIC)
     // ----------------------------------------------------------------
 
-    // Scrie tot Cache-ul într-un singur JSON
     public void SaveWorldItemStateToDisk(string folderPath)
     {
         WorldSaveData fullSave = new WorldSaveData();
-
-        // A. Salvăm progresul global
         fullSave.gameProgress.currentSceneName = SceneManager.GetActiveScene().name;
+        
         if (GameStateManager.Instance != null && WaveManager.Instance != null)
         {
-            fullSave.gameProgress.currentState = GameStateManager.Instance.IsNight ?
-                GameStateManager.GameState.Night : GameStateManager.GameState.Day;
+            fullSave.gameProgress.currentState = GameStateManager.Instance.IsNight ? GameStateManager.GameState.Night : GameStateManager.GameState.Day;
             fullSave.gameProgress.timeRemaining = GameStateManager.Instance.timeRemaining;
             fullSave.gameProgress.currentDayIndex = WaveManager.Instance.GetCurrentDayIndex();
         }
 
-        // B. Convertim Cache-ul (Dictionary) în Listă pentru JSON
         foreach (var kvp in runtimeSceneCache)
-        {
             fullSave.sceneDataList.Add(new SceneSaveEntry(kvp.Key, kvp.Value));
-        }
 
-        string json = JsonUtility.ToJson(fullSave, true);
-        File.WriteAllText(Path.Combine(folderPath, "world_items.json"), json);
+        File.WriteAllText(Path.Combine(folderPath, "world_items.json"), JsonUtility.ToJson(fullSave, true));
     }
 
-    // Aplică obiectele în scena curentă folosind datele din Cache
+    // Noua logică inteligentă de Aplicare a Scenei
     public void ApplyCurrentSceneState()
     {
         string currentSceneName = SceneManager.GetActiveScene().name;
-
-        // Resetăm lista locală
         currentSceneDestroyedIds.Clear();
 
-        // Dacă nu avem date despre scena asta în cache, nu facem nimic (e prima vizită)
-        if (!runtimeSceneCache.ContainsKey(currentSceneName))
-        {
-            Debug.Log($"[SaveManager] Nu există date în cache pentru {currentSceneName}. Se inițializează default.");
-            return;
-        }
+        if (!runtimeSceneCache.ContainsKey(currentSceneName)) return;
 
         SceneSaveData localData = runtimeSceneCache[currentSceneName];
-
-        // 1. Distrugeri
         currentSceneDestroyedIds = new List<string>(localData.destroyedOriginals);
 
-        WorldEntityState[] sceneItems = GameObject.FindObjectsOfType<WorldEntityState>();
-        foreach (WorldEntityState item in sceneItems)
+        // 1. Curățăm Entitățile și pregătim Dicționarul cu Entități Statice
+        Dictionary<string, Entity> staticEntitiesInScene = new Dictionary<string, Entity>();
+        WorldEntityState[] sceneItems = Object.FindObjectsByType<WorldEntityState>(FindObjectsSortMode.None);
+
+        foreach (WorldEntityState state in sceneItems)
         {
-            // Dacă itemul din scenă are un ID care apare în lista de distruse, îl ștergem
-            if (!string.IsNullOrEmpty(item.uniqueID) && currentSceneDestroyedIds.Contains(item.uniqueID))
+            if (!string.IsNullOrEmpty(state.uniqueID))
             {
-                Destroy(item.gameObject);
+                if (currentSceneDestroyedIds.Contains(state.uniqueID))
+                {
+                    // Obiectul fusese distrus
+                    state.gameObject.SetActive(false);
+                    Destroy(state.gameObject);
+                }
+                else if (!state.isSpawnedAtRuntime)
+                {
+                    // Obiect original (ex: Copac). Îl ținem minte ca să-i actualizăm viața.
+                    Entity e = state.GetComponent<Entity>();
+                    if (e != null) staticEntitiesInScene[state.uniqueID] = e;
+                }
+            }
+
+            // Distrugem obiectele vechi generate de la runtime pentru a le re-spawna din save
+            if (state.isSpawnedAtRuntime)
+            {
+                state.gameObject.SetActive(false);
+                Destroy(state.gameObject);
             }
         }
 
-        // 2. Curățăm și Re-spawnăm Inamicii
+        // Distrugem toți inamicii, îi vom respawna doar pe cei din cache
         ZombieNPC[] existingEnemies = Object.FindObjectsByType<ZombieNPC>(FindObjectsSortMode.None);
-        foreach (var e in existingEnemies) Destroy(e.gameObject);
-
-        foreach (var enemyData in localData.activeEnemies)
+        foreach (var e in existingEnemies) 
         {
-            SpawnEnemyFromSave(enemyData);
+            e.gameObject.SetActive(false);
+            Destroy(e.gameObject);
         }
 
-        // 3. Re-spawnăm drop-urile/construcțiile
-        foreach (DroppedItemSaveData dropData in localData.droppedItems)
+        // 2. Aplicăm starea din fișier/cache pe entitățile din scenă
+        foreach (var entityData in localData.activeEntities)
         {
-            SpawnDroppedItem(dropData);
+            // Dacă este un obiect STATIC și avem date despre el
+            if (!entityData.isSpawnedAtRuntime && !string.IsNullOrEmpty(entityData.uniqueID))
+            {
+                if (staticEntitiesInScene.ContainsKey(entityData.uniqueID))
+                {
+                    Entity targetEntity = staticEntitiesInScene[entityData.uniqueID];
+                    targetEntity.currentHealth = (int)entityData.currentHealth;
+
+                    WorldEntityState wState = targetEntity.GetComponent<WorldEntityState>();
+                    if (wState != null) wState.currentHealthOrDurability = entityData.currentHealth;
+                }
+            }
+            else
+            {
+                // Este o entitate de RUNTIME (Inamic generat sau Drop). O instanțiem!
+                SpawnEntityFromSave(entityData);
+            }
         }
 
-        if (WaveManager.Instance != null) WaveManager.Instance.RefreshActiveEnemies();
+        // 3. Update WaveManager
+        if (WaveManager.Instance != null)
+        {
+            WaveManager.Instance.LockManager();
+            WaveManager.Instance.SetCurrentDay(GameStateManager.Instance.currentDay);
+            WaveManager.Instance.UnlockManager();
+            
+            // Re-sincronizare inamici forțat 
+            WaveManager.Instance.RefreshActiveEnemies();
+            var recalculateMethod = WaveManager.Instance.GetType().GetMethod("RecalculateDayStateAfterLoad", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            if (recalculateMethod != null) recalculateMethod.Invoke(WaveManager.Instance, null);
+        }
+    }
+
+    // Metoda unificată de Spawn
+    private void SpawnEntityFromSave(EntitySaveData data)
+    {
+        GameObject prefab = null;
+
+        // Căutăm întâi în iteme (Drop-uri, Construcții mici)
+        Item itemSO = ItemVisualManager.Instance.GetItemDataByName(data.entityName);
+        if (itemSO != null) prefab = ItemVisualManager.Instance.GetItemVisualPrefab(itemSO);
+        else 
+        {
+            // Apoi în entități (Zombii)
+            EntityData entitySO = ItemVisualManager.Instance.GetEntityDataByName(data.entityName);
+            if (entitySO != null) prefab = ItemVisualManager.Instance.GetEntityVisualPrefab(entitySO);
+        }
+
+        if (prefab != null)
+        {
+            GameObject spawned = Instantiate(prefab, data.position, Quaternion.Euler(data.rotation));
+            
+            Entity entityComp = spawned.GetComponent<Entity>();
+            if (entityComp != null) entityComp.currentHealth = (int)data.currentHealth;
+
+            WorldEntityState state = spawned.GetComponent<WorldEntityState>();
+            if (state != null)
+            {
+                state.isSpawnedAtRuntime = true;
+                state.currentHealthOrDurability = data.currentHealth;
+                if (!string.IsNullOrEmpty(data.uniqueID)) state.uniqueID = data.uniqueID;
+            }
+        }
     }
 
     private void ApplyGlobalState(GameProgressSaveData progress)
@@ -579,116 +523,42 @@ public class SaveManager : MonoBehaviour
         if (GameStateManager.Instance != null && WaveManager.Instance != null)
         {
             GameStateManager.Instance.SetStateManually(progress.currentState, progress.timeRemaining);
+            WaveManager.Instance.LockManager();
             WaveManager.Instance.SetCurrentDay(progress.currentDayIndex);
+            WaveManager.Instance.UnlockManager();
             
             float totalDur = progress.currentState == GameStateManager.GameState.Day ? 300f : 180f;
-            GlobalEvents.NotifyTimeUpdate(progress.timeRemaining / totalDur);
+            GlobalEvents.NotifyTimeUpdate(progress.timeRemaining / totalDur, progress.currentState == GameStateManager.GameState.Night);
         }
     }
-
-    // ----------------------------------------------------------------
-    // HELPERS (Rămân la fel ca înainte)
-    // ----------------------------------------------------------------
 
     public void RegisterDestroyedWorldItem(string id)
     {
-        // Adăugăm doar în lista locală a scenei curente
         if (!string.IsNullOrEmpty(id) && !currentSceneDestroyedIds.Contains(id))
-        {
             currentSceneDestroyedIds.Add(id);
-        }
     }
-
-    // ... (SpawnEnemyFromSave, SpawnDroppedItem, SaveInventory, etc. rămân la fel ca în codul tău vechi)
     
-    private void SpawnEnemyFromSave(EnemySaveData data)
+    public void UnregisterDestroyedWorldItem(string id)
     {
-        EntityData enemySO = ItemVisualManager.Instance.GetEntityDataByName(data.enemyName);
-        if (enemySO != null)
-        {
-            GameObject prefab = ItemVisualManager.Instance.GetEntityVisualPrefab(enemySO);
-            if (prefab != null)
-            {
-                GameObject spawned = Instantiate(prefab, data.position, Quaternion.Euler(data.rotation));
-                Entity entityComp = spawned.GetComponent<Entity>();
-                if (entityComp != null) entityComp.currentHealth = (int)data.currentHealth;
-            }
-        }
+        if (!string.IsNullOrEmpty(id) && currentSceneDestroyedIds.Contains(id))
+            currentSceneDestroyedIds.Remove(id);
     }
 
-    private void SpawnDroppedItem(DroppedItemSaveData data)
-    {
-        GameObject prefab = null;
-        Item itemSO = ItemVisualManager.Instance.GetItemDataByName(data.itemName);
-        if (itemSO != null) prefab = ItemVisualManager.Instance.GetItemVisualPrefab(itemSO);
-        else 
-        {
-            EntityData entitySO = ItemVisualManager.Instance.GetEntityDataByName(data.itemName);
-            if (entitySO != null) prefab = ItemVisualManager.Instance.GetEntityVisualPrefab(entitySO);
-        }
+    // ... Metodele pentru Inventar / Player rămân identice ...
 
-        if (prefab != null)
-        {
-            GameObject spawned = Instantiate(prefab, data.position, Quaternion.Euler(data.rotation));
-            WorldEntityState state = spawned.GetComponent<WorldEntityState>();
-            if (state != null)
-            {
-                state.isSpawnedAtRuntime = true;
-                state.currentHealthOrDurability = data.durability;
-            }
-            Entity entityComp = spawned.GetComponent<Entity>();
-            if (entityComp != null) entityComp.currentHealth = (int)data.durability;
-        }
-    }
-
-    // ... (Inventory Methods - copy paste din codul tău vechi, nu necesită schimbări)
     public void SaveInventory() 
     {
-        if (InventoryManager.Instance == null)
-        {
-            Debug.LogError("<color=red>[SaveInventory] InventoryManager este NULL!</color>");
-            return;
-        }
-
+        if (InventoryManager.Instance == null) return;
         InventorySaveData saveData = new InventorySaveData();
-        Debug.Log("<color=cyan>[SaveInventory] Începe procesul de salvare...</color>");
-
-        // 1. Salvare sloturi din rucsac
-        int slotsSaved = 0;
         foreach (InventorySlot slot in InventoryManager.Instance.allSlots) 
         {
             if (slot.itemData != null && slot.count > 0) 
-            {
-                SlotSaveData slotData = new SlotSaveData(slot);
-                saveData.slots.Add(slotData);
-                
-                // Log special pentru unelte (Tools) să vedem durabilitatea
-                string durabilityInfo = (slotData.durability != -1f) ? $" | Durabilitate: {slotData.durability}" : "";
-                Debug.Log($"[Save] Slot Rucsac: {slotData.itemName} x{slotData.amount}{durabilityInfo} | Index: {slotData.slotIndex}");
-                
-                slotsSaved++;
-            }
+                saveData.slots.Add(new SlotSaveData(slot));
         }
-
-        // 2. Salvare obiect echipat (Unealta din mână)
         InventorySlot equipped = EquippedManager.Instance != null ? EquippedManager.Instance.GetEquippedSlot() : null;
-        if (equipped != null && equipped.itemData != null) 
-        {
-            saveData.equippedSlot = new SlotSaveData(equipped);
-            string durabilityInfo = (saveData.equippedSlot.durability != -1f) ? $" | Durabilitate: {saveData.equippedSlot.durability}" : "";
-            Debug.Log($"<color=green>[Save] ECHIPAT: {saveData.equippedSlot.itemName}{durabilityInfo}</color>");
-        }
-        else
-        {
-            Debug.Log("[Save] Niciun obiect echipat de salvat.");
-        }
+        if (equipped != null && equipped.itemData != null) saveData.equippedSlot = new SlotSaveData(equipped);
 
-        // 3. Scrierea efectivă pe disc
-        string path = Path.Combine(GetCurrentSaveFolderPath(), "inventory.json");
-        string json = JsonUtility.ToJson(saveData, true);
-        File.WriteAllText(path, json);
-
-        Debug.Log($"<color=cyan>[SaveInventory] Fișier salvat la: {path}. Total sloturi rucsac: {slotsSaved}</color>");
+        File.WriteAllText(Path.Combine(GetCurrentSaveFolderPath(), "inventory.json"), JsonUtility.ToJson(saveData, true));
     }
 
     public void LoadInventory()
@@ -698,16 +568,17 @@ public class SaveManager : MonoBehaviour
         if (!File.Exists(filePath)) return;
         InventorySaveData saveData = JsonUtility.FromJson<InventorySaveData>(File.ReadAllText(filePath));
         InventoryManager.Instance.ClearInventory();
+        
         foreach (SlotSaveData data in saveData.slots) {
             Item itemSO = FindItemInVisualManager(data.itemName);
             if (itemSO != null) {
                 InventorySlot newSlot = new InventorySlot(itemSO, data.slotIndex);
                 newSlot.count = data.amount;
                 if (newSlot.state != null && data.durability != -1f) newSlot.state.currentDurability = data.durability;
-                Debug.Log($"[Load] Slot rucsac: {data.itemName} | Durabilitate setată: {data.durability}");
                 InventoryManager.Instance.AddExistingSlot(newSlot);
             }
         }
+        
         if (saveData.equippedSlot != null && !string.IsNullOrEmpty(saveData.equippedSlot.itemName)) {
             Item equippedSO = FindItemInVisualManager(saveData.equippedSlot.itemName);
             if (equippedSO != null) {
@@ -742,7 +613,6 @@ public class SaveManager : MonoBehaviour
             FirstPersonController.Instance.transform.localEulerAngles = new Vector3(0, data.rotationYaw, 0);
             FirstPersonController.Instance.playerCamera.transform.localEulerAngles = new Vector3(data.cameraPitch, 0, 0);
             
-            // Reflection pentru pitch/yaw private fields
             var fpcType = FirstPersonController.Instance.GetType();
             var yawField = fpcType.GetField("yaw", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             var pitchField = fpcType.GetField("pitch", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
@@ -751,49 +621,21 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-
     public void SavePlayerStats(string folderPath)
     {
         if (FirstPersonController.Instance == null) return;
-
         PlayerStats stats = FirstPersonController.Instance.GetComponent<PlayerStats>();
         if (stats == null) return;
-
-        PlayerStatsSaveData data = new PlayerStatsSaveData
-        {
-            health = stats.currentHealth,
-            stamina = stats.currentStamina
-        };
-
-        File.WriteAllText(
-            Path.Combine(folderPath, "player_stats.json"),
-            JsonUtility.ToJson(data, true)
-        );
+        PlayerStatsSaveData data = new PlayerStatsSaveData { health = stats.currentHealth, stamina = stats.currentStamina };
+        File.WriteAllText(Path.Combine(folderPath, "player_stats.json"), JsonUtility.ToJson(data, true));
     }
-
 
     private void LoadPlayerStats(string folderPath)
     {
         string path = Path.Combine(folderPath, "player_stats.json");
         if (!File.Exists(path)) return;
-
-        cachedPlayerStats = JsonUtility.FromJson<PlayerRuntimeStats>(
-            File.ReadAllText(path)
-        );
-
+        cachedPlayerStats = JsonUtility.FromJson<PlayerRuntimeStats>(File.ReadAllText(path));
         hasCachedPlayerStats = true;
-    }
-
-
-    // Aceasta este funcția care lipsea:
-    public void UnregisterDestroyedWorldItem(string id)
-    {
-        // Dacă un obiect a "reînviat" sau a fost respawnat, îl scoatem din lista de distruse
-        // astfel încât să apară din nou la următorul Load.
-        if (!string.IsNullOrEmpty(id) && currentSceneDestroyedIds.Contains(id))
-        {
-            currentSceneDestroyedIds.Remove(id);
-        }
     }
 
     public void CaptureAndSaveScreenshot(string folderPath) { ScreenCapture.CaptureScreenshot(Path.Combine(folderPath, "screenshot.png")); }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6e492c7aa95d2af2db2363f6ae3330ac, type: 3}
   m_Name: Zombie
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
-  maxHealth: 10
+  maxHealth: 5
   name: Zombie
   baseAttackDamage: 7
   toolEffectivenesses:
@@ -24,4 +24,8 @@ MonoBehaviour:
     damageMultiplier: 0.3
   - toolType: 4
     damageMultiplier: 1.5
-  possibleDrops: []
+  possibleDrops:
+  - item: {fileID: 11400000, guid: af6ff001e6c4ce88db7f2d6298c10296, type: 2}
+    dropChance: 0.56
+    minQuantity: 0
+    maxQuantity: 3

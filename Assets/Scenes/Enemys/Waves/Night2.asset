@@ -12,26 +12,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77708730dc40de3548e9b565ec3f0bfd, type: 3}
   m_Name: Night2
   m_EditorClassIdentifier: Assembly-CSharp::DayWaveData
-  dayIndex: 1
+  dayIndex: 2
   dayDurationSeconds: 600
   spawnEntries:
   - timeInSeconds: 40
     enemyData: {fileID: 11400000, guid: d042d8ee5b4c0d4b2bf5c8db9212f713, type: 2}
     spawnCount: 4
     spawnRadius: 0
-  - timeInSeconds: 55
+  - timeInSeconds: 90
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
     spawnCount: 1
     spawnRadius: 0
-  - timeInSeconds: 59
+  - timeInSeconds: 140
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
     spawnCount: 1
     spawnRadius: 0
-  - timeInSeconds: 60
+  - timeInSeconds: 150
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
     spawnCount: 1
     spawnRadius: 0
-  - timeInSeconds: 100
+  - timeInSeconds: 210
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
     spawnCount: 3
     spawnRadius: 0

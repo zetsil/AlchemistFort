@@ -15,6 +15,9 @@ public class GameStateManager : MonoBehaviour
     public float dayDuration = 300f; // 5 minute
     [Tooltip("Durata unei nopți în secunde")]
     public float nightDuration = 180f; // 3 minute
+
+    [Header("Progrizie")]
+    public int currentDay = 1;
     
     public enum GameState { Day, Night }
     
@@ -113,7 +116,9 @@ public class GameStateManager : MonoBehaviour
             float percentRemaining = Mathf.Clamp01(timeRemaining / totalDuration);
             
             // Notifică UI-ul și alte sisteme care au nevoie de timer
-            GlobalEvents.NotifyTimeUpdate(percentRemaining); 
+            bool isNight = (currentState == GameState.Night);
+            GlobalEvents.NotifyTimeUpdate(percentRemaining, isNight);
+
 
             // Dacă timpul s-a terminat, schimbă starea
             if (timeRemaining <= 0)
@@ -127,20 +132,21 @@ public class GameStateManager : MonoBehaviour
     {
         if (currentState == GameState.Day)
         {
-            // Trecerea de la Zi la Noapte
             currentState = GameState.Night;
             timeRemaining = nightDuration;
-
             GlobalEvents.NotifyNightStart();
-            Debug.Log("☀️ A început Noaptea! (Invoking OnDayStart)");
+            Debug.Log("🌙 A început Noaptea!");
         }
-        else // currentState == GameState.Night
+        else
         {
             currentState = GameState.Day;
             timeRemaining = dayDuration;
-
-            Debug.Log("☀️ A început Ziua! (Invoking OnDayStart)");
+            
+            // INCREMENTĂM ZIUA AICI - Când se termină noaptea și începe o zi nouă
+            currentDay++; 
+            
             GlobalEvents.NotifyDayStart();
+            Debug.Log($"☀️ A început Ziua {currentDay}!");
         }
     }
 

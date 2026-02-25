@@ -8,10 +8,11 @@ public abstract class Entity : MonoBehaviour
     [Header("Datele Entității (Scriptable Object)")]
     [Tooltip("Sursa de date a entității (Viață, Loot, Vulnerabilități).")]
     public EntityData entityData;
+    private EntityHealthBar healthBar;
 
     // === STATISTICI DINAMICE ===
     [Header("Statistici Dinamice")]
-    [SerializeField] public int currentHealth;
+    [SerializeField] public int currentHealth = -1;
     public int CurrentHealth => currentHealth;
     public bool isDead = false;
     public int MaxHealth { get; private set; }
@@ -47,19 +48,33 @@ public abstract class Entity : MonoBehaviour
     // --- LOGICĂ START ---
     protected virtual void Start()
     {
-        // 1. Inițializare Viață
+        // 1. Inițializare Viață Maximă (asta rămâne fixă)
         if (entityData != null)
         {
-            currentHealth = entityData.maxHealth;
-            MaxHealth = currentHealth;
+            MaxHealth = entityData.maxHealth;
+            
+            // MODIFICARE: Punem viața full DOAR DACĂ nu a fost deja setată o valoare diferită
+            // (De exemplu, dacă SaveManager a setat deja currentHealth la 50, nu o punem înapoi la 100)
+            if (currentHealth <= 0) 
+            {
+                currentHealth = MaxHealth;
+            }
         }
         else
         {
             Debug.LogError($"EntityData lipsește pe {gameObject.name}!");
-            currentHealth = 1;
+            if(currentHealth <= 0) currentHealth = 1;
         }
 
-        // 2. Setup Renderers & Materials
+        // 2. Inițializare HealthBar (folosind viața deja existentă)
+        healthBar = GetComponentInChildren<EntityHealthBar>();
+        if (healthBar != null)
+        {
+            healthBar.Setup(this.transform, MaxHealth);
+            healthBar.UpdateHealthBar(currentHealth); // Asigurăm sincronizarea vizuală imediată
+        }
+
+        // 3. Setup Renderers & Materials
         SetupVisualCache();
     }
 
@@ -114,7 +129,7 @@ public abstract class Entity : MonoBehaviour
 
         if (finalDamage <= 0)
         {
-            GlobalEvents.TriggerPlaySound(signal);
+            GlobalEvents.TriggerPlaySoundAtPosition(signal, transform.position);
             Debug.Log($"{gameObject.name} este imun la {attackingToolType}.");
             return;
         }
@@ -123,17 +138,20 @@ public abstract class Entity : MonoBehaviour
         currentHealth = Mathf.Max(currentHealth - finalDamage, 0);
         
         // Feedback Vizual și Audio
-        GlobalEvents.TriggerPlaySound(signal);
+        GlobalEvents.TriggerPlaySoundAtPosition(signal, transform.position);
         TriggerFlash();
 
         if (this is ZombieNPC && HitStopManager.Instance != null)
         {
             // 0.07f este o valoare standard pentru un impact satisfăcător
-            HitStopManager.Instance.RequestHitStop(0.05f);
+            // HitStopManager.Instance.RequestHitStop(0.05f);
             ApplyKnockbackFromCenter(8f);
         }
 
-
+        if (healthBar != null)
+        {
+            healthBar.UpdateHealthBar(currentHealth);
+        }
 
         Debug.Log($"{gameObject.name} a luat {finalDamage} damage. Viață: {currentHealth}");
 

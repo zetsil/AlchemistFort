@@ -24,7 +24,7 @@ public static class GlobalEvents
 
     public static event Action OnNightStart;
 
-    public static event Action<float> OnTimeUpdate;
+    public static event Action<float, bool> OnTimeUpdate;
 
     public static event Action<InventorySlot> OnSlotEquipRequested;
 
@@ -38,6 +38,11 @@ public static class GlobalEvents
     public static event Action<Entity> OnEnemyDeath;
     public static event Action<float, float> OnScreenShakeRequested;
     public static event Action<string, Vector3> OnPlaySoundAtPosition;
+    public static System.Action OnToxicGasStart;
+    public static System.Action OnToxicGasStop;
+
+    public static void NotifyToxicGasStart() => OnToxicGasStart?.Invoke();
+    public static void NotifyToxicGasStop() => OnToxicGasStop?.Invoke();
 
     public static void TriggerPlaySoundAtPosition(string soundName, Vector3 position)
     {
@@ -123,9 +128,9 @@ public static class GlobalEvents
         OnNightStart?.Invoke();
     }
 
-    public static void NotifyTimeUpdate(float percentRemaining)
+    public static void NotifyTimeUpdate(float percent, bool isNight)
     {
-        OnTimeUpdate?.Invoke(percentRemaining);
+        OnTimeUpdate?.Invoke(percent, isNight);
     }
 
 

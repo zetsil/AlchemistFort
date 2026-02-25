@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 77708730dc40de3548e9b565ec3f0bfd, type: 3}
   m_Name: Night1
   m_EditorClassIdentifier: Assembly-CSharp::DayWaveData
-  dayIndex: 1
+  dayIndex: 0
   dayDurationSeconds: 600
   spawnEntries:
   - timeInSeconds: 20

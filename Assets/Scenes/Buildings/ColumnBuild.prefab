@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 2759343279774127760}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.0009, z: 0.0406}
+  m_LocalPosition: {x: 0, y: 0.0111, z: 0.0104}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -155,7 +155,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
   uiAnchor: {fileID: 5479162335682468464}
-  uiForItemPickUp: 0
+  uiForItemPickUp: 1
   customUIHeight: 1.5
   actionLevels:
   - recipes:

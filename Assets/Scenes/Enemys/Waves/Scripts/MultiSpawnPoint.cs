@@ -10,8 +10,8 @@ public class MultiSpawnPoint : MonoBehaviour
     public DayWaveData GetWaveDataForDay(int dayIndex)
     {
         // dayIndex-1 pentru că lista e 0-indexed, dar zilele încep de la 1
-        if (dayIndex > 0 && dayIndex <= allDayWaves.Count)
-            return allDayWaves[dayIndex - 1];
+        if (dayIndex >= 0 && dayIndex <= allDayWaves.Count)
+            return allDayWaves[dayIndex];
         
         return null;
     }
