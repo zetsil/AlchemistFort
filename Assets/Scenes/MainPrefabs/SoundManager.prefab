@@ -145,17 +145,14 @@ MonoBehaviour:
   soundEvents:
   - {fileID: 11400000, guid: ea950f252345181d8b8ca20c5cf32627, type: 2}
   - {fileID: 11400000, guid: 5bf96a3c477a83765856bd688cae5859, type: 2}
-  - {fileID: 11400000, guid: aee1dc3ac90090515ac6177ee230a808, type: 2}
   - {fileID: 11400000, guid: c6e9ac3e453b1bb79828e0f542fb80ea, type: 2}
   - {fileID: 11400000, guid: acd760ecdeaa0f8599103243fcc06ff1, type: 2}
-  - {fileID: 11400000, guid: 8886d0b7bc8d8143886298392f7c9fe6, type: 2}
   - {fileID: 11400000, guid: f399a1ea4a4dfe77ab0568da7c335205, type: 2}
   - {fileID: 11400000, guid: 1762f646c662dc1f5844da734ced2467, type: 2}
   - {fileID: 11400000, guid: b97262fd5881008fbbdac88bd36aa6ef, type: 2}
   - {fileID: 11400000, guid: e9770d0766bd7372c850b44e02de6720, type: 2}
   - {fileID: 11400000, guid: df80c2b502d432c1e9f0f8929596d106, type: 2}
   - {fileID: 11400000, guid: 74fd658ec7f552a51a4ef2cacb0effcb, type: 2}
-  - {fileID: 11400000, guid: bad7f2a853ce7f311aab28ae2c39e656, type: 2}
   - {fileID: 11400000, guid: cbba7ccbb2db3112dad965543ba7d641, type: 2}
   - {fileID: 11400000, guid: 1839cd05baf70733397538539089a4c4, type: 2}
   - {fileID: 11400000, guid: 328b82fd77201a95c9a70f8fa04898dd, type: 2}
@@ -168,6 +165,11 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 2f9dc5e98aca0bc129a50c90d808cae4, type: 2}
   - {fileID: 11400000, guid: fc3dc3d2ea07a19f78a5e8eee1ae0027, type: 2}
   - {fileID: 11400000, guid: c24ad09f35a0a10ce90a2d4a0f12d0c3, type: 2}
+  - {fileID: 11400000, guid: bad7f2a853ce7f311aab28ae2c39e656, type: 2}
+  - {fileID: 11400000, guid: 8886d0b7bc8d8143886298392f7c9fe6, type: 2}
+  - {fileID: 11400000, guid: aee1dc3ac90090515ac6177ee230a808, type: 2}
+  - {fileID: 11400000, guid: 1d6cfd4ed72d1053887fb635e93f6f7e, type: 2}
+  - {fileID: 11400000, guid: a96689c52ac5dcc1b8528930c055df89, type: 2}
   dayBackgroundSounds:
   - {fileID: 8300000, guid: bc6336210374f02a48f52becad3d0006, type: 3}
   - {fileID: 8300000, guid: 4704f4100ef2b8017b4c6743834465ca, type: 3}

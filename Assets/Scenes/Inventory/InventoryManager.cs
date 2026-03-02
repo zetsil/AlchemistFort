@@ -206,85 +206,60 @@ public class InventoryManager : MonoBehaviour
 
     public bool DropItem(InventorySlot slot, int amount)
     {
-        Debug.Log($"<color=cyan>[DropItem] Tentativă drop: {(slot != null && slot.itemData != null ? slot.itemData.itemName : "NULL/GOL")}, Cantitate solicitată: {amount}</color>");
+        Debug.Log($"<color=cyan>[DropItem] Tentativă drop: {(slot != null && slot.itemData != null ? slot.itemData.itemName : "NULL/GOL")}, Cantitate: {amount}</color>");
 
-        if (slot == null)
-        {
-            Debug.LogError("[DropItem] Referința 'slot' este NULL!");
-            return false;
-        }
-
-        if (slot.itemData == null)
-        {
-            Debug.LogError($"[DropItem] Slotul index {slot.slotIndex} are 'itemData' NULL!");
-            return false;
-        }
+        // 1. Verificări de siguranță
+        if (slot == null || slot.itemData == null) return false;
 
         if (amount <= 0 || amount > slot.count) 
         {
-            Debug.Log($"[DropItem] Ajustare cantitate de la {amount} la {slot.count}");
             amount = slot.count;
         }
 
-        if (ItemVisualManager.Instance == null)
-        {
-            Debug.LogError("[DropItem] ItemVisualManager lipsește din scenă!");
-            return false;
-        }
+        if (ItemVisualManager.Instance == null) return false;
 
         GameObject itemPrefab = ItemVisualManager.Instance.GetItemVisualPrefab(slot.itemData);
-        if (itemPrefab == null)
-        {
-            Debug.LogError($"[DropItem] Nu s-a găsit prefab pentru {slot.itemData.itemName} în ItemVisualManager!");
-            return false;
-        }
+        if (itemPrefab == null) return false;
 
+        // 2. Calculare poziție de bază
         Transform playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
-        if (playerTransform == null)
-        {
-            Debug.LogWarning("[DropItem] Player-ul nu a fost găsit (Tag 'Player'). Folosesc Vector3.zero.");
-        }
-
         Camera mainCamera = Camera.main;
-        Vector3 dropPosition = (mainCamera != null) 
+        Vector3 baseDropPosition = (mainCamera != null) 
             ? mainCamera.transform.position + mainCamera.transform.forward * dropDistance 
             : (playerTransform != null ? playerTransform.position + playerTransform.forward * dropDistance : Vector3.zero);
 
-        // --- LOGICA DE INSTANȚIERE ȘI SALVARE ---
-        GameObject droppedObject = Instantiate(itemPrefab, dropPosition, Quaternion.identity);
-        Debug.Log($"[DropItem] Obiect spawned în lume la {dropPosition}");
-
-        WorldEntityState state = droppedObject.GetComponent<WorldEntityState>();
-        if (state != null)
+        // ========================================================
+        // 3. LOGICA DE FOR LOOP PENTRU TURN (STACKING)
+        // ========================================================
+        for (int i = 0; i < amount; i++)
         {
-            state.isSpawnedAtRuntime = true;
-            state.uniqueID = System.Guid.NewGuid().ToString();
+            // Adăugăm un mic offset pe verticală pentru fiecare obiect din stivă
+            // 0.2f este o valoare estimativă, ajusteaz-o în funcție de mărimea modelului tău 3D
+            Vector3 spawnPosition = baseDropPosition + new Vector3(0, i * 0.25f, 0);
 
-            if (slot.state != null)
+            GameObject droppedObject = Instantiate(itemPrefab, spawnPosition, Quaternion.identity);
+
+            // Configurăm starea pentru fiecare obiect individual
+            WorldEntityState state = droppedObject.GetComponent<WorldEntityState>();
+            if (state != null)
             {
-                state.currentHealthOrDurability = slot.state.currentDurability;
-                Debug.Log($"[DropItem] Durabilitate transferată pe obiect: {state.currentHealthOrDurability}");
+                state.isSpawnedAtRuntime = true;
+                state.uniqueID = System.Guid.NewGuid().ToString();
+
+                // Dacă e o unealtă (amount va fi 1 oricum), îi dăm durabilitatea
+                if (slot.state != null)
+                {
+                    state.currentHealthOrDurability = slot.state.currentDurability;
+                }
             }
-
-            Debug.Log($"✅ [SAVE SYSTEM] Referință salvată pentru {slot.itemData.itemName} (ID: {state.uniqueID})");
-        }
-        else
-        {
-            Debug.LogWarning($"[DropItem] Prefab-ul {slot.itemData.itemName} NU are componenta WorldEntityState! Nu se va salva la Load.");
         }
 
-        // --- ELIMINAREA ---
+        // 4. ELIMINAREA DIN INVENTAR (după ce am creat toate obiectele)
         string nameToDecrease = slot.itemData.itemName;
-        Debug.Log($"[DropItem] Încerc eliminarea a {amount} bucăți de {nameToDecrease} din inventar...");
-        
-        // ATENȚIE: Dacă slotul are index -1 (echipat), DecreaseItem s-ar putea să nu îl găsească 
-        // în listele normale de inventar!
         bool removed = DecreaseItem(nameToDecrease, amount);
         
         if (removed)
-            Debug.Log($"<color=green>[DropItem] Succes total: {nameToDecrease} aruncat și eliminat.</color>");
-        else
-            Debug.LogWarning($"<color=orange>[DropItem] Obiectul a fost aruncat, dar 'DecreaseItem' a returnat FALSE (posibilă problemă la liste).</color>");
+            Debug.Log($"<color=green>[DropItem] Succes: {amount}x {nameToDecrease} eliminate și create fizic.</color>");
 
         return true;
     }
@@ -410,6 +385,27 @@ public class InventorySlot
 
         // Aruncă o bucată, dacă este cazul
         manager.DropItem(this, 1);
+    }
+
+    public void DropAll()
+    {
+        if (count <= 0)
+        {
+            Debug.LogWarning($"Nu se poate face Drop All din slotul #{slotIndex} deoarece este gol.");
+            return;
+        }
+
+        if (manager == null)
+        {
+            Debug.LogError("InventoryManager nu este inițializat.");
+            return;
+        }
+
+        // Trimitem tot ce avem în acest slot către metoda DropItem
+        // manager.DropItem se ocupă deja de instanțierea vizuală și de eliminarea din liste
+        manager.DropItem(this, count);
+        
+        Debug.Log($"[InventorySlot] Drop All executat pentru {itemData.itemName}. Toate cele {count} bucăți au fost eliminate.");
     }
 
     public void ApplyDurabilityLoss()

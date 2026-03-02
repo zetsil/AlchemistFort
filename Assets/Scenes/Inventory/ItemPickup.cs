@@ -1,22 +1,35 @@
 using UnityEngine;
+using System.Collections;
 
 public class ItemPickup : MonoBehaviour
 {
-    // Aici tragi și plasezi asset-ul tău Apple, Stick, etc.
-    public Item itemData; // <-- Folosește clasa de bază Item!
+    public Item itemData; 
     
     private Rigidbody rb;
     private AbstractActionLogicSO pickUpLogic; 
     private GameObject actionButtonPrefab;
 
+    private Vector3 initialSpawnPosition;
+    private float fallThreshold = -20f;
+
+
+    void Awake()
+    {
+        // Salvăm poziția exactă de la creare (primul frame)
+        initialSpawnPosition = transform.position;
+    }
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
 
+        if (rb != null)
+        {
+            StartCoroutine(StabilizePhysics());
+        }
+
         if (itemData == null) return;
 
-        // 1. Încărcăm automat resursele necesare
-        // Presupunem că le ai în Assets/Resources/Actions/...
         pickUpLogic = Resources.Load<AbstractActionLogicSO>("Actions/PickUpAction");
         actionButtonPrefab = Resources.Load<GameObject>("Actions/iconPrefab");
 
@@ -26,33 +39,64 @@ public class ItemPickup : MonoBehaviour
             return;
         }
 
-        // 2. Creăm Rețeta dinamică
         ActionRecipeSO dynamicRecipe = ScriptableObject.CreateInstance<ActionRecipeSO>();
         dynamicRecipe.actionName = "Pick Up " + itemData.itemName;
         dynamicRecipe.actionIcon = itemData.icon;
         dynamicRecipe.actionLogic = pickUpLogic;
 
-        // 3. Setup UI
         SetupDynamicUI(dynamicRecipe);
 
         VisibilityRangeController visibility = GetComponent<VisibilityRangeController>();
         if (visibility == null)
         {
             visibility = gameObject.AddComponent<VisibilityRangeController>();
-
-            // Configurăm setările cerute de tine
-            visibility.activationDistance = 4f; // Distanța la care apare UI-ul
-            visibility.hideOnlyInteractionButtons = true; // Ascunde doar butoanele, nu mărul
+            visibility.activationDistance = 4f; 
+            visibility.hideOnlyInteractionButtons = true; 
             visibility.shouldReinitialize = true;
         }
-        
+    }
+    
+
+    void Update()
+    {
+        // Verificăm dacă a căzut prin hartă
+        if (transform.position.y < fallThreshold)
+        {
+            RespawnAtTop();
+        }
+    }
+    
+
+    private void RespawnAtTop()
+    {
+        Debug.LogWarning($"[SafetyNet] Obiectul {itemData?.itemName} a căzut prin hartă! Teleportare la spawn.");
+
+        // Îl punem la poziția inițială + 1 metru mai sus ca să fim siguri
+        transform.position = initialSpawnPosition + Vector3.up * 1.0f;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero; // Îi oprim căderea
+            rb.angularVelocity = Vector3.zero; // Îi oprim rotirea
+            StartCoroutine(StabilizePhysics()); // Îi dăm încă un mic moment de freeze
+        }
     }
 
+    private IEnumerator StabilizePhysics()
+    {
+        rb.isKinematic = true;
+
+        yield return new WaitForSeconds(0.2f);
+
+        rb.isKinematic = false;
+
+        // Opțional: Forțăm detectarea continuă pentru a preveni bug-urile viitoare
+        // rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+    }
 
     private void SetupDynamicUI(ActionRecipeSO recipe)
     {
         NewActionUIGenerator uiGenerator = GetComponent<NewActionUIGenerator>();
-
         if (uiGenerator == null)
         {
             uiGenerator = gameObject.AddComponent<NewActionUIGenerator>();
@@ -68,7 +112,7 @@ public class ItemPickup : MonoBehaviour
         uiGenerator.actionLevels.Add(pickUpLevel);
     }
 
-   public void Collect()
+    public void Collect()
     {
         if (itemData == null)
         {
@@ -76,72 +120,85 @@ public class ItemPickup : MonoBehaviour
             return;
         }
 
+        // 1. Luăm referința la WorldEntityState o singură dată
+        WorldEntityState worldItem = GetComponent<WorldEntityState>();
+
+        // 2. VERIFICĂM DACĂ ESTE TOOL PENTRU A-I PĂSTRA DURABILITATEA
         if (itemData is ToolItem toolItem)
         {
+            // Cazul A: Echipăm direct în mână
             if (EquippedManager.Instance.IsEquippedSlotEmpty())
             {
-
                 InventorySlot newSlot = new InventorySlot(toolItem, -1);
 
-                GlobalEvents.RequestSlotEquip(newSlot);
-
-                // --- LOGICA DE SALVARE (BLACKING LIST) ---
-                // Încercăm să luăm componenta WorldItem pentru a accesa ID-ul unic
-                WorldEntityState worldItem = GetComponent<WorldEntityState>();
-                if (worldItem != null && !worldItem.isSpawnedAtRuntime)
+                // --- INJECTĂM DURABILITATEA ---
+                if (newSlot.state != null && worldItem != null)
                 {
-                    // Dacă are un ID valid și este un obiect original din scenă, îl trecem pe lista neagră
-                    if (!string.IsNullOrEmpty(worldItem.uniqueID))
-                    {
-                        SaveManager.Instance.RegisterDestroyedWorldItem(worldItem.uniqueID);
-                    }
+                    newSlot.state.currentDurability = worldItem.currentHealthOrDurability;
+                    Debug.Log($"[Collect] Tool echipat direct. Durabilitate recuperată: {newSlot.state.currentDurability}");
                 }
-                // ------------------------------------------
 
-                Debug.Log($"✅ Unealta {toolItem.itemName} a fost echipată direct din Lume.");
-
+                GlobalEvents.RequestSlotEquip(newSlot);
+                
+                RegisterDestroyedOriginal(worldItem);
                 Destroy(gameObject);
-
-                // Opțional: Trimitem un semnal de sunet specific pentru echipare
-                // GlobalEvents.TriggerPlaySound("EquipToolSound"); 
                 return;
+            }
+            // Cazul B: Mâna e plină, îl punem în inventar
+            else
+            {
+                InventorySlot inventorySlot = new InventorySlot(toolItem, -1);
+                
+                // --- INJECTĂM DURABILITATEA ---
+                if (inventorySlot.state != null && worldItem != null)
+                {
+                    inventorySlot.state.currentDurability = worldItem.currentHealthOrDurability;
+                    Debug.Log($"[Collect] Tool pus în inventar. Durabilitate recuperată: {inventorySlot.state.currentDurability}");
+                }
+
+                // Folosim AddExistingSlot pentru a trimite slotul personalizat
+                bool toolAdded = InventoryManager.Instance.AddExistingSlot(inventorySlot);
+                
+                if (toolAdded) CompleteCollection(worldItem);
+                else Debug.LogWarning($"❌ Inventarul este plin! Nu s-a putut adăuga {itemData.itemName}.");
+                
+                return; // Oprim execuția aici pentru ToolItem
             }
         }
 
+        // 3. PENTRU OBIECTE NORMALE (Lemn, Măr - Stivuibile, fără durabilitate dinamică)
         bool added = InventoryManager.Instance.AddItem(itemData);
 
         if (added)
         {
-            // Obiectul a fost adăugat cu succes în inventar.
-            Debug.Log($"✅ Colectat: {itemData.itemName} x{itemData.amount}.");
-
-            // Notificare (pentru sunet/UI, indiferent de succesul adăugării)
-            // Păstrăm logica ta de semnal combinat pentru notificare/sunet.
-            string combinedSignal = "Collect_" + itemData.itemName;
-            GlobalEvents.TriggerPlaySound(combinedSignal); // Managerul de sunet primește "Collect_Wood"
-
-
-            // --- LOGICA DE SALVARE (BLACKING LIST) ---
-            // Încercăm să luăm componenta WorldItem pentru a accesa ID-ul unic
-            WorldEntityState worldItem = GetComponent<WorldEntityState>();
-            if (worldItem != null && !worldItem.isSpawnedAtRuntime)
-            {
-                // Dacă are un ID valid și este un obiect original din scenă, îl trecem pe lista neagră
-                if (!string.IsNullOrEmpty(worldItem.uniqueID))
-                {
-                    SaveManager.Instance.RegisterDestroyedWorldItem(worldItem.uniqueID);
-                }
-            }
-            // ------------------------------------------
-
-            // Distrugem obiectul fizic, deoarece adăugarea a fost confirmată.
-            Destroy(gameObject);
+            CompleteCollection(worldItem);
         }
         else
         {
             Debug.LogWarning($"❌ Inventarul este plin! Nu s-a putut adăuga {itemData.itemName}.");
-
         }
+    }
 
+    // --- METODE AJUTĂTOARE PENTRU A PĂSTRA CODUL CURAT ---
+
+    private void CompleteCollection(WorldEntityState worldItem)
+    {
+        Debug.Log($"✅ Colectat: {itemData.itemName}.");
+        string combinedSignal = "Collect_" + itemData.itemName;
+        GlobalEvents.TriggerPlaySound(combinedSignal); 
+
+        RegisterDestroyedOriginal(worldItem);
+        Destroy(gameObject);
+    }
+
+    private void RegisterDestroyedOriginal(WorldEntityState worldItem)
+    {
+        if (worldItem != null && !worldItem.isSpawnedAtRuntime)
+        {
+            if (!string.IsNullOrEmpty(worldItem.uniqueID))
+            {
+                SaveManager.Instance.RegisterDestroyedWorldItem(worldItem.uniqueID);
+            }
+        }
     }
 }

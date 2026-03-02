@@ -25,7 +25,7 @@ Transform:
   m_GameObject: {fileID: 826252676828771742}
   serializedVersion: 2
   m_LocalRotation: {x: -0.043619405, y: 0, z: 0, w: 0.9990483}
-  m_LocalPosition: {x: 0, y: 0.017, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.1, y: 0.100000024, z: 0.100000024}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -121,6 +121,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!135 &7297197411278393963
 SphereCollider:
@@ -154,12 +155,6 @@ GameObject:
   - component: {fileID: 1629110655017802608}
   - component: {fileID: 140523311608559084}
   - component: {fileID: 6870702337730223007}
-  - component: {fileID: 4420705816303151958}
-  - component: {fileID: 1085825984842388836}
-  - component: {fileID: 272386472035071800}
-  - component: {fileID: 1824453566446265569}
-  - component: {fileID: 1112612402122867124}
-  - component: {fileID: 8843783499230907641}
   m_Layer: 0
   m_Name: SimpleRock (1)
   m_TagString: Pickable
@@ -176,7 +171,7 @@ Transform:
   m_GameObject: {fileID: 2939073326991924188}
   serializedVersion: 2
   m_LocalRotation: {x: -0.7071068, y: -0, z: -0, w: 0.7071067}
-  m_LocalPosition: {x: -0.008817196, y: -0.090530105, z: -0.09667011}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 10, y: 10, z: 10}
   m_ConstrainProportionsScale: 1
   m_Children:
@@ -242,120 +237,8 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &4420705816303151958
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939073326991924188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dba23fbf5eeb46447abc7cb8bf83e013, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
-  itemData: {fileID: 11400000, guid: 41325a4a1e525dc458004f4fe594c50e, type: 2}
---- !u!54 &1085825984842388836
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939073326991924188}
-  serializedVersion: 5
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 0
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!65 &272386472035071800
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939073326991924188}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.018255603, y: 0.015206537, z: 0.010498337}
-  m_Center: {x: 0.00034798216, y: -0.002064139, z: 0.004861991}
---- !u!114 &1824453566446265569
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939073326991924188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
-  uiAnchor: {fileID: 6714627336755734540}
-  uiForItemPickUp: 0
-  customUIHeight: 0.8
-  actionLevels:
-  - recipes:
-    - {fileID: 11400000, guid: c0060c6dec06c7925a749aff8b096fb1, type: 2}
-  currentActionLevel: 0
-  actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
---- !u!114 &1112612402122867124
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939073326991924188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36b591c764de67ac2b8b001b7b4fe96e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::VisibilityRangeController
-  activationDistance: 4
-  hideOnlyInteractionButtons: 1
-  recheckInterval: 1
-  shouldReinitialize: 1
---- !u!114 &8843783499230907641
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939073326991924188}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
-  uniqueID: 
-  isSpawnedAtRuntime: 0
-  currentHealthOrDurability: -1
-  itemNameForSave: 
 --- !u!1 &3344489364071539739
 GameObject:
   m_ObjectHideFlags: 0
@@ -507,6 +390,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!135 &4109338284021813866
 SphereCollider:
@@ -538,6 +422,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6728413032884230675}
+  - component: {fileID: 7729639625201336036}
+  - component: {fileID: 2817430605714717831}
+  - component: {fileID: 9038856369463542920}
+  - component: {fileID: 2834468303155625215}
+  - component: {fileID: 2957960100065292286}
+  - component: {fileID: 4898391754750835685}
   m_Layer: 0
   m_Name: Sand
   m_TagString: Pickable
@@ -561,6 +451,119 @@ Transform:
   - {fileID: 5594719318950369521}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7729639625201336036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6232229079001127359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dba23fbf5eeb46447abc7cb8bf83e013, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ItemPickup
+  itemData: {fileID: 11400000, guid: 41325a4a1e525dc458004f4fe594c50e, type: 2}
+--- !u!114 &2817430605714717831
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6232229079001127359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c68da3e91477ae89bb0f0f49d71c191, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NewActionUIGenerator
+  uiAnchor: {fileID: 6714627336755734540}
+  uiForItemPickUp: 0
+  customUIHeight: 0.8
+  actionLevels:
+  - recipes:
+    - {fileID: 11400000, guid: c0060c6dec06c7925a749aff8b096fb1, type: 2}
+  currentActionLevel: 0
+  actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
+--- !u!114 &9038856369463542920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6232229079001127359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36b591c764de67ac2b8b001b7b4fe96e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisibilityRangeController
+  activationDistance: 4
+  hideOnlyInteractionButtons: 1
+  recheckInterval: 1
+  shouldReinitialize: 1
+--- !u!114 &2834468303155625215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6232229079001127359}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 
+--- !u!54 &2957960100065292286
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6232229079001127359}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!65 &4898391754750835685
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6232229079001127359}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.01759789, y: 0.010659131, z: 0.02}
+  m_Center: {x: 0.0006884217, y: 0.0046704337, z: 0}
 --- !u!1 &6298173029632434392
 GameObject:
   m_ObjectHideFlags: 0
@@ -650,6 +653,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!135 &2859105861128758173
 SphereCollider:

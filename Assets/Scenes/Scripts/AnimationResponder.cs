@@ -26,31 +26,23 @@ public class AnimationResponder : MonoBehaviour
     // 💡 MODIFICARE: Metoda primește acum doar triggerName (string)
     private void HandleAnimationRequest(string triggerName)
     {
-        // Am eliminat: if (target == gameObject) 
-        
-        bool parameterExists = false;
+        // 1. Luăm starea curentă
+        AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
 
-        // 2. Iterează prin toți parametrii Animator-ului
-        foreach (AnimatorControllerParameter parameter in animator.parameters)
+        // 2. Dacă suntem în "atack" și animația e sub 90% din durată, BLOCĂM tot
+        // Asta simulează "Exit Time" - nu lasă alt click să strice atacul curent
+        if (stateInfo.IsName("atack") && stateInfo.normalizedTime < 0.9f)
         {
-            // Verifică numele și tipul parametrului
-            if (parameter.name == triggerName && parameter.type == AnimatorControllerParameterType.Trigger)
-            {
-                parameterExists = true;
-                break;
-            }
+            return; 
         }
 
-        if (parameterExists)
+        // 3. Verificăm dacă suntem deja în tranziție către atac
+        if (animator.IsInTransition(0))
         {
-            // 3. Dacă există, declanșează Trigger-ul
-            animator.SetTrigger(triggerName);
-            Debug.Log($"[Responder] Animație declanșată pe {gameObject.name} de un eveniment global: {triggerName}");
+            return;
         }
-        else
-        {
-            Debug.LogWarning($"Animator-ul pe {gameObject.name} nu are un Trigger cu numele '{triggerName}'.");
-        }
-        
+
+        // 4. Executăm atacul instant (fără lag, pentru că Has Exit Time e OFF în Animator)
+        animator.SetTrigger(triggerName);
     }
 }

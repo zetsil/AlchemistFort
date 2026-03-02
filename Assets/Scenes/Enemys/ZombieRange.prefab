@@ -525,6 +525,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -1803,6 +1804,7 @@ GameObject:
   - component: {fileID: 7844660394125311434}
   - component: {fileID: 1471236807858622100}
   - component: {fileID: 8220108143356106536}
+  - component: {fileID: -4809130291030360812}
   m_Layer: 9
   m_Name: ZombieRange
   m_TagString: Enemy
@@ -1878,6 +1880,7 @@ MonoBehaviour:
   baseAccessPoint: {fileID: 0}
   hasReachedAccessPoint: 0
   zombieChoseBase: 0
+  destroyDelay: 5
 --- !u!195 &7797681136788724889
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1961,6 +1964,22 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 2.0282028, z: 1}
   m_Center: {x: 0, y: 0.96610105, z: 0}
+--- !u!114 &-4809130291030360812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7520321101989171733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c46c5383c9414e019bbf674b3c8accf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldEntityState
+  uniqueID: 
+  isSpawnedAtRuntime: 0
+  currentHealthOrDurability: -1
+  itemNameForSave: 
 --- !u!1 &7613466476058629378
 GameObject:
   m_ObjectHideFlags: 0

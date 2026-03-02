@@ -5,18 +5,18 @@ using UnityEngine;
 /// Gestionează sincronizarea atacului (Animation Events), citirea datelor
 /// de la InventorySlot și comunicarea cu Hitbox-ul.
 /// </summary>
-public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData 
+public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
 {
     // Variabila veche publică este eliminată (sau transformată în privată fără [Tooltip])
     // public InventorySlot equippedSlot; 
 
     [Header("Referințe Componente")]
     [Tooltip("Referința la scriptul atașat GameObject-ului Hitbox (ToolHitboxHandler).")]
-    public ToolHitboxHandler hitboxHandler; 
-    
+    public ToolHitboxHandler hitboxHandler;
+
     // Variabilă de stare pentru a preveni input-ul în timpul animației sau double-hit.
-    private bool isAttacking = false; 
-    
+    private bool isAttacking = false;
+
     // NOU: Proprietate ajutătoare care accesează direct slotul de la manager.
     private InventorySlot CurrentEquippedSlot => EquippedManager.Instance.GetEquippedSlot();
 
@@ -32,7 +32,7 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
             Debug.LogError($"ToolController pe {gameObject.name} nu are referință la ToolHitboxHandler.");
         }
     }
-    
+
     // =================================================================
     // IMPLEMENTAREA IWeaponData (Sursa de date pentru Hitbox)
     // =================================================================
@@ -40,13 +40,13 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     public float GetAttackDamage()
     {
         InventorySlot slot = CurrentEquippedSlot; // Folosim proprietatea de acces
-        
+
         // 1. Verificăm dacă există un item echipat.
         if (slot == null || slot.itemData == null)
         {
             return 0f;
         }
-        
+
         // 2. Încercăm conversia sigură (as) la ToolItem pentru a accesa attackDamage.
         ToolItem tool = slot.itemData as ToolItem;
 
@@ -55,7 +55,7 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
         {
             return tool.attackDamage;
         }
-        
+
         return 0f;
     }
 
@@ -91,19 +91,13 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     /// </summary>
     public void StartAttackWindow()
     {
-        // Asigură-te că ai un item echipat (folosind proprietatea de acces) și că nu ești deja în atac.
-        // if (CurrentEquippedSlot == null || isAttacking) return; 
+        // Verificăm dacă avem hitbox și dacă nu cumva e deja activ
+        if (hitboxHandler == null) return;
 
-        if (hitboxHandler != null)
-        {
-            isAttacking = true;
-            
-            // 1. Activăm ÎNTREGUL GameObject Hitbox
-            hitboxHandler.gameObject.SetActive(true);
-            
-            // 2. Curățăm Registrul de Lovituri (HashSet)
-            hitboxHandler.ClearHitRegistry(); 
-        }
+        isAttacking = true;
+        hitboxHandler.gameObject.SetActive(true);
+        hitboxHandler.ClearHitRegistry(); 
+        
     }
 
     /// <summary>
@@ -117,7 +111,22 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
             // Dezactivăm ÎNTREGUL GameObject Hitbox
             hitboxHandler.gameObject.SetActive(false);
         }
-        
+
         isAttacking = false; // Resetăm starea
+    }
+    
+    public void ForceResetAttack()
+    {
+        if (hitboxHandler != null)
+        {
+            hitboxHandler.gameObject.SetActive(false);
+        }
+        isAttacking = false;
+    }
+
+    // Opțional: Dezactivăm automat hitbox-ul dacă obiectul uneltei este dezactivat
+    private void OnDisable()
+    {
+        ForceResetAttack();
     }
 }

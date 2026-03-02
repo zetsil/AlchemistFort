@@ -35,6 +35,7 @@ public class InventoryPanelController : MonoBehaviour
     private Button btnUse;
     private Button btnEquip;
     private Button btnDrop;
+    private Button btnDropAll;
 
     private VisualElement tooltipPanel;
     private Label tooltipNameLabel;
@@ -111,7 +112,7 @@ public class InventoryPanelController : MonoBehaviour
         if (EquippedManager.Instance != null)
         {
             EquippedManager.Instance.OnSlotEquippedStateChanged -= RefreshEquippedToolUI;
-            
+
         }
 
         if (equippedToolSlot != null)
@@ -125,6 +126,7 @@ public class InventoryPanelController : MonoBehaviour
         btnUse.clicked -= OnContextActionClicked;
         btnEquip.clicked -= OnContextActionClicked;
         btnDrop.clicked -= OnContextDropClicked;
+        btnDropAll.clicked -= OnContextDropAllClicked;
     }
 
 
@@ -179,11 +181,13 @@ public class InventoryPanelController : MonoBehaviour
         btnUse = contextMenu.Q<Button>("ContextMenuUse");
         btnEquip = contextMenu.Q<Button>("ContextMenuEquip");
         btnDrop = contextMenu.Q<Button>("ContextMenuDrop");
+        btnDropAll = contextMenu.Q<Button>("ContextMenuDropAll");
 
         // Atașează callback-urile (o singură dată)
         btnUse.clicked += OnContextActionClicked; // Folosim aceeași metodă generală
         btnEquip.clicked += OnContextActionClicked; // Folosim aceeași metodă generală
         btnDrop.clicked += OnContextDropClicked;
+        btnDropAll.clicked += OnContextDropAllClicked;
 
         rootElement.RegisterCallback<MouseDownEvent>(evt =>
         {
@@ -433,12 +437,12 @@ public class InventoryPanelController : MonoBehaviour
         {
             // Slotul ECHIPAT: oferă opțiunea Unequip
             btnEquip.text = "Unequip";
-            btnEquip.style.display = DisplayStyle.Flex; 
+            btnEquip.style.display = DisplayStyle.Flex;
         }
         else
         {
             // Slot din INVENTARUL STOCABIL
-            
+
             // a) Consumabile
             if (slot.itemData is Food)
             {
@@ -449,7 +453,11 @@ public class InventoryPanelController : MonoBehaviour
             else if (slot.itemData is ToolItem)
             {
                 btnEquip.text = "Equip";
-                btnEquip.style.display = DisplayStyle.Flex; 
+                btnEquip.style.display = DisplayStyle.Flex;
+            }
+            if (!(slot.itemData is ToolItem) && slot.count > 1)
+            {
+                btnDropAll.style.display = DisplayStyle.Flex;
             }
         }
         
@@ -476,6 +484,24 @@ public class InventoryPanelController : MonoBehaviour
             selectedSlot = null;
         }
     }
+    
+
+    private void OnContextDropAllClicked()
+    {
+        if (selectedSlot == null || selectedSlot.itemData == null)
+        {
+            HideContextMenu();
+            return;
+        }
+
+        // Executăm DropAll din InventorySlot (metoda pe care am creat-o anterior)
+        selectedSlot.DropAll();
+
+        Debug.Log($"[UI] Drop All executat pentru: {selectedSlot.itemData.itemName}");
+
+        HideContextMenu();
+        RefreshUI();
+    }
 
 
     private void OnContextActionClicked()
@@ -485,7 +511,7 @@ public class InventoryPanelController : MonoBehaviour
             HideContextMenu();
             return;
         }
-        
+
         // 1. Verifică acțiunile de Echipare/Dezechipare
         if (btnEquip.style.display == DisplayStyle.Flex)
         {
@@ -498,22 +524,22 @@ public class InventoryPanelController : MonoBehaviour
             {
                 // NOU: Apelăm HandleUse() pe SLOT.
                 // Logica din HandleUse va decide că e o unealtă și va apela EquipSlot(this).
-                selectedSlot.HandleUse(); 
+                selectedSlot.HandleUse();
             }
         }
-        
+
         // 2. Verifică acțiunile de Consum/Use
         if (btnUse.style.display == DisplayStyle.Flex)
         {
             // NOU: Apelăm HandleUse() pe SLOT.
             // Logica din HandleUse va decide dacă este un consumabil (caz în care va apela Item.Use()).
-            selectedSlot.HandleUse(); 
+            selectedSlot.HandleUse();
         }
 
 
         HideContextMenu();
         // Trebuie să forțezi o actualizare a inventarului (deoarece un item a fost scos/consumat)
-        RefreshUI(); 
+        RefreshUI();
     }
 
     private void OnContextDropClicked()

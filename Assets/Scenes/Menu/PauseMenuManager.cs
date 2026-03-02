@@ -4,6 +4,7 @@ using UnityEngine.SceneManagement;
 
 public class PauseMenuManager : MonoBehaviour
 {
+    public static PauseMenuManager Instance { get; private set; }
     private UIDocument uiDocument;
     private VisualElement root;
 
@@ -17,9 +18,13 @@ public class PauseMenuManager : MonoBehaviour
 
     [Header("Configurare Scene")]
     public string mainMenuSceneName = "StartMenu";
+    public string startingSceneName = "Forest";
 
     void Awake()
     {
+        if (Instance == null) Instance = this;
+        else { Destroy(gameObject); return; }
+        
         uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
 
@@ -41,10 +46,22 @@ public class PauseMenuManager : MonoBehaviour
         btnMainMenu.clicked += BackToMainMenu;
     }
 
+    public bool IsGamePaused()
+    { return isPaused; }
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            // 1. Verificăm ierarhia: Primul care răspunde este Inventarul
+            if (InventoryPanelController.Instance != null && InventoryPanelController.Instance.getIsPanelOpen())
+            {
+                // Închidem inventarul și oprim execuția aici (nu intrăm în pauză)
+                InventoryPanelController.Instance.TogglePanel();
+                Debug.Log("[PauseMenu] Inventar închis via Escape.");
+                return; 
+            }
+
+            // 2. Dacă nu avem inventar deschis, gestionăm meniul de pauză
             if (isPaused) ResumeGame();
             else PauseGame();
         }
@@ -88,14 +105,20 @@ public class PauseMenuManager : MonoBehaviour
     {
         Time.timeScale = 1f;
 
-        // 1. Curățăm datele din SaveManager înainte de load
+        // 1. Curățăm cache-ul de obiecte (SaveManager)
         if (SaveManager.Instance != null)
         {
             SaveManager.Instance.ClearRuntimeCache();
         }
 
-        // 2. Reîncărcăm scena
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        // 2. RESETĂM TIMPUL ȘI ZIUA (GameStateManager)
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.RestartGameProgress();
+        }
+
+        // 3. Reîncărcăm scena
+        SceneManager.LoadScene(startingSceneName);
     }
 
     void SaveGame()

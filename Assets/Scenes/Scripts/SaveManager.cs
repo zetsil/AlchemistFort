@@ -199,17 +199,44 @@ public class SaveManager : MonoBehaviour
 
         dataToCache.destroyedOriginals = new List<string>(currentSceneDestroyedIds);
 
-        // Aici unificăm salvarea: Găsim TOATE entitățile
-        Entity[] allEntities = Object.FindObjectsByType<Entity>(FindObjectsSortMode.None);
-        foreach (Entity entity in allEntities)
+        // Găsim TOATE obiectele care au WorldEntityState (Inamici, Copaci, DAR ȘI DROP-URI)
+        WorldEntityState[] allWorldStates = Object.FindObjectsByType<WorldEntityState>(FindObjectsSortMode.None);
+        
+        foreach (WorldEntityState state in allWorldStates)
         {
-            // Nu salvăm Player-ul aici sau uneltele din mâna lui
-            if (entity.CompareTag("Player") || entity.transform.root.CompareTag("Player")) continue;
-            
-            // Nu salvăm entitățile deja moarte
-            if (entity.currentHealth <= 0) continue;
+            // 1. Excludem Player-ul sau obiectele din mâna lui
+            if (state.CompareTag("Player") || state.transform.root.CompareTag("Player")) continue;
 
-            dataToCache.activeEntities.Add(new EntitySaveData(entity));
+            // 2. Încercăm să obținem componenta Entity (dacă există, ex: la Zombii)
+            Entity entityComp = state.GetComponent<Entity>();
+            
+            // 3. Verificăm dacă este "viu" (pentru entități cu viață)
+            if (entityComp != null && entityComp.currentHealth <= 0) continue;
+            
+            // 4. Dacă e un drop simplu, verificăm durabilitatea/viața din WorldEntityState
+            if (state.currentHealthOrDurability <= 0 && state.isSpawnedAtRuntime) continue;
+
+            // --- CREARE DATE SALVARE ---
+            EntitySaveData data = new EntitySaveData();
+            
+            // Identificare nume (prioritate ItemPickup pentru Drop-uri)
+            var pickup = state.GetComponent<ItemPickup>();
+            if (pickup != null && pickup.itemData != null)
+                data.entityName = pickup.itemData.itemName;
+            else if (entityComp != null && entityComp.entityData != null)
+                data.entityName = entityComp.entityData.name;
+            else
+                data.entityName = state.gameObject.name;
+
+            data.uniqueID = state.uniqueID;
+            data.position = state.transform.position;
+            data.rotation = state.transform.eulerAngles;
+            data.currentHealth = state.currentHealthOrDurability; // Salvăm viața sau durabilitatea
+            data.isSpawnedAtRuntime = state.isSpawnedAtRuntime;
+
+            dataToCache.activeEntities.Add(data);
+            
+            Debug.Log($"<color=cyan>[Cache] Salvat: {data.entityName} | Runtime: {data.isSpawnedAtRuntime} | Pos: {data.position}</color>");
         }
 
         if (runtimeSceneCache.ContainsKey(currentSceneName))
@@ -217,7 +244,7 @@ public class SaveManager : MonoBehaviour
         else
             runtimeSceneCache.Add(currentSceneName, dataToCache);
 
-        Debug.Log($"<color=yellow>[Cache] Scena '{currentSceneName}' a fost salvată. Entități: {dataToCache.activeEntities.Count}</color>");
+        Debug.Log($"<color=yellow>[Cache] Scena '{currentSceneName}' salvată. Total obiecte: {dataToCache.activeEntities.Count}</color>");
     }
     
     private void CachePlayerRuntimeStats()
@@ -490,31 +517,52 @@ public class SaveManager : MonoBehaviour
     private void SpawnEntityFromSave(EntitySaveData data)
     {
         GameObject prefab = null;
+        Debug.Log($"<color=cyan>[SpawnSystem] Încercare spawn pentru: {data.entityName} la poziția {data.position}</color>");
 
-        // Căutăm întâi în iteme (Drop-uri, Construcții mici)
+        // 1. Căutăm în Iteme (Drop-uri)
         Item itemSO = ItemVisualManager.Instance.GetItemDataByName(data.entityName);
-        if (itemSO != null) prefab = ItemVisualManager.Instance.GetItemVisualPrefab(itemSO);
+        if (itemSO != null) 
+        {
+            prefab = ItemVisualManager.Instance.GetItemVisualPrefab(itemSO);
+            Debug.Log($"[SpawnSystem] Găsit ca ITEM. Prefab null? {prefab == null}");
+        }
         else 
         {
-            // Apoi în entități (Zombii)
+            // 2. Căutăm în Entități (Zombii)
             EntityData entitySO = ItemVisualManager.Instance.GetEntityDataByName(data.entityName);
-            if (entitySO != null) prefab = ItemVisualManager.Instance.GetEntityVisualPrefab(entitySO);
+            if (entitySO != null) 
+            {
+                prefab = ItemVisualManager.Instance.GetEntityVisualPrefab(entitySO);
+                Debug.Log($"[SpawnSystem] Găsit ca ENTITY. Prefab null? {prefab == null}");
+            }
         }
 
+        // 3. Verificăm dacă am găsit prefab-ul în final
         if (prefab != null)
         {
             GameObject spawned = Instantiate(prefab, data.position, Quaternion.Euler(data.rotation));
             
+            // Sincronizăm viața (pentru Entity clasic)
             Entity entityComp = spawned.GetComponent<Entity>();
-            if (entityComp != null) entityComp.currentHealth = (int)data.currentHealth;
+            if (entityComp != null) 
+            {
+                entityComp.currentHealth = (int)data.currentHealth;
+                Debug.Log($"[SpawnSystem] Succes: {data.entityName} spawnat cu {entityComp.currentHealth} HP.");
+            }
 
+            // Sincronizăm starea mondială (pentru Drop-uri/Durabilitate)
             WorldEntityState state = spawned.GetComponent<WorldEntityState>();
             if (state != null)
             {
                 state.isSpawnedAtRuntime = true;
                 state.currentHealthOrDurability = data.currentHealth;
                 if (!string.IsNullOrEmpty(data.uniqueID)) state.uniqueID = data.uniqueID;
+                Debug.Log($"[SpawnSystem] Starea WorldEntityState a fost configurată pentru ID: {state.uniqueID}");
             }
+        }
+        else
+        {
+            Debug.LogError($"<color=red>[SpawnSystem] EROARE: Nu s-a găsit niciun prefab pentru numele '{data.entityName}'. Verifică ItemVisualManager!</color>");
         }
     }
 
@@ -569,9 +617,15 @@ public class SaveManager : MonoBehaviour
         InventorySaveData saveData = JsonUtility.FromJson<InventorySaveData>(File.ReadAllText(filePath));
         InventoryManager.Instance.ClearInventory();
         
-        foreach (SlotSaveData data in saveData.slots) {
+        if (EquippedManager.Instance != null) {
+        EquippedManager.Instance.ClearEquippedSlot(); 
+        }
+        
+        foreach (SlotSaveData data in saveData.slots)
+        {
             Item itemSO = FindItemInVisualManager(data.itemName);
-            if (itemSO != null) {
+            if (itemSO != null)
+            {
                 InventorySlot newSlot = new InventorySlot(itemSO, data.slotIndex);
                 newSlot.count = data.amount;
                 if (newSlot.state != null && data.durability != -1f) newSlot.state.currentDurability = data.durability;

@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 3845603372838670594}
   - component: {fileID: 3787366861000910036}
   - component: {fileID: 5155801623014228080}
-  - component: {fileID: 2361688931516661822}
   - component: {fileID: 7982184371830802698}
   - component: {fileID: 2967859796042834616}
   - component: {fileID: -1282751250282017727}
@@ -93,27 +92,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &2361688931516661822
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6430176215752336561}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9940c93c7c3cbddfaf37f01080b35fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AllyEntity
-  entityData: {fileID: 11400000, guid: d130e1ac4d98f38acbd948a9c933adca, type: 2}
-  currentHealth: 0
-  isDead: 0
-  flashSettings:
-    flashMaterial: {fileID: 0}
-    flashColor: {r: 4, g: 4, b: 4, a: 4}
-    duration: 0.05
-    targetRenderers: []
-  brokenBuildingPrefab: {fileID: 0}
 --- !u!114 &7982184371830802698
 MonoBehaviour:
   m_ObjectHideFlags: 0

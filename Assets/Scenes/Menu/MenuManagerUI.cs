@@ -35,7 +35,26 @@ public class MainMenuManager : MonoBehaviour
 
     void StartNewGame()
     {
-        // Pornim jocul direct pe scena de gameplay
+        // 1. Curățăm cache-ul din SaveManager (important dacă s-a mai jucat înainte în aceeași sesiune)
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.ClearRuntimeCache();
+        }
+
+        // 2. Resetăm timpul, ziua și starea globală
+        if (GameStateManager.Instance != null)
+        {
+            GameStateManager.Instance.RestartGameProgress();
+        }
+
+        // 3. (Opțional) Resetăm inventarul dacă acesta supraviețuiește între scene
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.ClearInventory();
+        }
+
+        // 4. Pornim jocul pe scena de gameplay
+        Debug.Log("<color=green>[MainMenu] Starting a fresh game session!</color>");
         SceneManager.LoadScene(gameplaySceneName);
     }
 

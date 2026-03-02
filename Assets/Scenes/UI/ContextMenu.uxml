@@ -4,5 +4,6 @@
         <ui:Button text="Equip" name="ContextMenuEquip" class="context-button" />
         <ui:Button text="Use" name="ContextMenuUse" class="context-button" />
         <ui:Button text="Drop" name="ContextMenuDrop" class="context-button" />
+        <ui:Button text="Drop All" name="ContextMenuDropAll" class="context-button" />
     </ui:VisualElement>
 </ui:UXML>
