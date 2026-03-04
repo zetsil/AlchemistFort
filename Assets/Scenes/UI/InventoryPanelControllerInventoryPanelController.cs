@@ -41,8 +41,13 @@ public class InventoryPanelController : MonoBehaviour
     private Label tooltipNameLabel;
     private Label tooltipDescriptionLabel;
 
+    private VisualElement ghostIcon; 
+    private InventorySlot draggedSlot;
+    private VisualElement originalSlotElement;
+
     [Header("Tooltip Assets")]
     public VisualTreeAsset tooltipUxml;
+    private List<VisualElement> uiSlotElements = new List<VisualElement>();
 
     public static InventoryPanelController Instance { get; private set; }
 
@@ -98,7 +103,7 @@ public class InventoryPanelController : MonoBehaviour
 
         // La început, ascundem panoul.
         SetPanelVisibility(false);
-
+        CreateGhostIcon();
         InitializeContextMenu();
         InitializeTooltip();
 
@@ -147,6 +152,18 @@ public class InventoryPanelController : MonoBehaviour
     {
         HideTooltip();
         evt.StopPropagation();
+    }
+
+    private void CreateGhostIcon()
+    {
+        ghostIcon = new VisualElement();
+        ghostIcon.style.width = 60; // Ajustează conform design-ului tău
+        ghostIcon.style.height = 60;
+        ghostIcon.style.position = Position.Absolute;
+        // ghostIcon.style.usageHints = UsageHints.DynamicTransform;
+        ghostIcon.style.display = DisplayStyle.None;
+        ghostIcon.pickingMode = PickingMode.Ignore; // Foarte important: să nu blocheze mouse-ul pentru slotul de destinație
+        rootElement.Add(ghostIcon);
     }
 
 
@@ -291,28 +308,124 @@ public class InventoryPanelController : MonoBehaviour
     {
         if (slotsGridContainer == null || InventoryManager.Instance == null) return;
 
-        // 1. Curățăm Grid-ul vechi
-        slotsGridContainer.Clear();
-        slotToElementMap.Clear();
-
-        // 2. Iterăm prin toate sloturile pline din InventoryManager
-        foreach (var inventorySlot in InventoryManager.Instance.allSlots)
+        // 1. Inițializăm containerele UI DOAR dacă nu au fost create deja
+        if (uiSlotElements.Count == 0)
         {
-            // Generează și populează un slot vizual doar pentru sloturile care au item-uri.
-            CreateSlotVisual(inventorySlot);
+            InitializeFixedGrid();
         }
 
-        int slotsUsed = InventoryManager.Instance.GetCurrentSlots();
-        int maxSlots = InventoryManager.Instance.max_slots;
-
-        for (int i = slotsUsed; i < maxSlots; i++)
+        // 2. Actualizăm datele pentru fiecare slot existent
+        for (int i = 0; i < InventoryManager.Instance.allSlots.Count; i++)
         {
-            CreateEmptySlotVisual();
+            InventorySlot dataSlot = InventoryManager.Instance.allSlots[i];
+            VisualElement uiSlot = uiSlotElements[i];
+            
+            UpdateSlotVisual(uiSlot, dataSlot);
         }
-        
-        // Asigură-te că și slotul echipat este actualizat, deși evenimentul ar trebui să se ocupe de asta.
+
+        // 3. Sincronizăm și slotul echipat
         RefreshEquippedToolUI(EquippedManager.Instance.GetEquippedSlot());
     }
+
+
+    private void UpdateSlotVisual(VisualElement uiElement, InventorySlot slot)
+    {
+        VisualElement icon = uiElement.Q<VisualElement>(className: "item-icon");
+        Label countLabel = uiElement.Q<Label>(className: "stack-count-label");
+
+        if (slot != null && slot.itemData != null)
+        {
+            icon.style.backgroundImage = new StyleBackground(slot.icon);
+            icon.style.display = DisplayStyle.Flex;
+            uiElement.style.opacity = 1f;
+
+            if (slot.count > 1)
+            {
+                countLabel.text = slot.count.ToString();
+                countLabel.style.display = DisplayStyle.Flex;
+            }
+            else countLabel.style.display = DisplayStyle.None;
+        }
+        else
+        {
+            // --- SLOT GOL ---
+            icon.style.backgroundImage = null;
+            icon.style.display = DisplayStyle.None;
+            countLabel.style.display = DisplayStyle.None;
+            uiElement.style.opacity = 1f; // Resetează opacitatea dacă a fost golit
+        }
+    }
+
+
+    private void OnSlotMouseDown(MouseDownEvent evt, int slotIndex)
+    {
+        InventorySlot slot = InventoryManager.Instance.allSlots[slotIndex];
+
+        if (slot.itemData == null) {
+            HideContextMenu();
+            return;
+        }
+
+        if (evt.button == (int)MouseButton.RightMouse || evt.button == (int)MouseButton.LeftMouse)
+        {
+            selectedSlot = slot;
+            ShowContextMenu(slot, Input.mousePosition, isEquippedSlot: false);
+        }
+        evt.StopPropagation(); // Previne click-ul de a declanșa alte evenimente (ex: ascunderea meniului)
+    }
+
+    private void OnSlotPointerDown(PointerDownEvent evt, int slotIndex, VisualElement uiElement)
+    {
+        InventorySlot slot = InventoryManager.Instance.allSlots[slotIndex];
+        if (evt.button == (int)MouseButton.LeftMouse && slot.itemData != null)
+        {
+            StartDrag(slot, uiElement, evt.position);
+        }
+    }
+
+    private void OnSlotPointerUp(PointerUpEvent evt, int targetSlotIndex)
+    {
+        InventorySlot targetSlot = InventoryManager.Instance.allSlots[targetSlotIndex];
+        if (draggedSlot != null)
+        {
+            FinishDrop(targetSlot);
+        }
+    }
+    
+
+    private void InitializeFixedGrid()
+    {
+        slotsGridContainer.Clear();
+        uiSlotElements.Clear();
+
+        for (int i = 0; i < InventoryManager.Instance.max_slots; i++)
+        {
+            // 1. Creăm elementele vizuale
+            VisualElement slotElement = new VisualElement();
+            slotElement.AddToClassList("inventory-slot");
+
+            VisualElement icon = new VisualElement();
+            icon.AddToClassList("item-icon");
+            slotElement.Add(icon);
+
+            Label countLabel = new Label();
+            countLabel.AddToClassList("stack-count-label");
+            slotElement.Add(countLabel);
+
+            // 2. Salvează indexul pentru a ști la ce slot din manager face referință
+            int slotIndex = i;
+
+            // 3. Înregistrează EVENIMENTELE O SINGURĂ DATĂ
+            slotElement.RegisterCallback<PointerDownEvent>(evt => OnSlotPointerDown(evt, slotIndex, slotElement));
+            slotElement.RegisterCallback<PointerUpEvent>(evt => OnSlotPointerUp(evt, slotIndex));
+            slotElement.RegisterCallback<PointerEnterEvent>(evt => ShowTooltip(InventoryManager.Instance.allSlots[slotIndex], evt.position));
+            slotElement.RegisterCallback<PointerLeaveEvent>(evt => HideTooltip());
+            slotElement.RegisterCallback<MouseDownEvent>(evt => OnSlotMouseDown(evt, slotIndex));
+
+            slotsGridContainer.Add(slotElement);
+            uiSlotElements.Add(slotElement);
+        }
+}
 
     private void CreateSlotVisual(InventorySlot inventorySlot = null)
     {
@@ -331,6 +444,24 @@ public class InventoryPanelController : MonoBehaviour
 
             // Setăm Iconița
             iconElement.style.backgroundImage = new StyleBackground(inventorySlot.icon);
+
+            // DRAG START
+            slotElement.RegisterCallback<PointerDownEvent>(evt =>
+            {
+                if (evt.button == (int)MouseButton.LeftMouse)
+                {
+                    StartDrag(inventorySlot, slotElement, evt.position);
+                }
+            });
+
+            // DROP / END DRAG
+            slotElement.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (draggedSlot != null)
+                {
+                    FinishDrop(inventorySlot); // 'inventorySlot' aici este destinația
+                }
+            });
 
             // Setăm numărul de Item-uri (Stack Count)
             if (inventorySlot.count > 1)
@@ -359,15 +490,21 @@ public class InventoryPanelController : MonoBehaviour
                 {
                     OnSlotClicked(inventorySlot);
                 }
-                evt.StopPropagation(); 
+                evt.StopPropagation();
             });
 
             slotToElementMap.Add(inventorySlot, slotElement);
         }
         else
         {
-            // 3. Popularea cu Sloturi GOALE (dacă inventorySlot este null)
-            // Slotul rămâne gol vizual, dar își păstrează fundalul din USS.
+            // Permitem Drop și pe sloturi goale!
+            slotElement.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                if (draggedSlot != null)
+                {
+                    FinishDrop(null); // Drop pe un slot gol
+                }
+            });
         }
 
         // 5. Adaugă slotul la containerul Grid
@@ -378,6 +515,71 @@ public class InventoryPanelController : MonoBehaviour
     {
         // Metodă ajutătoare pentru sloturile goale
         CreateSlotVisual(null);
+    }
+    
+
+    private void StartDrag(InventorySlot slot, VisualElement element, Vector2 startPos)
+    {
+        draggedSlot = slot;
+        originalSlotElement = element;
+
+        // Setează iconița fantomă
+        ghostIcon.style.backgroundImage = new StyleBackground(slot.icon);
+        ghostIcon.style.display = DisplayStyle.Flex;
+        ghostIcon.style.left = startPos.x - 30; // Centrează pe mouse
+        ghostIcon.style.top = startPos.y - 30;
+
+        // Opțional: Opacitate redusă pe slotul original
+        element.style.opacity = 0.5f;
+
+        // Înregistrăm mișcarea pe ROOT pentru a fi fluidă
+        rootElement.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+        rootElement.RegisterCallback<PointerUpEvent>(OnGlobalPointerUp);
+        
+        HideTooltip(); // Nu vrem tooltip în timpul drag-ului
+    }
+
+    private void OnPointerMove(PointerMoveEvent evt)
+    {
+        if (draggedSlot == null) return;
+        
+        ghostIcon.style.left = evt.position.x - 30;
+        ghostIcon.style.top = evt.position.y - 30;
+    }
+
+    private void FinishDrop(InventorySlot targetSlot)
+    {
+        if (draggedSlot == null) return;
+
+        // Aici apelezi logica din InventoryManager pentru a face swap
+        // Presupunând că ai o metodă Swap(InventorySlot a, InventorySlot b) sau similar
+        // Dacă targetSlot e null, înseamnă că îl muți pe o poziție goală (doar schimbi indexul în listă)
+        
+        InventoryManager.Instance.SwapSlots(draggedSlot, targetSlot);
+
+        StopDrag();
+        RefreshUI();
+    }
+
+    private void OnGlobalPointerUp(PointerUpEvent evt)
+    {
+        // Aceasta curăță drag-ul dacă dai drumul la mouse în afara unui slot valid
+        if (draggedSlot != null)
+        {
+            StopDrag();
+        }
+    }
+
+    private void StopDrag()
+    {
+        if (originalSlotElement != null) originalSlotElement.style.opacity = 1f;
+        
+        draggedSlot = null;
+        originalSlotElement = null;
+        ghostIcon.style.display = DisplayStyle.None;
+        
+        rootElement.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
+        rootElement.UnregisterCallback<PointerUpEvent>(OnGlobalPointerUp);
     }
 
 
@@ -392,7 +594,7 @@ public class InventoryPanelController : MonoBehaviour
         selectedSlot = slot;
 
         // Slotul din inventar nu este slotul echipat.
-        ShowContextMenu(slot, Input.mousePosition, isEquippedSlot: false); 
+        ShowContextMenu(slot, Input.mousePosition, isEquippedSlot: false);
     }
 
     // NOU: Callback pentru click pe slotul echipat
@@ -497,7 +699,7 @@ public class InventoryPanelController : MonoBehaviour
         // Executăm DropAll din InventorySlot (metoda pe care am creat-o anterior)
         selectedSlot.DropAll();
 
-        Debug.Log($"[UI] Drop All executat pentru: {selectedSlot.itemData.itemName}");
+        // Debug.Log($"[UI] Drop All executat pentru: {selectedSlot.itemData.itemName}");
 
         HideContextMenu();
         RefreshUI();
@@ -615,22 +817,33 @@ public class InventoryPanelController : MonoBehaviour
     // LOGICA TOOLTIP-ULUI
     // ===============================================
 
-    private void ShowTooltip(InventorySlot slot, Vector2 screenPosition)
+    
+    private void ShowTooltip(InventorySlot slot, Vector2 mousePosition)
     {
-        HideTooltip();
+        // Dacă slotul e gol, ne asigurăm că ascundem orice tooltip vechi și ieșim
+        if (slot == null || slot.itemData == null) 
+        {
+            HideTooltip();
+            return;
+        }
 
-        if (tooltipPanel == null || slot.itemData == null) return;
-        
-        // 1. Popularea textului 
+        if (tooltipPanel == null) return;
+
+        // 1. Populare date
         tooltipNameLabel.text = slot.itemData.itemName;
-        tooltipDescriptionLabel.text = slot.itemData.description; 
+        tooltipDescriptionLabel.text = slot.itemData.description;
+
+        // 2. Poziționare inteligentă
+        // Root-ul vizual al UI-ului (InventoryPanel)
+        VisualElement root = tooltipPanel.parent; 
         
-        // 2. Poziționarea
-        float offsetX = 15f; 
-        tooltipPanel.style.left = screenPosition.x + offsetX;
-        tooltipPanel.style.top = screenPosition.y; 
-        
-        // 3. Afișarea
+        // Convertim poziția mouse-ului din spațiul "ecran" în spațiul "UI local"
+        Vector2 localPos = root.WorldToLocal(mousePosition);
+
+        tooltipPanel.style.left = localPos.x + 20f; // Offset să nu fie sub deget/mouse
+        tooltipPanel.style.top = localPos.y + 20f;
+
+        // 3. Afișare
         tooltipPanel.style.display = DisplayStyle.Flex;
     }
 

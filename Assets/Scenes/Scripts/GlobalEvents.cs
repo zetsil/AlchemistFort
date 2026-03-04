@@ -109,9 +109,25 @@ public static class GlobalEvents
     /// </summary>
     public static void RequestSlotEquip(InventorySlot slot)
     {
-        if (slot == null || slot.ToolItemData == null)
+        if (slot == null)
         {
-            Debug.LogError("Cerere de echipare slot invalidă: Slotul este null sau nu este ToolItem.");
+            Debug.LogError("RequestSlotEquip: Slotul primit este NULL (referință inexistentă).");
+            return;
+        }
+
+        if (slot.itemData == null)
+        {
+            // Dacă ajungi aici, înseamnă că InventoryManager a golit slotul 
+            // ÎNAINTE să trimită cererea de echipare.
+            Debug.LogError($"RequestSlotEquip: Slotul {slot.slotIndex} este GOL. Nu am ce echipa!");
+            return;
+        }
+
+        // Dacă vrei să echipezi și mere, verifică doar itemData.
+        // Dacă vrei DOAR unelte, lasă verificarea de ToolItemData.
+        if (slot.ToolItemData == null)
+        {
+            Debug.LogWarning($"RequestSlotEquip: Itemul {slot.itemData.itemName} nu este o unealtă.");
             return;
         }
 

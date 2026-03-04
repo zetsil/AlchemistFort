@@ -594,55 +594,112 @@ public class SaveManager : MonoBehaviour
 
     // ... Metodele pentru Inventar / Player rămân identice ...
 
-    public void SaveInventory() 
+    public void SaveInventory()
     {
         if (InventoryManager.Instance == null) return;
+        
         InventorySaveData saveData = new InventorySaveData();
-        foreach (InventorySlot slot in InventoryManager.Instance.allSlots) 
-        {
-            if (slot.itemData != null && slot.count > 0) 
-                saveData.slots.Add(new SlotSaveData(slot));
-        }
-        InventorySlot equipped = EquippedManager.Instance != null ? EquippedManager.Instance.GetEquippedSlot() : null;
-        if (equipped != null && equipped.itemData != null) saveData.equippedSlot = new SlotSaveData(equipped);
+        string folderPath = GetCurrentSaveFolderPath();
 
-        File.WriteAllText(Path.Combine(GetCurrentSaveFolderPath(), "inventory.json"), JsonUtility.ToJson(saveData, true));
+        // 1. Salvăm Sloturile din Rucsac (Doar cele pline)
+        foreach (InventorySlot slot in InventoryManager.Instance.allSlots)
+        {
+            if (slot != null && slot.itemData != null && slot.count > 0)
+            {
+                saveData.slots.Add(new SlotSaveData(slot));
+            }
+        }
+
+        // 2. Salvăm Slotul Echipat (Mâna jucătorului)
+        if (EquippedManager.Instance != null)
+        {
+            InventorySlot equippedSlot = EquippedManager.Instance.GetEquippedSlot();
+            if (equippedSlot != null && equippedSlot.itemData != null)
+            {
+                saveData.equippedSlot = new SlotSaveData(equippedSlot);
+            }
+        }
+
+        // Scriem pe disc
+        string filePath = Path.Combine(folderPath, "inventory.json");
+        File.WriteAllText(filePath, JsonUtility.ToJson(saveData, true));
+        
+        Debug.Log($"<color=cyan>[SaveManager] Inventar salvat. {saveData.slots.Count} sloturi ocupate.</color>");
     }
 
     public void LoadInventory()
     {
         if (InventoryManager.Instance == null) return;
-        string filePath = Path.Combine(GetCurrentSaveFolderPath(), "inventory.json");
-        if (!File.Exists(filePath)) return;
-        InventorySaveData saveData = JsonUtility.FromJson<InventorySaveData>(File.ReadAllText(filePath));
-        InventoryManager.Instance.ClearInventory();
         
-        if (EquippedManager.Instance != null) {
-        EquippedManager.Instance.ClearEquippedSlot(); 
+        string folderPath = GetCurrentSaveFolderPath();
+        string filePath = Path.Combine(folderPath, "inventory.json");
+        
+        if (!File.Exists(filePath)) return;
+
+        InventorySaveData saveData = JsonUtility.FromJson<InventorySaveData>(File.ReadAllText(filePath));
+        
+        // 1. Curățăm inventarul curent (Sărim peste toate sloturile și le facem Clear)
+        InventoryManager.Instance.ClearInventory(); 
+        
+        if (EquippedManager.Instance != null) 
+        {
+            EquippedManager.Instance.ClearEquippedSlot(); 
         }
         
+        // 2. Restaurăm sloturile din Rucsac
         foreach (SlotSaveData data in saveData.slots)
         {
             Item itemSO = FindItemInVisualManager(data.itemName);
             if (itemSO != null)
             {
-                InventorySlot newSlot = new InventorySlot(itemSO, data.slotIndex);
-                newSlot.count = data.amount;
-                if (newSlot.state != null && data.durability != -1f) newSlot.state.currentDurability = data.durability;
-                InventoryManager.Instance.AddExistingSlot(newSlot);
+                // IMPORTANT: Ne asigurăm că indexul este valid
+                if (data.slotIndex >= 0 && data.slotIndex < InventoryManager.Instance.allSlots.Count)
+                {
+                    // Luăm referința la slotul persistent deja existent
+                    InventorySlot persistentSlot = InventoryManager.Instance.allSlots[data.slotIndex];
+                    
+                    // Repopulăm datele direct în el
+                    persistentSlot.SetItem(itemSO);
+                    persistentSlot.count = data.amount;
+                    
+                    if (persistentSlot.state != null && data.durability != -1f) 
+                    {
+                        persistentSlot.state.currentDurability = data.durability;
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"[SaveManager] Am încercat încărcarea unui slot la un index invalid: {data.slotIndex}");
+                }
             }
         }
         
-        if (saveData.equippedSlot != null && !string.IsNullOrEmpty(saveData.equippedSlot.itemName)) {
+        // 3. Forțăm reconstrucția dicționarului intern al Inventarului (pentru căutări)
+        // Va trebui să expui această metodă dacă e privată în InventoryManager
+        InventoryManager.Instance.GetType().GetMethod("RebuildInventoryDictionary", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?.Invoke(InventoryManager.Instance, null);
+        
+        // 4. Restaurăm Slotul Echipat (Folosim HandleEquipSlotRequest ca să trigăruim și vizualul)
+        if (saveData.equippedSlot != null && !string.IsNullOrEmpty(saveData.equippedSlot.itemName)) 
+        {
             Item equippedSO = FindItemInVisualManager(saveData.equippedSlot.itemName);
-            if (equippedSO != null) {
-                InventorySlot equippedSlot = new InventorySlot(equippedSO, -1);
-                equippedSlot.count = saveData.equippedSlot.amount;
-                if (equippedSlot.state != null && saveData.equippedSlot.durability != -1f)
-                    equippedSlot.state.currentDurability = saveData.equippedSlot.durability;
-                GlobalEvents.RequestSlotEquip(equippedSlot);
+            if (equippedSO != null) 
+            {
+                // Cream un slot temporar doar pentru a-l pasa ca "cerere" către EquippedManager
+                InventorySlot tempSlot = new InventorySlot(equippedSO, -1);
+                tempSlot.count = saveData.equippedSlot.amount;
+                
+                if (tempSlot.state != null && saveData.equippedSlot.durability != -1f)
+                {
+                    tempSlot.state.currentDurability = saveData.equippedSlot.durability;
+                }
+                
+                // Trimitem cererea ca și cum am fi dat click din inventar
+                // EquippedManager se va ocupa să-l copieze și să-l afișeze în mână
+                GlobalEvents.RequestSlotEquip(tempSlot);
             }
         }
+        
+        Debug.Log($"<color=green>[SaveManager] Inventar încărcat cu succes!</color>");
     }
     
     public void SavePlayerPosition(string folderPath)

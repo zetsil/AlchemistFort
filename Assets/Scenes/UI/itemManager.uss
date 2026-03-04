@@ -122,3 +122,26 @@
     -unity-font-style: normal;
     margin-top: 5px;
 }
+
+
+/* Hover pentru sloturile normale din grila */
+.inventory-slot:hover {
+    background-color: rgb(170, 170, 170); /* O nuanță mai deschisă de gri */
+    border-color: rgb(255, 255, 255);     /* Border alb strălucitor */
+    scale: 1.05;                          /* Îl mărește foarte puțin (efect de zoom) */
+    transition-duration: 0.1s;            /* Face trecerea lină */
+}
+
+/* Hover pentru slotul de unealtă echipată (folosind ID-ul) */
+#equipped-tool-slot:hover {
+    background-color: rgb(220, 230, 20);  /* Un galben mai intens */
+    border-color: rgb(255, 255, 255);
+    scale: 1.05;
+    transition-duration: 0.1s;
+}
+
+/* Opțional: Efect când dai click (Active) */
+.inventory-slot:active {
+    background-color: rgb(100, 100, 100);
+    scale: 0.95;                          /* Efect de "apăsare" */
+}
