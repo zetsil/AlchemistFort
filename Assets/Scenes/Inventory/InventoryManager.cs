@@ -177,7 +177,7 @@ public class InventoryManager : MonoBehaviour
         {
             Debug.Log($"<color=white>[Inventory Success] {itemData.itemName} a fost adăugat complet.</color>");
         }
-
+        RebuildInventoryDictionary();
         UpdateDebugList();
         return remain <= 0;
     }
@@ -431,7 +431,7 @@ public class InventoryManager : MonoBehaviour
 
 
     // O metodă ajutătoare pentru a re-sincroniza dicționarul rapid după un Swap
-    private void RebuildInventoryDictionary()
+    public  void RebuildInventoryDictionary()
     {
         inventory.Clear();
         current_slots = 0;
@@ -544,6 +544,13 @@ public class InventorySlot
     public ItemState state;
     // Proprietate ajutătoare pentru acces facil la ToolItem (dacă este cazul)
     public ToolItem ToolItemData => itemData as ToolItem;
+    public string instanceID;
+
+    public void GenerateID()
+    {
+        if (string.IsNullOrEmpty(instanceID))
+            instanceID = System.Guid.NewGuid().ToString();
+    }
 
     public InventorySlot(Item data, int index)
     {
@@ -732,19 +739,23 @@ public class InventorySlot
     {
         if (itemData == null) return;
 
-        // 1. Trimitem cererea de echipare
-        GlobalEvents.RequestSlotEquip(this);
-
-        // 2. VERIFICARE: A reușit transferul?
-        // Dacă EquippedManager are acum item-ul nostru, înseamnă că putem goli slotul din inventar
-        if (EquippedManager.Instance.GetEquippedSlot().itemData == this.itemData)
+        // 1. Verificăm dacă este o unealtă (ToolItem)
+        if (itemData is ToolItem)
         {
-            this.Clear(); // Acum e sigur să-l ștergem din inventar
-            Debug.Log("Item mutat cu succes în mână.");
+            // Trimitem cererea de echipare
+            GlobalEvents.RequestSlotEquip(this);
+
+            // Verificăm dacă transferul a reușit (dacă EquippedManager are acum datele noastre)
+            if (EquippedManager.Instance.GetEquippedSlot().itemData == this.itemData)
+            {
+                this.Clear();
+            }
         }
+        // 2. Altfel, tratăm item-ul ca pe un consumabil normal
         else
         {
-            Debug.LogWarning("Echipare eșuată (probabil inventarul e plin și nu am putut face schimbul).");
+            // Apelăm metoda Use() definită în ScriptableObject (Item)
+            itemData.Use();
         }
     }
 
@@ -761,7 +772,43 @@ public class InventorySlot
 
         return amount - toRemove;
     }
-    
-    
+
+
+}
+
+
+[System.Serializable]
+public class QuickSlot
+{
+    public int hotbarIndex; 
+    public string targetItemName = ""; 
+
+    public bool IsAssigned => !string.IsNullOrEmpty(targetItemName);
+
+    // Această proprietate returnează suma totală a itemelor din inventar cu acest nume
+    public int TotalCount 
+    {
+        get 
+        {
+            if (!IsAssigned) return 0;
+
+            // 1. Căutăm în inventar (folosind metoda ta de Dicționar/Total)
+            int count = InventoryManager.Instance.GetTotalItemCount(targetItemName);
+            
+            // 2. Adăugăm și dacă este în mână
+            var equipped = EquippedManager.Instance.GetEquippedSlot();
+            if (equipped != null && equipped.itemData != null && equipped.itemData.itemName == targetItemName)
+            {
+                count += equipped.count;
+            }
+
+            return count;
+        }
+    }
+
+    public QuickSlot(int index) => hotbarIndex = index;
+
+    public void Assign(string itemName) => targetItemName = itemName;
+    public void Unassign() => targetItemName = "";
 }
 

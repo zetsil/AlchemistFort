@@ -1,0 +1,69 @@
+/* Secțiunea care ține bara (Fundal, Margini) */
+.quick-shortcut-section-base {
+    /* Schimbăm din poziție relativă în absolută */
+    position: absolute;
+    bottom: 20px; /* Distanța față de marginea de jos a ecranului */
+    left: 0;
+    right: 0;
+    
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    background-color: rgba(24, 24, 24, 0.8); /* Recomandat transparent ca să vezi jocul prin el */
+    border-top-width: 2px;
+    border-top-color: rgb(70, 70, 70);
+    
+    /* Ne asigurăm că mouse-ul trece prin fundalul barei dar nu și prin sloturi */
+    pointer-events: none; 
+}
+
+.hotbar-container-style {
+    /* Aceasta este cheia stabilității */
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    
+    /* Restul stilului tău */
+    height: 100px;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    
+    /* Permite click-urilor să treacă prin fundal, dar nu prin sloturi */
+    pointer-events: none; 
+}
+
+.quick-shortcut-grid {
+    flex-direction: row;
+    /* Sloturile trebuie să primească click-uri */
+    pointer-events: auto; 
+}
+
+
+
+/* Titlul de deasupra sloturilor (opțional) */
+.quick-shortcut-title {
+    font-size: 14px;
+    color: rgb(188, 188, 188);
+    margin-bottom: 5px;
+    -unity-font-style: bold;
+}
+
+.quick-shortcut-grid {
+    flex-direction: row;
+    justify-content: center;
+    /* Sloturile trebuie să primească click-uri */
+    pointer-events: auto; 
+}
+
+/* Dacă vrei ca sloturile de jos să arate puțin diferit, poți folosi această clasă. 
+   Dacă nu, poți adăuga direct clasa ta veche .inventory-slot când le generezi în C# */
+.quick-shortcut-slot {
+    width: 60px;
+    height: 60px;
+    margin: 5px;
+    background-color: rgba(50, 50, 50, 0.8);
+    border-color: rgb(100, 100, 100);
+    border-width: 1px;
+}

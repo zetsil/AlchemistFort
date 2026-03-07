@@ -2,182 +2,126 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
 
-
-
-// Noua denumire a clasei!
 public class UIInfoWindow : MonoBehaviour
 {
-    // Asigură-te că tragi InfoWindow.uxml aici din Inspector
-    public VisualTreeAsset infoWindowTemplate;
-
     private UIDocument _uiDocument;
-
-    // Numele elementului rădăcină (root) al UI-ului principal
     private VisualElement _rootElement;
+    
+    // Referința către elementul care există deja în UI
+    private VisualElement _infoWindowElement;
 
-    // Vom folosi un sistem simplu: afișăm o singură fereastră la un moment dat
-    private VisualElement _currentInfoWindow;
+    // Referințe către sub-elemente
+    private VisualElement _iconElement;
+    private VisualElement _separator;
+    private Label _nameLabel;
+    private Label _costLabel;
 
-    // Cât timp stă fereastra pe ecran (poți ajusta asta)
     private const float DISPLAY_TIME = 4f;
-    private const string INFO_CLASS = "info-window"; // Clasa USS
+    private const string INFO_CLASS = "info-window";
     private const string ALERT_CLASS = "alert-window";
 
-
-    // Referință la corutina activă, pentru a o putea opri dacă este nevoie
     private Coroutine _removalCoroutine;
-
-
 
     private void Awake()
     {
         _uiDocument = GetComponent<UIDocument>();
-        if (_uiDocument == null || _uiDocument.rootVisualElement == null)
-        {
-            Debug.LogError("UIDocument sau rootVisualElement lipsesc!");
-            return;
-        }
+        if (_uiDocument == null) return;
+
         _rootElement = _uiDocument.rootVisualElement;
 
+        // Căutăm elementul în document (trebuie să aibă acest nume în UI Builder)
+        // Dacă ai pus template-ul direct, caută numele părintelui din template
+        _infoWindowElement = _rootElement.Q<VisualElement>("InfoWindowRoot"); 
+
+        if (_infoWindowElement != null)
+        {
+            // Găsim sub-elementele
+            _iconElement = _infoWindowElement.Q<VisualElement>("Icon");
+            _separator = _infoWindowElement.Q<VisualElement>("Separator");
+            _nameLabel = _infoWindowElement.Q<Label>("BuildingNameLabel");
+            _costLabel = _infoWindowElement.Q<Label>("CostLabel");
+
+            // Îl ascundem la început
+            _infoWindowElement.style.display = DisplayStyle.None;
+        }
+        else
+        {
+            Debug.LogError("Nu am găsit elementul 'InfoWindowRoot' în UIDocument! Verifică numele în UI Builder.");
+        }
     }
 
     private void OnEnable()
     {
-        // Ne abonăm la evenimentul din Subject (rămâne același)
         GlobalEvents.OnNotificationRequested += DisplayInfo;
     }
 
     private void OnDisable()
     {
-        // Ne dezabonăm
         GlobalEvents.OnNotificationRequested -= DisplayInfo;
     }
 
-    // Funcția Observer: primește și afișează mesajul
     private void DisplayInfo(string message, MessageType type)
     {
-        if (infoWindowTemplate == null) 
-        {
-            Debug.LogError("InfoWindow UXML Template lipsește din Inspector.");
-            return;
-        }
+        if (_infoWindowElement == null) return;
 
-        // 1. Curăță fereastra veche (pentru a afișa doar o notificare la un moment dat)
-        if (_currentInfoWindow != null)
-        {
-            if (_removalCoroutine != null)
-            {
-                StopCoroutine(_removalCoroutine);
-            }
-            _currentInfoWindow.RemoveFromHierarchy();
-        }
+        // Resetăm corutina dacă există una activă
+        if (_removalCoroutine != null) StopCoroutine(_removalCoroutine);
 
-        // 2. Creează instanța și ia referințele la elementele din UXML
-        VisualElement newInfoWindow = infoWindowTemplate.Instantiate();
+        // 1. Resetăm vizibilitatea și clasele
+        _infoWindowElement.RemoveFromClassList(INFO_CLASS);
+        _infoWindowElement.RemoveFromClassList(ALERT_CLASS);
         
-        // Elementele structurii UXML îmbunătățite
-        VisualElement iconElement = newInfoWindow.Q<VisualElement>("Icon");
-        VisualElement separator = newInfoWindow.Q<VisualElement>("Separator");
-        Label nameLabel = newInfoWindow.Q<Label>("BuildingNameLabel"); 
-        Label costLabel = newInfoWindow.Q<Label>("CostLabel");
-        
-        // Asigură-te că toate elementele de bază sunt găsite
-        if (nameLabel == null || costLabel == null || iconElement == null)
-        {
-            Debug.LogError("Eroare UXML: Lipsește unul dintre elementele 'BuildingNameLabel', 'CostLabel', sau 'Icon'.");
-            return;
-        }
-        
-        // 3. Elimină clasele vechi și setează clasa de bază
-        newInfoWindow.RemoveFromClassList(INFO_CLASS);
-        newInfoWindow.RemoveFromClassList(ALERT_CLASS);
-        
-        // Inițializează vizibilitatea elementelor secundare
-        costLabel.style.display = DisplayStyle.Flex;
-        separator.style.display = DisplayStyle.Flex;
-        iconElement.style.display = DisplayStyle.Flex;
+        _costLabel.style.display = DisplayStyle.Flex;
+        _separator.style.display = DisplayStyle.Flex;
+        _iconElement.style.display = DisplayStyle.Flex;
 
-
-        // 4. LOGICA DE STIL ȘI CONȚINUT PE BAZA TIPULUI DE MESAJ
+        // 2. Aplicăm logica de conținut
         switch (type)
         {
             case MessageType.Alert:
-                // Mesaje de eroare (ex: Pickaxe Required)
-                
-                // Aplică clasa de stil Alert (Roșu, Bold)
-                newInfoWindow.AddToClassList(ALERT_CLASS); 
-                
-                // Conținut
-                nameLabel.text = $"! {message}";
-                
-                // Ascunde elementele secundare
-                costLabel.style.display = DisplayStyle.None;
-                separator.style.display = DisplayStyle.None;
-                
-                // Setare iconiță Alertă (Notă: necesită o textură reală pentru background)
-                // Exemplu simplu:
-                iconElement.style.backgroundColor = Color.red; 
-                
+                _infoWindowElement.AddToClassList(ALERT_CLASS);
+                _nameLabel.text = $"! {message}";
+                _costLabel.style.display = DisplayStyle.None;
+                _separator.style.display = DisplayStyle.None;
+                _iconElement.style.backgroundColor = Color.red;
                 break;
 
             case MessageType.ResourceNeeded:
-                // Mesaje de cost (ex: la Hover peste clădire)
-                
-                // Aplică clasa de stil Info/Cost (Neutru, Gri)
-                newInfoWindow.AddToClassList(INFO_CLASS); 
-
-                // Împărțim mesajul în Nume și Cost (presupunând formatul "Nume\nCost...")
+                _infoWindowElement.AddToClassList(INFO_CLASS);
                 string[] parts = message.Split('\n');
-                
                 if (parts.Length >= 2)
                 {
-                    nameLabel.text = parts[0]; // Numele Clădirii
-                    costLabel.text = parts[1]; // Costul Resurselor
-                } 
-                else 
-                {
-                    nameLabel.text = "Cost Info:";
-                    costLabel.text = message;
+                    _nameLabel.text = parts[0];
+                    _costLabel.text = parts[1];
                 }
-                
-                // Setare iconiță Info (Exemplu: Verde deschis)
-                iconElement.style.backgroundColor = Color.green; 
-
+                else
+                {
+                    _nameLabel.text = "Cost Info:";
+                    _costLabel.text = message;
+                }
+                _iconElement.style.backgroundColor = Color.green;
                 break;
-                
+
             case MessageType.Info:
-                // Mesaje simple de sistem (ex: Item colectat)
-                newInfoWindow.AddToClassList(INFO_CLASS);
-                nameLabel.text = message;
-                
-                // Ascunde elementele secundare pentru mesajul simplu de info
-                costLabel.style.display = DisplayStyle.None;
-                separator.style.display = DisplayStyle.None;
-                iconElement.style.display = DisplayStyle.None;
+                _infoWindowElement.AddToClassList(INFO_CLASS);
+                _nameLabel.text = message;
+                _costLabel.style.display = DisplayStyle.None;
+                _separator.style.display = DisplayStyle.None;
+                _iconElement.style.display = DisplayStyle.None;
                 break;
-
-            default:
-                // Ignoră sau tratează alte tipuri
-                Debug.Log($"Tip de notificare neprocesat de UIInfoWindow: {type}");
-                return;
         }
 
-        // 5. Adaugă la UI-ul principal
-        _rootElement.Add(newInfoWindow);
-        _currentInfoWindow = newInfoWindow;
+        // 3. Afișăm elementul
+        _infoWindowElement.style.display = DisplayStyle.Flex;
 
-        // 6. Pornește cronometrul de ștergere
-        _removalCoroutine = StartCoroutine(RemoveInfoAfterDelay(newInfoWindow, DISPLAY_TIME));
+        // 4. Pornim cronometrul de ascundere
+        _removalCoroutine = StartCoroutine(HideAfterDelay(DISPLAY_TIME));
     }
 
-    private IEnumerator RemoveInfoAfterDelay(VisualElement element, float delay)
+    private IEnumerator HideAfterDelay(float delay)
     {
         yield return new WaitForSeconds(delay);
-
-        if (_currentInfoWindow == element)
-        {
-             _currentInfoWindow = null;
-        }
-        element.RemoveFromHierarchy();
+        _infoWindowElement.style.display = DisplayStyle.None;
+        _removalCoroutine = null;
     }
 }

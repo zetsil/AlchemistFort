@@ -72,33 +72,39 @@ public class EquippedManager : MonoBehaviour
 
     private void HandleEquipSlotRequest(InventorySlot slotFromInventory)
     {
-        // Aici verificăm dacă ce vine din Inventar e valid în SECUNDA ASTA
-        if (slotFromInventory == null || slotFromInventory.itemData == null)
+        // 1. Verificări de bază (null sau gol)
+        if (slotFromInventory == null || slotFromInventory.itemData == null) return;
+
+        // 2. LOGICA DE TOGGLE: Dacă slotul primit este deja cel din mână, îl dechipăm
+        if (slotFromInventory == currentEquippedSlot)
         {
-            Debug.LogWarning("[EquippedManager] Slotul primit din inventar e deja gol!");
+            UnequipTool(); 
             return;
         }
 
-        // Dezechipăm ce avem acum (dacă avem)
-        if (currentEquippedSlot.itemData != null)
-        {
-            UnequipTool();
-            if (currentEquippedSlot.itemData != null) return; // Inventar plin
-        }
+        // 3. SALVĂM DATELE DIN MÂNĂ (pentru Swap)
+        Item tempItem = currentEquippedSlot.itemData;
+        int tempCount = currentEquippedSlot.count;
+        ItemState tempState = currentEquippedSlot.state;
 
-        // COPIEM DATELE (Deep Copy)
-        // Acum, dacă InventoryManager golește slotul lui, noi avem copia noastră safe.
+        // 4. TRANSFERUL DE DATE (Deep Copy)
+        // Punem în mână ce a venit din inventar
         currentEquippedSlot.CopyFrom(slotFromInventory);
 
-        // Ne asigurăm că avem cel puțin 1 item (pentru mere/unelte)
-        if (currentEquippedSlot.count <= 0) currentEquippedSlot.count = 1;
+        // Punem în inventar ce aveam înainte în mână 
+        // (Dacă mâna era goală, slotul din inventar va deveni acum gol prin CopyFromValues)
+        slotFromInventory.CopyFromValues(tempItem, tempItem?.icon, tempCount, tempItem?.stackSize ?? 1, tempState);
 
-        ToolController equippedController = FindToolControllerInScene();
-        if (equippedController != null)
+        // 5. ASIGURARE DATE (Minim 1 item dacă slotul nu e null)
+        if (currentEquippedSlot.itemData != null && currentEquippedSlot.count <= 0)
         {
-            Debug.Log($"[EquippedManager] Echipat cu succes: {currentEquippedSlot.itemData.itemName}");
+            currentEquippedSlot.count = 1;
         }
 
+        // 6. SINCRONIZARE (Refacem dicționarul pentru a evita "fantomele")
+        InventoryManager.Instance.RebuildInventoryDictionary();
+
+        // 7. NOTIFICARE UI
         OnSlotEquippedStateChanged?.Invoke(currentEquippedSlot);
     }
     

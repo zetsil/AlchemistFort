@@ -1,0 +1,15 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:Template name="InventoryContent" src="project://database/Assets/Scenes/UI/InventoryUI.uxml?fileID=9197481963319205126&amp;guid=36b13ea872734f582a49e68806cd558f&amp;type=3#InventoryUI"/>
+    <Style src="project://database/Assets/Scenes/UI/QuickSlots.uss?fileID=7433441132597879392&amp;guid=8bab94936eac77a6ca180b6872fd9da0&amp;type=3#QuickSlots"/>
+    <ui:VisualElement name="ui-screen-root" style="flex-grow: 1; justify-content: space-between; background-color: rgba(0, 0, 0, 0);">
+        <ui:VisualElement name="inventory-panel" class="inventory-panel-base">
+            <ui:Instance template="InventoryContent"/>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="hotbar-panel" class="hotbar-container-style" style="height: 100px; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.5); bottom: 0; right: -2px; left: 3px;">
+            <ui:Label text="QUICK SLOTS" style="font-size: 10px; color: white; margin-bottom: 2px;"/>
+            <ui:VisualElement name="hotbar-slot-container" class="quick-shortcut-grid" style="flex-direction: row;"/>
+        </ui:VisualElement>
+
+    </ui:VisualElement>
+</ui:UXML>
