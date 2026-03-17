@@ -714,6 +714,7 @@ public class InventorySlot
         int availableSpace = max_count - count;
         int toAdd = Mathf.Min(amount, availableSpace);
         count += toAdd;
+        OnSlotChanged?.Invoke(this);
         return amount - toAdd;
     }
 
@@ -744,6 +745,7 @@ public class InventorySlot
         {
             // Trimitem cererea de echipare
             GlobalEvents.RequestSlotEquip(this);
+            OnSlotChanged?.Invoke(this);
 
             // Verificăm dacă transferul a reușit (dacă EquippedManager are acum datele noastre)
             if (EquippedManager.Instance.GetEquippedSlot().itemData == this.itemData)
@@ -756,6 +758,7 @@ public class InventorySlot
         {
             // Apelăm metoda Use() definită în ScriptableObject (Item)
             itemData.Use();
+            OnSlotChanged?.Invoke(this);
         }
     }
 
@@ -763,6 +766,7 @@ public class InventorySlot
     {
         int toRemove = Mathf.Min(amount, count);
         count -= toRemove;
+        OnSlotChanged?.Invoke(this);
 
         if (count <= 0)
         {

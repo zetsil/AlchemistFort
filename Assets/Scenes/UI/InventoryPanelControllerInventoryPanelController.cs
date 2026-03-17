@@ -100,6 +100,11 @@ public class InventoryPanelController : MonoBehaviour
             EquippedManager.Instance.OnSlotEquippedStateChanged += RefreshEquippedToolUI;
         }
 
+        if (QuickSlotManager.Instance != null)
+        {
+            QuickSlotManager.Instance.OnQuickSlotUIUpdate +=  RefreshHotbarVisuals;
+        }
+
         // 5. NOU: Atașează callback-ul de click pe slotul echipat
         if (equippedToolSlot != null)
         {
@@ -113,6 +118,7 @@ public class InventoryPanelController : MonoBehaviour
         CreateGhostIcon();
         InitializeContextMenu();
         InitializeTooltip();
+        InitializeHotbar();
 
         // Facem o primă actualizare a slotului echipat (pentru a afișa starea inițială)
         RefreshEquippedToolUI(EquippedManager.Instance.GetEquippedSlot()); 
@@ -146,12 +152,17 @@ public class InventoryPanelController : MonoBehaviour
 
         }
 
-        if (equippedToolSlot != null)
+        if (QuickSlotManager.Instance != null)
         {
-            equippedToolSlot.UnregisterCallback<MouseDownEvent>(OnEquippedSlotMouseDown);
-            equippedToolSlot.UnregisterCallback<PointerEnterEvent>(OnEquippedSlotPointerEnter);
-            equippedToolSlot.UnregisterCallback<PointerLeaveEvent>(OnEquippedSlotPointerLeave);
+            QuickSlotManager.Instance.OnQuickSlotUIUpdate -=  RefreshHotbarVisuals;
         }
+
+        if (equippedToolSlot != null)
+            {
+                equippedToolSlot.UnregisterCallback<MouseDownEvent>(OnEquippedSlotMouseDown);
+                equippedToolSlot.UnregisterCallback<PointerEnterEvent>(OnEquippedSlotPointerEnter);
+                equippedToolSlot.UnregisterCallback<PointerLeaveEvent>(OnEquippedSlotPointerLeave);
+            }
 
         // Dezabonare callback-uri pentru butoanele meniului
         btnUse.clicked -= OnContextActionClicked;
@@ -447,10 +458,6 @@ public class InventoryPanelController : MonoBehaviour
         {
             InitializeFixedGrid();
         }
-
-
-        InitializeHotbar();
-        
 
 
         // 2. Actualizăm datele pentru fiecare slot existent

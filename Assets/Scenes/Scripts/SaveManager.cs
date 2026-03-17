@@ -31,6 +31,27 @@ public class SlotSaveData
 }
 
 [System.Serializable]
+public class QuickSlotSaveData
+{
+    public int index;
+    public string targetItemName;
+
+    public QuickSlotSaveData() { }
+
+    public QuickSlotSaveData(QuickSlot qs)
+    {
+        this.index = qs.hotbarIndex;
+        this.targetItemName = qs.targetItemName;
+    }
+}
+
+[System.Serializable]
+public class HotbarSaveData
+{
+    public List<QuickSlotSaveData> quickSlots = new List<QuickSlotSaveData>();
+}
+
+[System.Serializable]
 public class InventorySaveData
 {
     public List<SlotSaveData> slots = new List<SlotSaveData>();
@@ -289,6 +310,57 @@ public class SaveManager : MonoBehaviour
         CacheCurrentSceneState();
         CachePlayerRuntimeStats();
     }
+
+    public void SaveHotbar(string folderPath)
+    {
+        if (QuickSlotManager.Instance == null) return;
+
+        HotbarSaveData saveData = new HotbarSaveData();
+
+        // Parcurgem toate sloturile din Hotbar și le salvăm datele
+        foreach (var qs in QuickSlotManager.Instance.quickSlots)
+        {
+            saveData.quickSlots.Add(new QuickSlotSaveData(qs));
+        }
+
+        string filePath = Path.Combine(folderPath, "hotbar.json");
+        File.WriteAllText(filePath, JsonUtility.ToJson(saveData, true));
+        
+        Debug.Log($"<color=cyan>[SaveManager] Hotbar salvat.</color>");
+    }
+
+    public void LoadHotbar(string folderPath)
+    {
+        if (QuickSlotManager.Instance == null) return;
+
+        string filePath = Path.Combine(folderPath, "hotbar.json");
+        if (!File.Exists(filePath))
+        {
+            // Dacă nu există fișierul, curățăm Hotbar-ul existent pentru a preveni "fantome" de la sesiuni anterioare
+            foreach(var qs in QuickSlotManager.Instance.quickSlots)
+            {
+                qs.Unassign();
+            }
+            return;
+        }
+
+        HotbarSaveData saveData = JsonUtility.FromJson<HotbarSaveData>(File.ReadAllText(filePath));
+
+        // Asignăm noile valori
+        foreach (var savedSlot in saveData.quickSlots)
+        {
+            if (string.IsNullOrEmpty(savedSlot.targetItemName))
+            {
+                QuickSlotManager.Instance.quickSlots[savedSlot.index].Unassign();
+            }
+            else
+            {
+                QuickSlotManager.Instance.AssignToHotbar(savedSlot.targetItemName, savedSlot.index);
+            }
+        }
+        
+        Debug.Log($"<color=green>[SaveManager] Hotbar încărcat cu succes!</color>");
+    }
     
     public void SetPendingPlayerSpawn(Vector3 position, float yaw)
     {
@@ -329,6 +401,7 @@ public class SaveManager : MonoBehaviour
         CacheCurrentSceneState();
         CaptureAndSaveScreenshot(folderPath);
         SaveInventory();
+        SaveHotbar(folderPath);
         SavePlayerPosition(folderPath);
         SaveWorldItemStateToDisk(folderPath);
         SavePlayerStats(folderPath);
@@ -384,6 +457,7 @@ public class SaveManager : MonoBehaviour
 
         LoadPlayerPosition(folderPath);
         LoadInventory();
+        LoadHotbar(folderPath);
         ApplyPendingPlayerSpawn();
     }
     
@@ -657,15 +731,18 @@ public class SaveManager : MonoBehaviour
                 {
                     // Luăm referința la slotul persistent deja existent
                     InventorySlot persistentSlot = InventoryManager.Instance.allSlots[data.slotIndex];
-                    
+
                     // Repopulăm datele direct în el
                     persistentSlot.SetItem(itemSO);
                     persistentSlot.count = data.amount;
-                    
-                    if (persistentSlot.state != null && data.durability != -1f) 
+
+                    if (persistentSlot.state != null && data.durability != -1f)
                     {
                         persistentSlot.state.currentDurability = data.durability;
                     }
+                    
+                    // Reconstruim dicționarul ca să știm noile sume
+                    InventoryManager.Instance.RebuildInventoryDictionary();
                 }
                 else
                 {

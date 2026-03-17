@@ -5,11 +5,9 @@
         <ui:VisualElement name="inventory-panel" class="inventory-panel-base">
             <ui:Instance template="InventoryContent"/>
         </ui:VisualElement>
-
-        <ui:VisualElement name="hotbar-panel" class="hotbar-container-style" style="height: 100px; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0.5); bottom: 0; right: -2px; left: 3px;">
+        <ui:VisualElement name="hotbar-panel" class="hotbar-container-style" style="height: 100px; justify-content: center; align-items: center; background-color: rgba(0, 0, 0, 0); bottom: 0; right: -2px; left: 3px; background-position-x: center;">
             <ui:Label text="QUICK SLOTS" style="font-size: 10px; color: white; margin-bottom: 2px;"/>
             <ui:VisualElement name="hotbar-slot-container" class="quick-shortcut-grid" style="flex-direction: row;"/>
         </ui:VisualElement>
-
     </ui:VisualElement>
 </ui:UXML>

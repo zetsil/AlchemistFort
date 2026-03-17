@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
+
 
 public class QuickSlotManager : MonoBehaviour
 {
@@ -8,6 +10,7 @@ public class QuickSlotManager : MonoBehaviour
     [Header("Settings")]
     public int numberOfSlots = 4;
     public List<QuickSlot> quickSlots = new List<QuickSlot>();
+    public event Action OnQuickSlotUIUpdate;
 
     private void Awake()
     {
@@ -72,6 +75,38 @@ public class QuickSlotManager : MonoBehaviour
         }
     }
 
+
+    private void OnEnable()
+    {
+        // 1. Ascultăm slotul de echipament (mâna)
+        if (EquippedManager.Instance != null)
+        {
+            EquippedManager.Instance.GetEquippedSlot().OnSlotChanged += HandleGlobalSlotChange;
+        }
+
+        // 2. Ascultăm toate sloturile din inventar
+        if (InventoryManager.Instance != null)
+        {
+            foreach (var slot in InventoryManager.Instance.allSlots)
+            {
+                slot.OnSlotChanged += HandleGlobalSlotChange;
+            }
+        }
+    }
+
+    private void OnDisable()
+    {
+        // Dezabonare pentru a evita memory leaks
+        if (EquippedManager.Instance != null)
+            EquippedManager.Instance.GetEquippedSlot().OnSlotChanged -= HandleGlobalSlotChange;
+
+        if (InventoryManager.Instance != null)
+        {
+            foreach (var slot in InventoryManager.Instance.allSlots)
+                slot.OnSlotChanged -= HandleGlobalSlotChange;
+        }
+    }
+
     private InventorySlot GetFirstAvailableInventorySlot(string itemName)
     {
         // 1. Verificăm în ECHIPAMENT (EquippedManager)
@@ -94,6 +129,21 @@ public class QuickSlotManager : MonoBehaviour
         return null;
     }
 
+
+    private void HandleGlobalSlotChange(InventorySlot slot)
+    {
+        // Debug.Log($"[Logic] Slotul {slot.slotIndex} s-a schimbat. Emitem semnal de refresh.");
+        
+        // Emitem semnalul către UI
+        OnQuickSlotUIUpdate?.Invoke();
+    }
+
+    // Păstrează și această metodă pentru apeluri manuale dacă e nevoie
+    public void RequestUIRefresh()
+    {
+        OnQuickSlotUIUpdate?.Invoke();
+    }
+
     public Sprite GetQuickSlotIcon(int index)
     {
         if (index < 0 || index >= quickSlots.Count) return null;
@@ -110,6 +160,7 @@ public class QuickSlotManager : MonoBehaviour
         if (hotbarIndex >= 0 && hotbarIndex < quickSlots.Count)
         {
             quickSlots[hotbarIndex].Assign(itemName);
+            RequestUIRefresh();
             Debug.Log($"<color=green>[Hotbar]</color> Asignat: {itemName} pe index {hotbarIndex}");
         }
     }
