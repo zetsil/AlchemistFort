@@ -43,6 +43,7 @@ public class ItemPickup : MonoBehaviour
         dynamicRecipe.actionName = "Pick Up " + itemData.itemName;
         dynamicRecipe.actionIcon = itemData.icon;
         dynamicRecipe.actionLogic = pickUpLogic;
+        // io
 
         SetupDynamicUI(dynamicRecipe);
 
@@ -50,12 +51,13 @@ public class ItemPickup : MonoBehaviour
         if (visibility == null)
         {
             visibility = gameObject.AddComponent<VisibilityRangeController>();
-            visibility.activationDistance = 4f; 
-            visibility.hideOnlyInteractionButtons = true; 
-            visibility.shouldReinitialize = true;
         }
-    }
-    
+
+        // IMPORTANT: Îi spunem să își ia referințele UI ACUM, 
+        // pentru că tocmai am terminat SetupDynamicUI
+        visibility.ManualInitialize();
+        }
+            
 
     void Update()
     {

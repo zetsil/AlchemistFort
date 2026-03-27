@@ -12,13 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 169b76e95c662df98a2e36dbb7d8e3ad, type: 3}
   m_Name: ForestMap
   m_EditorClassIdentifier: Assembly-CSharp::PerlinSettings
-  seed: 200
+  seed: 0
   scale: 60
   octaves: 3
   persistence: 0.099
   lacunarity: 3
   nivelCampie: 0.339
   nivelMunte: 0.625
+  createCentralLake: 1
+  lakeRadius: 80
+  plainRadius: 130
+  lakeDepthMultiplier: 0.143
   terrainHeightMultiplier: 200
-  width: 500
-  height: 500
+  width: 1000
+  height: 1000

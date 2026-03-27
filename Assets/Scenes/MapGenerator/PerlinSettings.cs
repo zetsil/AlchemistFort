@@ -14,32 +14,45 @@ public class PerlinSettings : ScriptableObject
     public float lacunarity = 2f;
 
     [Header("Reguli Formă Teren (Slidere)")]
-    [Tooltip("Până la ce valoare sunt gropi. Aici începe zona plată.")]
+    [Tooltip("Până la ce valoare sunt gropi (lacuri).")]
     [Range(0f, 1f)] 
     public float nivelCampie = 0.3f; 
 
-    [Tooltip("De la ce valoare se termină zona plată și încep munții.")]
+    [Tooltip("De la ce valoare încep munții.")]
     [Range(0f, 1f)] 
     public float nivelMunte = 0.5f;
 
+    [Header("Lac Central & Câmpie")]
+    public bool createCentralLake = true;
+    [Tooltip("Raza apei din centrul hărții.")]
+    public float lakeRadius = 25f;
+    [Tooltip("Raza zonei plate din jurul lacului.")]
+    public float plainRadius = 50f;
+    [Tooltip("Adâncimea lacului (0 = nivelul apei, sub 1 = adânc).")]
+    [Range(0f, 1f)]
+    public float lakeDepthMultiplier = 0.5f;
+
     [Header("Dimensiuni Teren")]
     public float terrainHeightMultiplier = 50f;
-    public int width = 257; // 257 este optim pentru Unity Terrain
+    public int width = 257; 
     public int height = 257;
 
     public float[,] GenerateMap()
     {
-        // Ne asigurăm că sliderul de munte nu e tras accidental sub cel de câmpie
+        // Corecție automată slidere
         if (nivelMunte < nivelCampie) nivelMunte = nivelCampie;
+        if (plainRadius < lakeRadius) plainRadius = lakeRadius;
 
-        // Trimitem valorile sliderelor către generator
-        return PerlinNoiseGenerator.GenerateNoiseMap(width, height, seed, scale, octaves, persistence, lacunarity, nivelCampie, nivelMunte);
+        return PerlinNoiseGenerator.GenerateNoiseMap(
+            width, height, seed, scale, octaves, persistence, lacunarity, 
+            nivelCampie, nivelMunte
+        );
     }
 
     private void OnValidate()
     {
-        // Validare în timp real în Inspector
         if (nivelMunte < nivelCampie) nivelMunte = nivelCampie;
+        if (plainRadius < lakeRadius) plainRadius = lakeRadius;
 
         #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(this);

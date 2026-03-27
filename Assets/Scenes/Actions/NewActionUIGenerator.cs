@@ -34,9 +34,13 @@ public class NewActionUIGenerator : MonoBehaviour
     private Transform uiContainer;
     private Transform playerTransform;
 
+    [HideInInspector] 
+    public Transform containerToRotate;
+
     void Awake()
     {
         uiContainer = GetOrCreateUIContainer();
+        containerToRotate = uiAnchor != null ? uiAnchor : uiContainer;
     }
 
     void Start()
@@ -165,7 +169,7 @@ public class NewActionUIGenerator : MonoBehaviour
             }
 
             Button uiButton = buttonInstance.GetComponent<Button>();
-            ActionButtonUI buttonUI = buttonInstance.GetComponent<ActionButtonUI>(); 
+            ActionButtonUI buttonUI = buttonInstance.GetComponent<ActionButtonUI>();
             buttonUI.SetupExecutor(recipe.actionLogic, recipe);
 
             if (uiButton != null)
@@ -186,6 +190,7 @@ public class NewActionUIGenerator : MonoBehaviour
                 buttonUI.SetVisuals(recipe.actionIcon, recipe.actionName);
             }
         }
+        uiContainer.gameObject.SetActive(false);
     }
 
     public void SetActionLevel(int newLevel)
