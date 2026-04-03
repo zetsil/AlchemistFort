@@ -90,6 +90,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &1749986359523561199
 MonoBehaviour:
@@ -105,7 +106,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Resource
   entityData: {fileID: 0}
   currentHealth: 0
-  MaxHealth: 0
+  isDead: 0
+  flashSettings:
+    flashMaterial: {fileID: 0}
+    flashColor: {r: 4, g: 4, b: 4, a: 4}
+    duration: 0.05
+    targetRenderers: []
   requiredToolType: 0
 --- !u!65 &8751557941455326582
 BoxCollider:

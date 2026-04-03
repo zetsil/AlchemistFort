@@ -75,6 +75,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Cauldron
       objectReference: {fileID: 0}
+    - target: {fileID: 100000, guid: bfd8050d9a207f646a71e823c296d984, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 400000, guid: bfd8050d9a207f646a71e823c296d984, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -132,6 +136,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 100000, guid: bfd8050d9a207f646a71e823c296d984, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8186713588954638657}
+    - targetCorrespondingSourceObject: {fileID: 100000, guid: bfd8050d9a207f646a71e823c296d984, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6836909016080668041}
   m_SourcePrefab: {fileID: 100100000, guid: bfd8050d9a207f646a71e823c296d984, type: 3}
 --- !u!4 &3864005368430693513 stripped
 Transform:
@@ -163,6 +170,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: e480397e09953d263938e377b328645b, type: 2}
   currentActionLevel: 0
   actionButtonPrefab: {fileID: 4891698182733973471, guid: d422570395dfcf8c0b79c2de13d3222a, type: 3}
+  containerToRotate: {fileID: 0}
 --- !u!64 &8186713588954638657
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -185,6 +193,18 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4300000, guid: bfd8050d9a207f646a71e823c296d984, type: 3}
+--- !u!114 &6836909016080668041
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3864005368430727337}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36b591c764de67ac2b8b001b7b4fe96e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisibilityRangeController
 --- !u!1001 &7618022219522636765
 PrefabInstance:
   m_ObjectHideFlags: 0

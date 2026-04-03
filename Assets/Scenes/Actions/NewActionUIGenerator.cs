@@ -37,10 +37,16 @@ public class NewActionUIGenerator : MonoBehaviour
     [HideInInspector] 
     public Transform containerToRotate;
 
+    bool visibility = false;
+
+
+
+
     void Awake()
     {
         uiContainer = GetOrCreateUIContainer();
         containerToRotate = uiAnchor != null ? uiAnchor : uiContainer;
+        
     }
 
     void Start()
@@ -85,11 +91,20 @@ public class NewActionUIGenerator : MonoBehaviour
             }
         }
     }
+    
+
+    public void ToggleUIContainer(bool state)
+    {
+        if (uiContainer != null)
+        {
+            uiContainer.gameObject.SetActive(state);
+        }
+    }
 
     private Transform GetOrCreateUIContainer()
     {
         GameObject go = new GameObject("UI_Action_Container");
-        
+
         // --- PARENTING ȘI RESET ---
         if (uiAnchor != null)
         {
@@ -124,12 +139,12 @@ public class NewActionUIGenerator : MonoBehaviour
         go.AddComponent<GraphicRaycaster>();
 
         RectTransform rt = go.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(400, 100); 
-        rt.pivot = new Vector2(0.5f, 0.5f); 
+        rt.sizeDelta = new Vector2(400, 100);
+        rt.pivot = new Vector2(0.5f, 0.5f);
 
         HorizontalLayoutGroup hlg = go.AddComponent<HorizontalLayoutGroup>();
         hlg.childAlignment = TextAnchor.MiddleCenter;
-        hlg.spacing = 200f; 
+        hlg.spacing = 200f;
         hlg.childControlHeight = true;
         hlg.childControlWidth = true;
 

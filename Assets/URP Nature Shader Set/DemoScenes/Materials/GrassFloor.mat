@@ -21,7 +21,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: GrassFloor
-  m_Shader: {fileID: -6465566751694194690, guid: c95caf119d253db4ab0f6c6e6a140bc6, type: 3}
+  m_Shader: {fileID: 4800000, guid: b8e983578f253dfb1896c68157126acc, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -120,6 +120,7 @@ Material:
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _MaxDist: 100
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _Parallax: 0.005

@@ -447,6 +447,7 @@ public class MapGenerator : MonoBehaviour
 
     public void PlaceTrees()
     {
+
         string containerName = "Generated_Trees";
         Transform oldContainer = transform.Find(containerName);
         if (oldContainer != null) DestroyImmediate(oldContainer.gameObject);

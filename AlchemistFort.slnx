@@ -1,6 +1,9 @@
 ﻿<Solution>
   <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="Boxophobic.Utils.Editor.csproj" />
   <Project Path="IngameDebugConsole.Runtime.csproj" />
+  <Project Path="Boxophobic.SkyboxCubemapExtended.Editor.csproj" />
+  <Project Path="Boxophobic.Utils.Scripts.csproj" />
   <Project Path="IngameDebugConsole.Editor.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
 </Solution>

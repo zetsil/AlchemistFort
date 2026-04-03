@@ -7,7 +7,7 @@ public class EquippedManager : MonoBehaviour
     // Singleton Setup
     public static EquippedManager Instance { get; private set; }
     
-    // Semnalul Public de Stare (pe baza slotului)
+    // Semnalul Public de Stare (pe baza slotului) asd
     public event Action<InventorySlot> OnSlotEquippedStateChanged;
 
     // Slotul de Echipare (Instanța cu durabilitate)
@@ -69,6 +69,8 @@ public class EquippedManager : MonoBehaviour
         // 2. Notificăm UI-ul (InventoryPanelController va primi slotul gol și va ascunde iconița)
         OnSlotEquippedStateChanged?.Invoke(slot.itemData == null ? null : slot);
     }
+    
+    
 
     private void HandleEquipSlotRequest(InventorySlot slotFromInventory)
     {
@@ -78,7 +80,7 @@ public class EquippedManager : MonoBehaviour
         // 2. LOGICA DE TOGGLE: Dacă slotul primit este deja cel din mână, îl dechipăm
         if (slotFromInventory == currentEquippedSlot)
         {
-            UnequipTool(); 
+            UnequipTool();
             return;
         }
 

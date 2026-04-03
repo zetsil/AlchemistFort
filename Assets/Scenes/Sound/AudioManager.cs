@@ -85,15 +85,37 @@ public class AudioManager : MonoBehaviour
         if (soundMap.TryGetValue(soundName, out SoundClipData soundData))
         {
             AudioClip clip = soundData.GetNextClip();
-
             if (clip != null)
             {
-                // PlayClipAtPoint creează automat un obiect temporar în scenă,
-                // setează sunetul ca fiind 3D (Spatial Blend 1.0) și îl distruge după terminare.
-                // Volumul este preluat din setările effectsAudioSource pentru consistență.
-                AudioSource.PlayClipAtPoint(clip, position, effectsAudioSource.volume);
+                StartCoroutine(PlayClip3D(clip, position));
+            }
+            else
+            {
+                Debug.LogWarning($"[AudioManager] Clip null pentru: {soundName}");
             }
         }
+        else
+        {
+            Debug.LogWarning($"[AudioManager] Sunetul nu există în soundMap: '{soundName}'");
+        }
+    }
+
+    private IEnumerator PlayClip3D(AudioClip clip, Vector3 position)
+    {
+        GameObject tempGO = new GameObject("TempAudio_3D");
+        tempGO.transform.position = position;
+
+        AudioSource src = tempGO.AddComponent<AudioSource>();
+        src.clip = clip;
+        src.spatialBlend = 1f;         // Full 3D
+        src.rolloffMode = AudioRolloffMode.Linear;
+        src.minDistance = 5f;          // Volum maxim până la 5 unități
+        src.maxDistance = 50f;         // Ajustează după nevoie
+        src.volume = 1f;
+        src.Play();
+
+        yield return new WaitForSeconds(clip.length);
+        Destroy(tempGO);
     }
 
     // ====================================================================================

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 169b76e95c662df98a2e36dbb7d8e3ad, type: 3}
   m_Name: ForestMap
   m_EditorClassIdentifier: Assembly-CSharp::PerlinSettings
-  seed: 0
+  seed: 10
   scale: 60
   octaves: 3
   persistence: 0.099
