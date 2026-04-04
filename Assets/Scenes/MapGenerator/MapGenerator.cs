@@ -12,6 +12,22 @@ public struct TerrainTextureSettings
 
 
 [System.Serializable]
+public class VegetationSettings
+{
+    public string name;
+    public Mesh mesh;
+    public Material material;
+    [Range(0f, 1f)] public float density = 0.3f;        // Cât de des apare
+    [Range(0f, 1f)] public float minHeight = 0.35f;     // Înălțime minimă teren
+    [Range(0f, 1f)] public float maxHeight = 0.45f;     // Înălțime maximă teren
+    public float maxSlope = 20f;                         // Pantă maximă
+    public Vector2 scaleRange = new Vector2(0.6f, 1.0f);
+    public float noiseScale = 40f;                       // Scala noise-ului de distribuție
+    public float lakeOffset = 5f;                        // Distanță față de lac
+}
+
+
+[System.Serializable]
 public class FlowerSettings
 {
     public string name;
@@ -69,6 +85,8 @@ public class MapGenerator : MonoBehaviour
 
     [Header("Setări Flori GPU")]
     public List<FlowerSettings> flowerSettingsList;
+    public List<VegetationSettings> vegetationList;
+
 
 
     [Header("Setări Mining Rocks")]
@@ -149,8 +167,7 @@ public class MapGenerator : MonoBehaviour
         if (treePrefab != null)
             PlaceTrees();               // 4. Punem copacii
 
-        GenerateGrass();               // 5. Generăm iarba (după ce heightmap-ul e setat!)
-        GenerateFlowers();
+        GenerateVegetation();
         SpawnMiningRock();
         UpdateWaterLevel();            // 6. Poziționăm apa (nu afectează TerrainData)
     }
@@ -294,19 +311,31 @@ public class MapGenerator : MonoBehaviour
     }
 
     // ─────────────────────────────────────────────
-    //  IARBĂ  ← FIXED
+    //  Vegetation
     // ─────────────────────────────────────────────
 
-    public void GenerateGrass()
+    public void GenerateVegetation()
     {
-        List<Matrix4x4> grassTransforms = new List<Matrix4x4>();
-        System.Random prng = new System.Random(settings.seed + 123);
-        TerrainData terrainData = terrain.terrainData;
+        if (multiRenderer == null) EnsureRendererExists();
+        
+        // Ștergem datele vechi
+        multiRenderer.ClearAll();
 
+        TerrainData terrainData = terrain.terrainData;
         int sampleRes = 256;
-        float spacing = terrainData.size.x / sampleRes;
         Vector2 center = new Vector2(sampleRes / 2f, sampleRes / 2f);
         float gridLakeRadius = (settings.lakeRadius / terrainData.heightmapResolution) * sampleRes;
+        float spacing = terrainData.size.x / sampleRes;
+
+        // O listă per tip de vegetație
+        Dictionary<int, List<Matrix4x4>> transforms = new Dictionary<int, List<Matrix4x4>>();
+        for (int i = 0; i < vegetationList.Count; i++)
+            transforms[i] = new List<Matrix4x4>();
+
+        // Seed diferit per tip ca să nu se suprapună pattern-urile
+        System.Random[] prngs = new System.Random[vegetationList.Count];
+        for (int i = 0; i < vegetationList.Count; i++)
+            prngs[i] = new System.Random(settings.seed + i * 137);
 
         for (int y = 0; y < sampleRes; y++)
         {
@@ -315,132 +344,71 @@ public class MapGenerator : MonoBehaviour
                 float normX = (float)x / (sampleRes - 1);
                 float normY = (float)y / (sampleRes - 1);
 
-                float distToCenter = Vector2.Distance(new Vector2(x, y), center);
-                if (distToCenter < gridLakeRadius + 5f) continue;
-
                 float height = terrainData.GetInterpolatedHeight(normX, normY);
                 float normHeight = height / terrainData.size.y;
                 float slope = terrainData.GetSteepness(normX, normY);
+                float distToCenter = Vector2.Distance(new Vector2(x, y), center);
 
-                if (normHeight >= settings.nivelCampie && normHeight <= settings.nivelCampie + 0.05f && slope < 20f)
+                for (int i = 0; i < vegetationList.Count; i++)
                 {
-                    float noise = Mathf.PerlinNoise(normX * 40f + settings.seed, normY * 40f + settings.seed);
+                    var veg = vegetationList[i];
 
-                    if (noise > (1.0f - grassDensity))
-                    {
-                        float offsetX = ((float)prng.NextDouble() - 0.5f) * spacing * 1.5f;
-                        float offsetZ = ((float)prng.NextDouble() - 0.5f) * spacing * 1.5f;
-                        Vector3 pos = new Vector3(normX * terrainData.size.x + offsetX, 0, normY * terrainData.size.z + offsetZ) + terrain.transform.position;
+                    // Verificări de bază
+                    if (distToCenter < gridLakeRadius + veg.lakeOffset) continue;
+                    if (normHeight < veg.minHeight || normHeight > veg.maxHeight) continue;
+                    if (slope > veg.maxSlope) continue;
 
-                        float finalNormX = Mathf.Clamp01((pos.x - terrain.transform.position.x) / terrainData.size.x);
-                        float finalNormZ = Mathf.Clamp01((pos.z - terrain.transform.position.z) / terrainData.size.z);
-                        pos.y = terrainData.GetInterpolatedHeight(finalNormX, finalNormZ) + terrain.transform.position.y;
+                    // Noise unic per tip — seed diferit ca să nu se suprapună
+                    float noise = Mathf.PerlinNoise(
+                        normX * veg.noiseScale + settings.seed + i * 13.7f,
+                        normY * veg.noiseScale + settings.seed + i * 13.7f
+                    );
 
-                        Quaternion randomYaw = Quaternion.Euler(0, (float)prng.NextDouble() * 360f, 0);
-                        Vector3 scale = Vector3.one * (0.6f + (float)prng.NextDouble() * 0.4f);
+                    // density controlează direct pragul noise-ului
+                    if (noise < (1f - veg.density)) continue;
 
-                        grassTransforms.Add(Matrix4x4.TRS(pos, randomYaw, scale));
-                    }
+                    // Offset aleator ca să nu fie pe grid
+                    float offsetX = ((float)prngs[i].NextDouble() - 0.5f) * spacing * 1.5f;
+                    float offsetZ = ((float)prngs[i].NextDouble() - 0.5f) * spacing * 1.5f;
+
+                    Vector3 pos = new Vector3(
+                        normX * terrainData.size.x + offsetX,
+                        0,
+                        normY * terrainData.size.z + offsetZ
+                    ) + terrain.transform.position;
+
+                    float finalNormX = Mathf.Clamp01((pos.x - terrain.transform.position.x) / terrainData.size.x);
+                    float finalNormZ = Mathf.Clamp01((pos.z - terrain.transform.position.z) / terrainData.size.z);
+                    pos.y = terrainData.GetInterpolatedHeight(finalNormX, finalNormZ) + terrain.transform.position.y;
+
+                    Quaternion rot = Quaternion.Euler(0, (float)prngs[i].NextDouble() * 360f, 0);
+                    float s = Mathf.Lerp(veg.scaleRange.x, veg.scaleRange.y, (float)prngs[i].NextDouble());
+
+                    transforms[i].Add(Matrix4x4.TRS(pos, rot, Vector3.one * s));
                 }
             }
         }
 
-        // TRIMITEM DATELE LA MANAGER
-        GPUInstanceData grassData = new GPUInstanceData
+        // Trimitem la renderer
+        for (int i = 0; i < vegetationList.Count; i++)
         {
-            name = "Grass",
-            mesh = grassMesh,
-            material = grassMaterial
-        };
-        grassData.Initialize(grassTransforms);
-        multiRenderer.AddRenderData(grassData);
-    }
+            if (transforms[i].Count == 0) continue;
 
-
-    public void GenerateFlowers()
-    {
-        EnsureRendererExists();
-
-        // Folosim un Dictionary pentru a grupa transformările pe tipuri de flori
-        // Key: Indexul florii în listă, Value: Lista de matrici
-        Dictionary<int, List<Matrix4x4>> flowerBatches = new Dictionary<int, List<Matrix4x4>>();
-
-        System.Random prng = new System.Random(settings.seed + 999); // Seed diferit de iarbă
-        TerrainData terrainData = terrain.terrainData;
-
-        int sampleRes = 256;
-        float spacing = terrainData.size.x / sampleRes;
-        Vector2 center = new Vector2(sampleRes / 2f, sampleRes / 2f);
-        float gridLakeRadius = (settings.lakeRadius / terrainData.heightmapResolution) * sampleRes;
-
-        for (int y = 0; y < sampleRes; y++)
-        {
-            for (int x = 0; x < sampleRes; x++)
+            GPUInstanceData data = new GPUInstanceData
             {
-                float normX = (float)x / (sampleRes - 1);
-                float normY = (float)y / (sampleRes - 1);
+                name = vegetationList[i].name,
+                mesh = vegetationList[i].mesh,
+                material = vegetationList[i].material
+            };
+            data.Initialize(transforms[i]);
+            multiRenderer.AddRenderData(data);
 
-                // Evităm lacul
-                float distToCenter = Vector2.Distance(new Vector2(x, y), center);
-                if (distToCenter < gridLakeRadius + 7f) continue;
-
-                float height = terrainData.GetInterpolatedHeight(normX, normY);
-                float normHeight = height / terrainData.size.y;
-                float slope = terrainData.GetSteepness(normX, normY);
-
-                // Condiții de creștere (similare cu iarba)
-                if (normHeight >= settings.nivelCampie && normHeight <= settings.nivelCampie + 0.05f && slope < 20f)
-                {
-                    // Noise-ul de bază pentru a vedea dacă "poate" crește ceva aici
-                    float noise = Mathf.PerlinNoise(normX * 30f + settings.seed, normY * 30f + settings.seed);
-
-                    if (noise > 0.5f) // Dacă zona e fertilă
-                    {
-                        float flowerRoll = (float)prng.NextDouble();
-
-                        for (int i = 0; i < flowerSettingsList.Count; i++)
-                        {
-                            var f = flowerSettingsList[i];
-
-                            // Verificăm dacă "pica" această floare
-                            if (flowerRoll < f.spawnChance)
-                            {
-                                if (!flowerBatches.ContainsKey(i)) flowerBatches[i] = new List<Matrix4x4>();
-
-                                float offsetX = ((float)prng.NextDouble() - 0.5f) * spacing;
-                                float offsetZ = ((float)prng.NextDouble() - 0.5f) * spacing;
-                                Vector3 pos = new Vector3(normX * terrainData.size.x + offsetX, 0, normY * terrainData.size.z + offsetZ) + terrain.transform.position;
-                                pos.y = terrainData.GetInterpolatedHeight(Mathf.Clamp01((pos.x - terrain.transform.position.x) / terrainData.size.x),
-                                                                        Mathf.Clamp01((pos.z - terrain.transform.position.z) / terrainData.size.z)) + terrain.transform.position.y;
-
-                                Quaternion rot = Quaternion.Euler(0, (float)prng.NextDouble() * 360f, 0);
-                                float s = Mathf.Lerp(f.scaleRange.x, f.scaleRange.y, (float)prng.NextDouble());
-                                Vector3 scale = Vector3.one * s;
-
-                                flowerBatches[i].Add(Matrix4x4.TRS(pos, rot, scale));
-                                break; // Am pus o floare, nu mai verificăm celelalte tipuri pentru acest punct
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Trimitem fiecare tip de floare către Renderer
-        foreach (var kvp in flowerBatches)
-        {
-            int index = kvp.Key;
-            var settings = flowerSettingsList[index];
-
-            GPUInstanceData flowerData = new GPUInstanceData();
-            flowerData.name = settings.name;
-            flowerData.mesh = settings.mesh;
-            flowerData.material = settings.material;
-            flowerData.Initialize(kvp.Value);
-
-            multiRenderer.AddRenderData(flowerData);
+            Debug.Log($"[Vegetation] {vegetationList[i].name}: {transforms[i].Count} instanțe");
         }
     }
+
+
+    
     // ─────────────────────────────────────────────
     //  COPACI
     // ─────────────────────────────────────────────
