@@ -61,10 +61,47 @@ public class ItemPickup : MonoBehaviour
 
     void Update()
     {
-        // Verificăm dacă a căzut prin hartă
+        // Raycast în jos pentru a găsi terenul
+        // if (Physics.Raycast(transform.position + Vector3.up * 2f, Vector3.down, out RaycastHit hit, 10f))
+        // {
+        //     float distanceToGround = hit.point.y - transform.position.y;
+            
+        //     // Dacă e sub teren sau prea aproape
+        //     if (distanceToGround > 0.1f)
+        //     {
+        //         SnapToGround(hit);
+        //     }
+        // }
+        
+        // Fallback dacă raycast nu prinde nimic (a căzut prin tot)
+        // if (transform.position.y < fallThreshold)
+        // {
+        //     RespawnAtTop();
+        // }
+    }
+    
+    void OnEnable()
+    {
+        // Verificare o singură dată la spawn, nu în fiecare frame
         if (transform.position.y < fallThreshold)
-        {
             RespawnAtTop();
+    }
+
+
+    private void SnapToGround(RaycastHit hit)
+    {
+        // Dot product cu up — verificăm că e suprafață aproape plată
+        float flatness = Vector3.Dot(hit.normal, Vector3.up);
+        if (flatness < 0.7f) return; // Pantă prea abruptă, ignorăm
+
+        // Punem obiectul pe suprafață cu offset mic
+        Vector3 correctedPos = hit.point + Vector3.up * 0.05f;
+        transform.position = correctedPos;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
     }
     
@@ -74,7 +111,7 @@ public class ItemPickup : MonoBehaviour
         Debug.LogWarning($"[SafetyNet] Obiectul {itemData?.itemName} a căzut prin hartă! Teleportare la spawn.");
 
         // Îl punem la poziția inițială + 1 metru mai sus ca să fim siguri
-        transform.position = initialSpawnPosition + Vector3.up * 1.0f;
+        transform.position = initialSpawnPosition + Vector3.up * 6.0f;
 
         if (rb != null)
         {

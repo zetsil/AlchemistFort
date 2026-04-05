@@ -17,33 +17,23 @@ public class VegetationSettings
     public string name;
     public Mesh mesh;
     public Material material;
-    [Range(0f, 1f)] public float density = 0.3f;        // Cât de des apare
-    [Range(0f, 1f)] public float minHeight = 0.35f;     // Înălțime minimă teren
-    [Range(0f, 1f)] public float maxHeight = 0.45f;     // Înălțime maximă teren
-    public float maxSlope = 20f;                         // Pantă maximă
+    [Range(0f, 1f)] public float density = 0.3f;
+    [Range(0f, 1f)] public float minHeight = 0.35f;
+    [Range(0f, 1f)] public float maxHeight = 0.45f;
+    public float maxSlope = 20f;
     public Vector2 scaleRange = new Vector2(0.6f, 1.0f);
-    public float noiseScale = 40f;                       // Scala noise-ului de distribuție
-    public float lakeOffset = 5f;                        // Distanță față de lac
-}
-
-
-[System.Serializable]
-public class FlowerSettings
-{
-    public string name;
-    public Mesh mesh;
-    public Material material;
-    [Range(0, 1)] public float spawnChance = 0.05f; // Cât de des apare față de iarbă
-    public Vector2 scaleRange = new Vector2(0.5f, 1.2f);
+    public float noiseScale = 40f;
+    public float lakeOffset = 5f;
+    public int seedOffset = 0;
 }
 
 
 [System.Serializable]
 public class UnderTreeSettings
 {
-    public List<GameObject> prefabs; // Lista cu mere, crengi, etc.
+    public List<GameObject> prefabs;
     [Range(0, 5)] public int maxItems = 3;
-    public float spawnRadius = 1.5f; // Cât de departe de trunchi să apară
+    public float spawnRadius = 1.5f;
 }
 
 public class MapGenerator : MonoBehaviour
@@ -53,16 +43,19 @@ public class MapGenerator : MonoBehaviour
     [Header("Referință Teren")]
     public Terrain terrain;
 
-    [Header("Referință Apă (Plane)")]
+    [Header("Referință Apă")]
     public Transform waterPlane;
-    [Tooltip("Dacă apa ar trebui să fie exact la nivelul câmpiei sau puțin sub.")]
     public float waterOffset = 0.1f;
+    public float waterDepth = 10f;
 
     public bool autoUpdate = true;
 
     [Header("Texturi Teren")]
-    [Tooltip("Adaugă texturi în ordine crescătoare a înălțimii (ex: Iarbă, Piatră, Zăpadă)")]
     public List<TerrainTextureSettings> textureSettings;
+
+    [Header("Textură Lac (aplicată în gropi)")]
+    public TerrainLayer lakeLayer;
+    [Range(0f, 1f)] public float lakeBlendStrength = 0.02f;
 
     [Header("Setări Vegetație")]
     public GameObject treePrefab;
@@ -76,18 +69,8 @@ public class MapGenerator : MonoBehaviour
     [Header("GPU Multi Renderer")]
     private GPUMultiRenderer multiRenderer;
 
-    [Header("Setări Iarbă GPU")]
-
-    public Mesh grassMesh;
-    public Material grassMaterial;
-    private GPUInstanceData currentGrassRenderer;
-    [Range(0.1f, 0.9f)] public float grassDensity = 0.4f;
-
-    [Header("Setări Flori GPU")]
-    public List<FlowerSettings> flowerSettingsList;
+    [Header("Setări Vegetație GPU")]
     public List<VegetationSettings> vegetationList;
-
-
 
     [Header("Setări Mining Rocks")]
     public GameObject miningRockPrefab;
@@ -95,13 +78,14 @@ public class MapGenerator : MonoBehaviour
     public float miningMinHeight = 0.42f;
     public float miningMaxHeight = 0.65f;
 
-
-
-
+    [Header("Pietre Mici (Colectabile)")]
+    public GameObject smallRockPrefab;
+    [Range(0, 100)] public int smallRockDensity = 40;
 
     // ─────────────────────────────────────────────
     //  LIFECYCLE
     // ─────────────────────────────────────────────
+
     private void Awake()
     {
         EnsureRendererExists();
@@ -132,9 +116,7 @@ public class MapGenerator : MonoBehaviour
     {
         if (multiRenderer == null)
         {
-            // Căutăm în copii dacă există deja (în caz de ierarhie persistentă)
             multiRenderer = GetComponentInChildren<GPUMultiRenderer>();
-
             if (multiRenderer == null)
             {
                 GameObject go = new GameObject("GPU_Vegetation_Manager");
@@ -159,17 +141,17 @@ public class MapGenerator : MonoBehaviour
 
         float[,] noiseMap = settings.GenerateMap();
 
-        // Ordinea este importantă:
-        SetupTerrainLayers();           // 1. Pregătim layerele (înainte de orice altceva)
-        ApplyToTerrain(noiseMap);       // 2. Aplicăm heightmap-ul
-        ApplyTexturesToTerrain(noiseMap); // 3. Texturăm după înălțime
+        SetupTerrainLayers();
+        ApplyToTerrain(noiseMap);
+        ApplyTexturesToTerrain(noiseMap);
 
         if (treePrefab != null)
-            PlaceTrees();               // 4. Punem copacii
+            PlaceTrees();
 
         GenerateVegetation();
         SpawnMiningRock();
-        UpdateWaterLevel();            // 6. Poziționăm apa (nu afectează TerrainData)
+        SpawnSmallRocks();
+        UpdateWaterLevel();
     }
 
     // ─────────────────────────────────────────────
@@ -200,28 +182,18 @@ public class MapGenerator : MonoBehaviour
 
                     if (dist < settings.lakeRadius)
                     {
-                        // PÂLNIE: Calculăm cât de aproape suntem de centru (0 = centru, 1 = marginea lacului)
                         float t = dist / settings.lakeRadius;
-
-                        // Nivelul fundului lacului (cel mai adânc punct)
                         float hFund = noiseValue * (settings.nivelCampie * settings.lakeDepthMultiplier);
-
-                        // Nivelul marginii lacului (unde începe câmpia)
                         float hMargine = settings.nivelCampie + (noiseValue * 0.02f);
-
-                        // Interpolăm între fund și margine pentru a crea panta de pâlnie
-                        // Folosim SmoothStep pentru o curbură mai naturală (nu doar o linie dreaptă)
                         float smoothT = Mathf.SmoothStep(0, 1, t);
                         noiseValue = Mathf.Lerp(hFund, hMargine, smoothT);
                     }
                     else if (dist < settings.plainRadius)
                     {
-                        // Câmpie plată
                         noiseValue = settings.nivelCampie + (noiseValue * 0.02f);
                     }
                     else
                     {
-                        // Tranziție munte
                         float transitionWidth = 25f;
                         float t = Mathf.Clamp01((dist - settings.plainRadius) / transitionWidth);
                         float hCampie = settings.nivelCampie + (noiseValue * 0.02f);
@@ -244,7 +216,8 @@ public class MapGenerator : MonoBehaviour
     {
         if (textureSettings == null || textureSettings.Count == 0) return;
 
-        TerrainLayer[] layers = new TerrainLayer[textureSettings.Count];
+        // Construim lista de layere — texturile normale + lakeLayer la sfârșit dacă există
+        List<TerrainLayer> layers = new List<TerrainLayer>();
         for (int i = 0; i < textureSettings.Count; i++)
         {
             if (textureSettings[i].layer == null)
@@ -252,10 +225,13 @@ public class MapGenerator : MonoBehaviour
                 Debug.LogError($"Lipsește TerrainLayer la indexul {i}!");
                 return;
             }
-            layers[i] = textureSettings[i].layer;
+            layers.Add(textureSettings[i].layer);
         }
 
-        terrain.terrainData.terrainLayers = layers;
+        if (lakeLayer != null)
+            layers.Add(lakeLayer);
+
+        terrain.terrainData.terrainLayers = layers.ToArray();
 
 #if UNITY_EDITOR
         UnityEditor.EditorUtility.SetDirty(terrain.terrainData);
@@ -269,29 +245,35 @@ public class MapGenerator : MonoBehaviour
         int alphaH = terrainData.alphamapHeight;
         int numLayers = textureSettings.Count;
 
-        float[,,] splatmap = new float[alphaH, alphaW, numLayers];
+        // Dacă avem lakeLayer, totalul e numLayers + 1
+        bool hasLakeLayer = lakeLayer != null;
+        int totalLayers = hasLakeLayer ? numLayers + 1 : numLayers;
+        int lakeLayerIndex = numLayers; // ultimul index
+
+        float[,,] splatmap = new float[alphaH, alphaW, totalLayers];
+
+        // Nivelul câmpiei în world units
+        float campieHeight = settings.nivelCampie;
 
         for (int y = 0; y < alphaH; y++)
         {
             for (int x = 0; x < alphaW; x++)
             {
-                // Coordonate normalizate centrate pe pixel
                 float normX = (x + 0.5f) / alphaW;
                 float normY = (y + 0.5f) / alphaH;
 
                 float currentHeight = terrainData.GetInterpolatedHeight(normX, normY) / terrainData.size.y;
 
-                float[] weights = new float[numLayers];
+                float[] weights = new float[totalLayers];
 
+                // Aplicăm texturile normale bazate pe înălțime
                 for (int i = 0; i < numLayers; i++)
                 {
                     if (currentHeight >= textureSettings[i].startHeight)
                     {
-                        // Resetăm straturile inferioare
                         for (int j = 0; j < i; j++) weights[j] = 0f;
                         weights[i] = 1f;
 
-                        // Blending lin cu stratul anterior
                         if (i > 0 && textureSettings[i].blendStrength > 0f)
                         {
                             float blendStart = textureSettings[i].startHeight - textureSettings[i].blendStrength;
@@ -302,7 +284,25 @@ public class MapGenerator : MonoBehaviour
                     }
                 }
 
-                for (int i = 0; i < numLayers; i++)
+                // Aplicăm lakeLayer în zonele sub nivelul câmpiei (groapa lacului)
+                if (hasLakeLayer && currentHeight < campieHeight - lakeBlendStrength)
+                {
+                    // Cu cât e mai adânc, cu atât mai multă textură de lac
+                    float depth = Mathf.InverseLerp(
+                        campieHeight - lakeBlendStrength,
+                        campieHeight - lakeBlendStrength * 5f,
+                        currentHeight
+                    );
+                    float lakeWeight = Mathf.Clamp01(depth);
+
+                    // Reducem celelalte layere proporțional
+                    for (int i = 0; i < numLayers; i++)
+                        weights[i] *= (1f - lakeWeight);
+
+                    weights[lakeLayerIndex] = lakeWeight;
+                }
+
+                for (int i = 0; i < totalLayers; i++)
                     splatmap[y, x, i] = weights[i];
             }
         }
@@ -311,14 +311,12 @@ public class MapGenerator : MonoBehaviour
     }
 
     // ─────────────────────────────────────────────
-    //  Vegetation
+    //  VEGETAȚIE GPU
     // ─────────────────────────────────────────────
 
     public void GenerateVegetation()
     {
         if (multiRenderer == null) EnsureRendererExists();
-        
-        // Ștergem datele vechi
         multiRenderer.ClearAll();
 
         TerrainData terrainData = terrain.terrainData;
@@ -327,15 +325,13 @@ public class MapGenerator : MonoBehaviour
         float gridLakeRadius = (settings.lakeRadius / terrainData.heightmapResolution) * sampleRes;
         float spacing = terrainData.size.x / sampleRes;
 
-        // O listă per tip de vegetație
         Dictionary<int, List<Matrix4x4>> transforms = new Dictionary<int, List<Matrix4x4>>();
         for (int i = 0; i < vegetationList.Count; i++)
             transforms[i] = new List<Matrix4x4>();
 
-        // Seed diferit per tip ca să nu se suprapună pattern-urile
         System.Random[] prngs = new System.Random[vegetationList.Count];
         for (int i = 0; i < vegetationList.Count; i++)
-            prngs[i] = new System.Random(settings.seed + i * 137);
+            prngs[i] = new System.Random(settings.seed + vegetationList[i].seedOffset);
 
         for (int y = 0; y < sampleRes; y++)
         {
@@ -353,21 +349,17 @@ public class MapGenerator : MonoBehaviour
                 {
                     var veg = vegetationList[i];
 
-                    // Verificări de bază
                     if (distToCenter < gridLakeRadius + veg.lakeOffset) continue;
                     if (normHeight < veg.minHeight || normHeight > veg.maxHeight) continue;
                     if (slope > veg.maxSlope) continue;
 
-                    // Noise unic per tip — seed diferit ca să nu se suprapună
                     float noise = Mathf.PerlinNoise(
-                        normX * veg.noiseScale + settings.seed + i * 13.7f,
-                        normY * veg.noiseScale + settings.seed + i * 13.7f
+                        normX * veg.noiseScale + settings.seed + veg.seedOffset,
+                        normY * veg.noiseScale + settings.seed + veg.seedOffset
                     );
 
-                    // density controlează direct pragul noise-ului
                     if (noise < (1f - veg.density)) continue;
 
-                    // Offset aleator ca să nu fie pe grid
                     float offsetX = ((float)prngs[i].NextDouble() - 0.5f) * spacing * 1.5f;
                     float offsetZ = ((float)prngs[i].NextDouble() - 0.5f) * spacing * 1.5f;
 
@@ -389,7 +381,6 @@ public class MapGenerator : MonoBehaviour
             }
         }
 
-        // Trimitem la renderer
         for (int i = 0; i < vegetationList.Count; i++)
         {
             if (transforms[i].Count == 0) continue;
@@ -407,15 +398,12 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-
-    
     // ─────────────────────────────────────────────
     //  COPACI
     // ─────────────────────────────────────────────
 
     public void PlaceTrees()
     {
-
         string containerName = "Generated_Trees";
         Transform oldContainer = transform.Find(containerName);
         if (oldContainer != null) DestroyImmediate(oldContainer.gameObject);
@@ -429,10 +417,7 @@ public class MapGenerator : MonoBehaviour
         float mapWidth = terrainData.size.x;
         float mapZ = terrainData.size.z;
         int res = terrainData.heightmapResolution;
-
         int step = Mathf.Max(2, 110 - treeDensity);
-
-        // Centrul hărții pentru calculul distanței față de lac
         Vector2 center = new Vector2(res / 2f, res / 2f);
 
         for (int y = 0; y < res; y += step)
@@ -448,22 +433,15 @@ public class MapGenerator : MonoBehaviour
                 float currentHeight = terrainData.GetInterpolatedHeight(normX, normY);
                 float currentHeightNormalized = currentHeight / terrainData.size.y;
                 float slope = terrainData.GetSteepness(normX, normY);
-
-                // CALCUL DISTANȚĂ FAȚĂ DE LAC
                 float distToCenter = Vector2.Distance(new Vector2(xPos, yPos), center);
 
-                // CONDIȚIE NOUĂ: distToCenter > settings.lakeRadius + offset
-                // Am adăugat + 9f ca să nu stea copacii fix în buza apei
                 if (distToCenter > (settings.lakeRadius + 9f) &&
                     currentHeightNormalized >= treeMinHeight &&
                     currentHeightNormalized <= treeMaxHeight &&
                     slope < 30f)
                 {
-                    Vector3 worldPos = new Vector3(
-                        normX * mapWidth,
-                        currentHeight,
-                        normY * mapZ
-                    ) + terrain.transform.position;
+                    Vector3 worldPos = new Vector3(normX * mapWidth, currentHeight, normY * mapZ)
+                        + terrain.transform.position;
 
                     float randomRotation = (float)prng.NextDouble() * 360f;
                     GameObject tree = Instantiate(treePrefab, worldPos, Quaternion.Euler(0, randomRotation, 0));
@@ -473,9 +451,7 @@ public class MapGenerator : MonoBehaviour
                     tree.transform.localScale = Vector3.one * scale;
 
                     if (underTreeSettings.prefabs.Count > 0)
-                    {
                         GenerateUnderTreeItems(worldPos, treeContainer.transform);
-                    }
                 }
             }
         }
@@ -485,13 +461,12 @@ public class MapGenerator : MonoBehaviour
     {
         if (underTreeSettings.prefabs == null || underTreeSettings.prefabs.Count == 0) return;
 
-        // Creăm un SEED LOCAL bazat pe poziția X și Z a copacului.
-        // Înmulțim cu numere mari ca să evităm seed-uri similare pentru copaci apropiați.
         int localSeed = (int)(treePos.x * 1000 + treePos.z * 1000);
         System.Random itemPrng = new System.Random(localSeed);
-
-        // Acum folosim itemPrng (nu prng-ul principal de la PlaceTrees)
         int itemCount = itemPrng.Next(0, underTreeSettings.maxItems + 1);
+
+        TerrainData terrainData = terrain.terrainData;
+        Vector3 terrainPos = terrain.transform.position;
 
         for (int i = 0; i < itemCount; i++)
         {
@@ -501,19 +476,25 @@ public class MapGenerator : MonoBehaviour
             Vector3 offset = new Vector3(Mathf.Cos(angle) * distance, 0, Mathf.Sin(angle) * distance);
             Vector3 spawnPos = treePos + offset;
 
-            // Punem obiectul pe sol (Terrain)
-            spawnPos.y = terrain.SampleHeight(spawnPos) + terrain.transform.position.y;
+            float normX = Mathf.Clamp01((spawnPos.x - terrainPos.x) / terrainData.size.x);
+            float normZ = Mathf.Clamp01((spawnPos.z - terrainPos.z) / terrainData.size.z);
+
+            Vector3 terrainNormal = terrainData.GetInterpolatedNormal(normX, normZ);
+            float flatness = Vector3.Dot(terrainNormal, Vector3.up);
+            if (flatness < 0.92f) continue;
+
+            spawnPos.y = terrainData.GetInterpolatedHeight(normX, normZ) + terrainPos.y + 0.05f;
+
+            float randomYaw = (float)itemPrng.NextDouble() * 360f;
+            Quaternion finalRotation = Quaternion.Euler(0, randomYaw, 0);
 
             int prefabIndex = itemPrng.Next(0, underTreeSettings.prefabs.Count);
-            GameObject prefab = underTreeSettings.prefabs[prefabIndex];
-
-            GameObject item = Instantiate(prefab, spawnPos, Quaternion.Euler(0, (float)itemPrng.NextDouble() * 360f, 0));
+            GameObject item = Instantiate(underTreeSettings.prefabs[prefabIndex], spawnPos, finalRotation);
             item.transform.parent = parent;
-
-            float scale = 0.8f + (float)itemPrng.NextDouble() * 0.4f;
-            item.transform.localScale = Vector3.one * scale;
+            item.transform.localScale = Vector3.one * (0.8f + (float)itemPrng.NextDouble() * 0.4f);
         }
     }
+
     // ─────────────────────────────────────────────
     //  APĂ
     // ─────────────────────────────────────────────
@@ -522,21 +503,28 @@ public class MapGenerator : MonoBehaviour
     {
         if (waterPlane == null) return;
 
-        float waterY = (settings.nivelCampie * settings.terrainHeightMultiplier) - waterOffset;
+        // Calculăm înălțimea suprafeței apei în unități de lume
+        // Nivelul câmpiei * Multiplicatorul de înălțime al terenului
+        float waterSurfaceY = (settings.nivelCampie * settings.terrainHeightMultiplier) - waterOffset;
 
+        // Poziționăm Plane-ul exact la suprafață
+        // Nu mai împărțim waterDepth la 2 pentru că Plane-ul nu are volum/grosime
         Vector3 pos = waterPlane.position;
-        pos.y = waterY;
-        pos.x = settings.width / 2f;
-        pos.z = settings.height / 2f;
+        pos.y = waterSurfaceY + terrain.transform.position.y; 
+        pos.x = terrain.transform.position.x + (settings.width / 2f);
+        pos.z = terrain.transform.position.z + (settings.height / 2f);
         waterPlane.position = pos;
 
+        // IMPORTANT: Unity Plane are dimensiunea de 10x10 unități implicit.
+        // Pentru a acoperi lățimea/înălțimea setată, împărțim la 10.
+        // Pe axa Y punem 1 (sau orice valoare), deoarece Plane-ul este 2D.
         float scaleX = settings.width / 10f;
         float scaleZ = settings.height / 10f;
         waterPlane.localScale = new Vector3(scaleX, 1f, scaleZ);
     }
-    
+
     // ─────────────────────────────────────────────
-    //  MINERIT
+    //  MINING ROCKS (Mari, pe pante)
     // ─────────────────────────────────────────────
 
     public void SpawnMiningRock()
@@ -552,25 +540,19 @@ public class MapGenerator : MonoBehaviour
         TerrainData terrainData = terrain.terrainData;
         Vector3 terrainPos = terrain.transform.position;
 
-        // Setăm o rezoluție fixă pentru eșantionare (nu neapărat rezoluția hărții)
-        int sampleRes = 128; 
-        float stepX = terrainData.size.x / sampleRes;
-        float stepZ = terrainData.size.z / sampleRes;
-        
-        Vector2 center = new Vector2(0.5f, 0.5f); // Centrul în coordonate UV (0-1)
+        int sampleRes = 128;
+        Vector2 center = new Vector2(0.5f, 0.5f);
         float lakeRadiusUV = settings.lakeRadius / terrainData.size.x;
 
         for (int y = 0; y < sampleRes; y++)
         {
             for (int x = 0; x < sampleRes; x++)
             {
-                // Densitatea: șansă bazată pe density (ex: 30% șansă să testăm acest punct)
                 if (prng.Next(0, 100) > miningRockDensity) continue;
 
                 float normX = (float)x / sampleRes;
                 float normY = (float)y / sampleRes;
 
-                // Evităm lacul
                 float distToCenter = Vector2.Distance(new Vector2(normX, normY), center);
                 if (distToCenter < lakeRadiusUV + 0.05f) continue;
 
@@ -578,31 +560,104 @@ public class MapGenerator : MonoBehaviour
                 float normHeight = height / terrainData.size.y;
                 float slope = terrainData.GetSteepness(normX, normY);
 
-                // LOGICA RELAXATĂ
-                // slope > 10f (să nu fie pe iarbă plată)
-                // slope < 85f (aproape orice pantă de munte)
                 if (normHeight >= miningMinHeight && normHeight <= miningMaxHeight && slope > 10f)
                 {
                     Vector3 worldPos = new Vector3(
-                        normX * terrainData.size.x,
-                        height,
-                        normY * terrainData.size.z
+                        normX * terrainData.size.x, height, normY * terrainData.size.z
                     ) + terrainPos;
 
-                    // Rotire completă pentru aspect natural
                     Quaternion rot = Quaternion.Euler(
-                        (float)prng.NextDouble() * 360f, 
-                        (float)prng.NextDouble() * 360f, 
+                        (float)prng.NextDouble() * 360f,
+                        (float)prng.NextDouble() * 360f,
                         (float)prng.NextDouble() * 360f
                     );
 
                     GameObject rock = Instantiate(miningRockPrefab, worldPos, rot);
                     rock.transform.parent = rockContainer.transform;
-
-                    float s = 0.5f + (float)prng.NextDouble() * 1.0f;
-                    rock.transform.localScale = Vector3.one * s;
+                    rock.transform.localScale = Vector3.one * (0.5f + (float)prng.NextDouble() * 1.0f);
                 }
             }
         }
+    }
+
+    // ─────────────────────────────────────────────
+    //  PIETRE MICI (Colectabile, pe câmpie)
+    // ─────────────────────────────────────────────
+
+    public void SpawnSmallRocks()
+    {
+        if (smallRockPrefab == null) return;
+
+        string containerName = "Generated_SmallRocks";
+        Transform oldContainer = transform.Find(containerName);
+        if (oldContainer != null) DestroyImmediate(oldContainer.gameObject);
+
+        GameObject rockContainer = new GameObject(containerName);
+        rockContainer.transform.parent = this.transform;
+
+        System.Random prng = new System.Random(settings.seed + 555);
+        TerrainData terrainData = terrain.terrainData;
+        Vector3 terrainPos = terrain.transform.position;
+
+        int sampleRes = 128;
+        Vector2 center = new Vector2(0.5f, 0.5f);
+        float lakeRadiusUV = settings.lakeRadius / terrainData.size.x;
+
+        // Câmpia + pante ușoare, la fel ca iarba dar și pe margini de deal
+        float minHeight = settings.nivelCampie - 0.02f;
+        float maxHeight = settings.nivelCampie + 0.08f;
+
+        for (int y = 0; y < sampleRes; y++)
+        {
+            for (int x = 0; x < sampleRes; x++)
+            {
+                // Densitate mai mică decât lemnele — ~60% din puncte sunt sărite
+                if (prng.Next(0, 100) > smallRockDensity) continue;
+
+                float normX = (float)x / sampleRes;
+                float normY = (float)y / sampleRes;
+
+                // Evităm lacul
+                float distToCenter = Vector2.Distance(new Vector2(normX, normY), center);
+                if (distToCenter < lakeRadiusUV + 0.06f) continue;
+
+                float height = terrainData.GetInterpolatedHeight(normX, normY);
+                float normHeight = height / terrainData.size.y;
+                float slope = terrainData.GetSteepness(normX, normY);
+
+                // Pe câmpie și pante ușoare — unde umblă playerul
+                if (normHeight >= minHeight && normHeight <= maxHeight && slope < 25f)
+                {
+                    // Offset mic aleator ca să nu fie pe grid
+                    float offsetX = ((float)prng.NextDouble() - 0.5f) * (terrainData.size.x / sampleRes);
+                    float offsetZ = ((float)prng.NextDouble() - 0.5f) * (terrainData.size.z / sampleRes);
+
+                    Vector3 worldPos = new Vector3(
+                        normX * terrainData.size.x + offsetX,
+                        height,
+                        normY * terrainData.size.z + offsetZ
+                    ) + terrainPos;
+
+                    worldPos.y = terrain.SampleHeight(worldPos) + terrainPos.y;
+
+                    // Rotire random pe Y, ușoară înclinare pe X/Z pentru aspect natural
+                    Quaternion rot = Quaternion.Euler(
+                        (float)prng.NextDouble() * 15f,
+                        (float)prng.NextDouble() * 360f,
+                        (float)prng.NextDouble() * 15f
+                    );
+
+                    GameObject rock = Instantiate(smallRockPrefab, worldPos, rot);
+                    rock.transform.parent = rockContainer.transform;
+
+                    // Pietre mici — scale mic și variat
+                    // float s = 0.2f + (float)prng.NextDouble() * 0.4f;
+                    // rock.transform.localScale = Vector3.one * s;
+                    
+                }
+            }
+        }
+
+        Debug.Log($"[SmallRocks] Pietre mici generate în scenă.");
     }
 }
