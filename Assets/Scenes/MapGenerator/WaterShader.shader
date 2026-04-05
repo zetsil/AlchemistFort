@@ -1,14 +1,12 @@
-Shader "Custom/WaterSurface_CleanContour"
+Shader "Custom/WaterSurface_GrayNight"
 {
     Properties
     {
-        // --- Culori & Aspect ---
+        // ... (Păstrează toate proprietățile tale neschimbate până la _VisibilityEnd)
         _ShallowColor       ("Culoare Apă Mică",             Color) = (0.18, 0.72, 0.78, 0.75)
         _DeepColor          ("Culoare Apă Adâncă",           Color) = (0.04, 0.22, 0.48, 0.97)
         _FoamColor          ("Culoare Contur Mal",           Color) = (1.0, 1.0, 1.0, 1.0)
         _FresnelColor       ("Culoare Fresnel/Reflecție",     Color) = (0.80, 0.93, 1.0,  1.0)
-
-        // --- Toon Shading ---
         _ToonSteps          ("Toon – Număr Trepte Lumină", Range(2, 8))   = 3
         _ToonSmoothness     ("Toon – Netezime Margini",    Range(0, 0.3)) = 0.04
         _ToonSpecSize       ("Toon – Mărime Specular",     Range(0, 1))   = 0.08
@@ -17,29 +15,17 @@ Shader "Custom/WaterSurface_CleanContour"
         _ToonRimSize        ("Toon – Mărime Rim Light",    Range(0, 1))   = 0.55
         _ToonRimSmooth      ("Toon – Netezime Rim",        Range(0, 0.3)) = 0.06
         _RimColor           ("Toon – Culoare Rim",         Color)         = (0.75, 0.92, 1.0, 1.0)
-
-        // --- Adâncime & Transparență ---
         _ShoreLineThickness ("Grosime Linie Contur (m)",    Float)     = 0.15
         _RefractionStrength ("Intensitate Refracție",       Float)     = 0.04
-
-        // --- Valuri (Normal Maps) ---
         _NormalMap          ("Normal Map Valuri",       2D)           = "bump" {}
         _NormalMap2         ("Normal Map Valuri 2",     2D)           = "bump" {}
         _NormalStrength     ("Intensitate Normal",      Float)        = 0.55
         _WaveSpeed          ("Viteza Valurilor",        Float)        = 0.45
         _WaveTiling         ("Scalare Valuri",          Float)        = 1.2
-
-        // --- Specular / Fresnel ---
         _Smoothness         ("Netezime Suprafață",      Range(0,1))   = 0.88
         _FresnelPower       ("Putere Fresnel",          Float)        = 3.5
-
-        // --- Noapte ---
         _NightDarkness      ("Lumină Ambientală Minimă Noapte", Range(0, 0.3)) = 0.06
-
-        // --- Opacitate ---
         _MinAlpha           ("Alpha Minim Suprafață",   Range(0,1))   = 0.70
-
-        // --- Vizibilitate pe distanță ---
         _VisibilityEnd      ("Vizibilitate Maximă (m)",  Float) = 10.0
     }
 
@@ -123,14 +109,14 @@ Shader "Custom/WaterSurface_CleanContour"
                 float2 screenUV = input.screenPos.xy / input.screenPos.w;
                 float3 cameraPos = _WorldSpaceCameraPos.xyz;
 
-                // --- Adâncime (Fără distorsiune la rotire) ---
+                // --- Adâncime ---
                 float sceneDepthM = GetSceneLinearDepth(screenUV);
                 float waterDepthM = input.screenPos.w; 
                 float depthDiff   = max(0.0, sceneDepthM - waterDepthM);
                 float depthT      = saturate(depthDiff / max(0.001, _VisibilityEnd));
 
-                // --- Culori ---
-                float3 waterColor = lerp(_ShallowColor.rgb, _DeepColor.rgb, depthT);
+                // --- Culori de bază ---
+                float3 waterBaseColor = lerp(_ShallowColor.rgb, _DeepColor.rgb, depthT);
                 float currentAlpha = lerp(_ShallowColor.a, _DeepColor.a, depthT);
 
                 // --- Normale Animate ---
@@ -148,28 +134,43 @@ Shader "Custom/WaterSurface_CleanContour"
                 float2 refractedUV = screenUV + normalWS.xz * _RefractionStrength * (1.0 - depthT);
                 if (GetSceneLinearDepth(refractedUV) < waterDepthM) refractedUV = screenUV;
                 float3 bgColor = SampleSceneColor(refractedUV).rgb;
-                float3 finalColor = lerp(lerp(bgColor, waterColor, depthT), waterColor, max(_MinAlpha, currentAlpha));
+                float3 finalColor = lerp(lerp(bgColor, waterBaseColor, depthT), waterBaseColor, max(_MinAlpha, currentAlpha));
 
-                // --- Iluminare Toon ---
+                // --- Iluminare Soare (Pentru detectarea nopții) ---
                 Light mainLight = GetMainLight();
+                float sunIntensity = saturate((mainLight.color.r + mainLight.color.g + mainLight.color.b) / 3.0);
+                
                 float3 viewDir = normalize(cameraPos - input.positionWS);
                 float3 halfDir = normalize(mainLight.direction + viewDir);
 
+                // Aplicăm Toon Shading
                 float toonDiff = ToonRamp(dot(normalWS, mainLight.direction) * 0.5 + 0.5, _ToonSteps, _ToonSmoothness);
                 float diffMin = max(_NightDarkness, 0.5 * saturate(mainLight.color.r + mainLight.color.g + mainLight.color.b));
                 finalColor *= lerp(diffMin, 1.0, toonDiff) * mainLight.color;
 
+                // Specular & Rim & Fresnel
                 float specRaw = pow(saturate(dot(normalWS, halfDir)), exp2(_Smoothness * 10.0 + 1.0));
                 finalColor += mainLight.color * smoothstep(_ToonSpecSize - _ToonSpecSmooth, _ToonSpecSize + _ToonSpecSmooth, specRaw) * _SpecularIntensity;
-
                 float rimRaw = 1.0 - saturate(dot(normalWS, viewDir));
                 finalColor = lerp(finalColor, _RimColor.rgb, smoothstep(_ToonRimSize - _ToonRimSmooth, _ToonRimSize + _ToonRimSmooth, rimRaw) * 0.25);
                 finalColor = lerp(finalColor, _FresnelColor.rgb, pow(1.0 - saturate(dot(normalWS, viewDir)), _FresnelPower) * 0.15);
 
-                // --- Linie Contur Mal (Shoreline) ---
+                // Shoreline
                 float outline = 1.0 - saturate(depthDiff / max(0.001, _ShoreLineThickness));
                 outline = smoothstep(0.0, 0.1, outline);
                 finalColor = lerp(finalColor, _FoamColor.rgb, outline * _FoamColor.a);
+
+                // --- DESATURARE NOAPTE ---
+                float gray = dot(finalColor.rgb, float3(0.2126, 0.7152, 0.0722));
+                float3 grayColor = float3(gray, gray, gray);
+                float desaturateAmount = saturate(1.0 - (sunIntensity * 2.0)); 
+                finalColor = lerp(finalColor, grayColor, desaturateAmount);
+
+                // --- FOG (afectează și apa, și noaptea) ---
+                float fogFactor = ComputeFogFactor(input.positionCS.z);
+                finalColor = MixFog(finalColor, fogFactor);
+
+                // ----------------------------------------------
 
                 return half4(finalColor, max(max(currentAlpha, _MinAlpha), outline * _FoamColor.a));
             }

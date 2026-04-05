@@ -20,7 +20,7 @@ public static class PerlinNoiseGenerator
         float maxNoiseHeight = float.MinValue;
         float minNoiseHeight = float.MaxValue;
 
-        // PASUL 1: Generare Zgomot Brut
+        // PASUL 1: Generare Zgomot Brutrr
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
