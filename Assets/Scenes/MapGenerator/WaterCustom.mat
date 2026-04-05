@@ -81,6 +81,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _TerrainHeightmap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -110,7 +114,7 @@ Material:
     - _DepthBands: 3
     - _DepthDistance: 1
     - _DepthExp: 1000
-    - _DepthFadeDistance: 4.5
+    - _DepthFadeDistance: 10
     - _DepthMax: 8
     - _DepthOffset: 100
     - _DepthPower: 2
@@ -125,7 +129,7 @@ Material:
     - _EdgeThickness: 0.01
     - _EnvironmentReflections: 1
     - _FoamAmount: 1.82
-    - _FoamDepthThreshold: 0.5
+    - _FoamDepthThreshold: 0.1
     - _FoamNoiseScale: 20
     - _FoamSpeed: 0.5
     - _FoamThreshold: 1
@@ -137,7 +141,8 @@ Material:
     - _Glossiness: 0
     - _GlossyReflections: 0
     - _Metallic: 0
-    - _MinAlpha: 0.7
+    - _MinAlpha: 0.615
+    - _NightDarkness: 0.128
     - _NormalSpeed: 0.2
     - _NormalStrength: 0.25
     - _NormalTiling: 0.05
@@ -147,6 +152,7 @@ Material:
     - _OutlineWidth: 0.0148
     - _Parallax: 0.005
     - _QueueOffset: 0
+    - _Range: 10
     - _ReceiveShadows: 1
     - _ReflectionStrength: 0.246
     - _RefractionStrength: 0.04
@@ -155,8 +161,11 @@ Material:
     - _RippleTiling: 0.06
     - _ShoreDistance: -100
     - _ShoreSmoothness: 100
+    - _ShorelineFoamSpeed: 1.2
+    - _ShorelineSharpness: 0.949
+    - _ShorelineWidth: 2
     - _ShowDebugLog: 1
-    - _Smoothness: 0.165
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SpecularIntensity: 1
@@ -171,39 +180,43 @@ Material:
     - _Surface: 0
     - _Threshold: 1
     - _Tiling: 50
-    - _ToonRimSize: 0.562
-    - _ToonRimSmooth: 0.108
-    - _ToonSmoothness: 0.04
-    - _ToonSpecSize: 0.18
-    - _ToonSpecSmooth: 0.03
+    - _ToonRimSize: 0.283
+    - _ToonRimSmooth: 0.028
+    - _ToonSmoothness: 0.138
+    - _ToonSpecSize: 0.951
+    - _ToonSpecSmooth: 0.008
     - _ToonSteps: 3
     - _Transparency: 0.157
-    - _VisibilityEnd: 19
-    - _VisibilityStart: 10
+    - _VisibilityEnd: 6.46
+    - _VisibilityStart: 2
+    - _WaterLevel: 0
     - _WaveAmplitude: 0.2
     - _WaveFrequency: 2
     - _WaveScale: 100
     - _WaveSpeed: 0.1
     - _WaveStrength: 0.01
-    - _WaveTiling: 100
+    - _WaveTiling: 50
     - _WorkflowMode: 1
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
     - _BaseColor: {r: 0.36495602, g: 0.48544613, b: 0.8036433, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _DeepColor: {r: 0.22838259, g: 0.59121513, b: 0.6189171, a: 0.8784314}
+    - _DeepColor: {r: 0.27857727, g: 0.44165638, b: 0.43362293, a: 1}
     - _EdgeColor: {r: 0.44931316, g: 0.44931316, b: 0.44931316, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _FoamColor: {r: 0.09818756, g: 0.8406683, b: 0.5927549, a: 0.7607843}
+    - _FoamColor: {r: 0.09818753, g: 0.8406683, b: 0.5927549, a: 1}
     - _FresnelColor: {r: 0.0031087399, g: 0.0031087399, b: 0.0031087399, a: 1}
     - _OutlineColor: {r: 0.6984184, g: 0.6984184, b: 0.6984184, a: 1}
-    - _RimColor: {r: 0.5197357, g: 0.36048016, b: 0.14627083, a: 1}
-    - _ShallowColor: {r: 0.0744859, g: 1, b: 0.97293806, a: 0.91764706}
+    - _RimColor: {r: 0.2558909, g: 0.19824672, b: 0.5188679, a: 1}
+    - _ShallowColor: {r: 0.59197706, g: 0.9894832, b: 0.9212125, a: 1}
     - _ShoreColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ShorelineColor: {r: 0.8338114, g: 0.89808244, b: 0.9068978, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _Speed: {r: 0.05, g: 0.05, b: 0, a: 0}
+    - _TerrainHeightmapScale: {r: 256, g: 256, b: 50, a: 0}
+    - _TerrainOrigin: {r: 0, g: 0, b: 0, a: 0}
     - _WaterColor: {r: 0.1, g: 0.8, b: 0.9, a: 1}
     - _WaveSpeed: {r: 0.1, g: 0.1, b: 0, a: 0}
   m_BuildTextureStacks: []

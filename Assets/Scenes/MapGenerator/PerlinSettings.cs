@@ -36,6 +36,7 @@ public class PerlinSettings : ScriptableObject
     public float terrainHeightMultiplier = 50f;
     public int width = 257; 
     public int height = 257;
+    bool tesssssst = false;
 
     public float[,] GenerateMap()
     {
@@ -44,7 +45,7 @@ public class PerlinSettings : ScriptableObject
         if (plainRadius < lakeRadius) plainRadius = lakeRadius;
 
         return PerlinNoiseGenerator.GenerateNoiseMap(
-            width, height, seed, scale, octaves, persistence, lacunarity, 
+            width, height, seed, scale, octaves, persistence, lacunarity,
             nivelCampie, nivelMunte
         );
     }
@@ -60,4 +61,4 @@ public class PerlinSettings : ScriptableObject
         
         OnSettingsUpdated?.Invoke();
     }
-}
+}//d
