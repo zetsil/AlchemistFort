@@ -7,7 +7,7 @@ public class EquippedManager : MonoBehaviour
     // Singleton Setup
     public static EquippedManager Instance { get; private set; }
     
-    // Semnalul Public de Stare (pe baza slotului) asd
+    // Semnalul Public de Stare (pe baza slotului)
     public event Action<InventorySlot> OnSlotEquippedStateChanged;
 
     // Slotul de Echipare (Instanța cu durabilitate)
@@ -19,7 +19,7 @@ public class EquippedManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            currentEquippedSlot = new InventorySlot(null, 999);
+            currentEquippedSlot = new InventorySlot(SlotType.Tool, null, 999);
             currentEquippedSlot.OnSlotChanged += HandleSlotContentChanged;
         }
         else

@@ -168,7 +168,7 @@ public class ItemPickup : MonoBehaviour
             // Cazul A: Echipăm direct în mână
             if (EquippedManager.Instance.IsEquippedSlotEmpty())
             {
-                InventorySlot newSlot = new InventorySlot(toolItem, -1);
+                InventorySlot newSlot = new InventorySlot(SlotType.Tool, toolItem, -1);
 
                 // --- INJECTĂM DURABILITATEA ---
                 if (newSlot.state != null && worldItem != null)
@@ -186,7 +186,7 @@ public class ItemPickup : MonoBehaviour
             // Cazul B: Mâna e plină, îl punem în inventar
             else
             {
-                InventorySlot inventorySlot = new InventorySlot(toolItem, -1);
+                InventorySlot inventorySlot = new InventorySlot(SlotType.General, toolItem, -1);
                 
                 // --- INJECTĂM DURABILITATEA ---
                 if (inventorySlot.state != null && worldItem != null)

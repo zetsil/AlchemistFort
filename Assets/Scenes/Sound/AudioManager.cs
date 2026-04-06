@@ -25,11 +25,27 @@ public class AudioManager : MonoBehaviour
     [Tooltip("Durata unei zile complete în secunde reale (300 de secunde = 5 minute).")]
     public float dayDurationSeconds = 300f; 
 
+
+    [Header("Ambiance (Loop Continuu)")]
+    [Tooltip("Clip pentru sunetul continuu de fundal în timpul zilei.")]
+    public AudioClip dayAmbianceClip;
+    [Range(0f, 1f)] public float dayAmbianceVolume = 0.5f;
+
+    [Space]
+    [Tooltip("Clip pentru sunetul continuu de fundal în timpul nopții.")]
+    public AudioClip nightAmbianceClip;
+    [Range(0f, 1f)] public float nightAmbianceVolume = 0.5f;
+
+    [Tooltip("Viteza cu care se face trecerea între zi și noapte.")]
+    public float crossfadeSpeed = 0.5f;
+
     // Dicționar pentru căutare rapidă bazată pe numele evenimentului
     private Dictionary<string, SoundClipData> soundMap = new Dictionary<string, SoundClipData>();
 
     private AudioSource effectsAudioSource; 
     private AudioSource backgroundAudioSource; // AudioSource dedicat sunetelor de fundal
+    private AudioSource dayAmbianceSource;     // Pentru loop-ul de zi
+    private AudioSource nightAmbianceSource;   // Pentru loop-ul de noapte
 
     // Variabilă care simulează timpul jocului (0.0 la 1.0)
     // 0.0-0.5 ar putea fi Ziua, 0.5-1.0 ar putea fi Noaptea
@@ -56,7 +72,7 @@ public class AudioManager : MonoBehaviour
             Destroy(gameObject);
         }
     }
-    
+
     private void Update()
     {
         // Simularea trecerii timpului
@@ -66,6 +82,8 @@ public class AudioManager : MonoBehaviour
         {
             currentTime = 0f; // Resetăm la începutul unei noi zile
         }
+        
+        HandleAmbianceCrossfade();
     }
 
     private void OnEnable()
@@ -133,6 +151,10 @@ public class AudioManager : MonoBehaviour
         backgroundAudioSource.loop = false;
         backgroundAudioSource.spatialBlend = 0f; // 2D Sound
 
+        // Creăm sursele pentru Ambiance Continuu
+        dayAmbianceSource = SetupAmbianceSource("DayAmbiance", dayAmbianceClip);
+        nightAmbianceSource = SetupAmbianceSource("NightAmbiance", nightAmbianceClip);
+
         foreach (var soundData in soundEvents)
         {
             if (soundMap.ContainsKey(soundData.soundName))
@@ -173,6 +195,29 @@ public class AudioManager : MonoBehaviour
                 backgroundAudioSource.PlayOneShot(clipToPlay);
             }
         }
+    }
+
+    private AudioSource SetupAmbianceSource(string name, AudioClip clip)
+    {
+        AudioSource src = new GameObject(name).AddComponent<AudioSource>();
+        src.transform.SetParent(this.transform);
+        src.clip = clip;
+        src.loop = true;
+        src.playOnAwake = false;
+        src.volume = 0;
+        src.Play();
+        return src;
+    }
+
+    private void HandleAmbianceCrossfade()
+    {
+        // Calculăm volumul țintă pentru fiecare sursă
+        float targetDayVol = IsDayTime ? dayAmbianceVolume : 0f;
+        float targetNightVol = IsDayTime ? 0f : nightAmbianceVolume;
+
+        // Interpolare lină (Lerp) pentru a evita tăierile bruște de sunet
+        dayAmbianceSource.volume = Mathf.Lerp(dayAmbianceSource.volume, targetDayVol, Time.deltaTime * crossfadeSpeed);
+        nightAmbianceSource.volume = Mathf.Lerp(nightAmbianceSource.volume, targetNightVol, Time.deltaTime * crossfadeSpeed);
     }
 
     private AudioClip GetAmbientClipBasedOnTime()

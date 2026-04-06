@@ -447,7 +447,7 @@ public class MapGenerator : MonoBehaviour
                     GameObject tree = Instantiate(treePrefab, worldPos, Quaternion.Euler(0, randomRotation, 0));
                     tree.transform.parent = treeContainer.transform;
 
-                    float scale = 0.8f + (float)prng.NextDouble() * 0.4f;
+                    float scale = 1.2f + (float)prng.NextDouble() * 0.4f;
                     tree.transform.localScale = Vector3.one * scale;
 
                     if (underTreeSettings.prefabs.Count > 0)

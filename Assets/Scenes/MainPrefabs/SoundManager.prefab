@@ -46,7 +46,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
-  m_Volume: 1
+  m_Volume: 0.473
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -170,6 +170,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aee1dc3ac90090515ac6177ee230a808, type: 2}
   - {fileID: 11400000, guid: 1d6cfd4ed72d1053887fb635e93f6f7e, type: 2}
   - {fileID: 11400000, guid: a96689c52ac5dcc1b8528930c055df89, type: 2}
+  - {fileID: 11400000, guid: 856b6e48128069fc48e30610003fb083, type: 2}
   dayBackgroundSounds:
   - {fileID: 8300000, guid: bc6336210374f02a48f52becad3d0006, type: 3}
   - {fileID: 8300000, guid: 4704f4100ef2b8017b4c6743834465ca, type: 3}
@@ -177,3 +178,8 @@ MonoBehaviour:
   nightBackgroundSounds: []
   backgroundSoundInterval: {x: 100, y: 300}
   dayDurationSeconds: 300
+  dayAmbianceClip: {fileID: 8300000, guid: 451e4fc53f192c2e28631a024ef3d943, type: 3}
+  dayAmbianceVolume: 0.5
+  nightAmbianceClip: {fileID: 0}
+  nightAmbianceVolume: 0.5
+  crossfadeSpeed: 0.5

@@ -49,7 +49,7 @@ public class InventoryManager : MonoBehaviour
         for (int i = 0; i < max_slots; i++)
         {
             // Creăm un slot "gol" (itemData = null, count = 0)
-            allSlots.Add(new InventorySlot(null, i));
+            allSlots.Add(new InventorySlot(SlotType.General, null, i));
         }
     }
     
@@ -412,6 +412,16 @@ public class InventoryManager : MonoBehaviour
     {
         if (source == null || target == null || source == target) return;
 
+
+        bool sourceCanAcceptTarget = source.CanAcceptItem(target.itemData);
+        bool targetCanAcceptSource = target.CanAcceptItem(source.itemData);
+
+        if (!sourceCanAcceptTarget || !targetCanAcceptSource)
+        {
+            Debug.LogWarning($"[InventoryManager] Swap respins! Incompatibilitate între {source.slotType} și {target.slotType}");
+            return; 
+        }
+
         // 1. SALVĂM valorile individuale (nu obiectul cu totul)
         Item tItem = source.itemData;
         Sprite tIcon = source.icon;
@@ -527,7 +537,17 @@ public class InventoryManager : MonoBehaviour
 [System.Serializable]
 public class ItemState
 {
-    public float currentDurability; 
+    public float currentDurability;
+}
+
+
+public enum SlotType 
+{ 
+    General,    // Acceptă orice (Rucsac)
+    Tool,       // Doar unelte/arme
+    Head,       // Doar căști
+    Chest,      // Doar armură corp
+    // QuickSlot   // Sloturi de acces rapid
 }
 
 [System.Serializable]
@@ -539,6 +559,7 @@ public class InventorySlot
     public Sprite icon;
     public int count = 0;
     public int max_count;
+    public SlotType slotType;
     private InventoryManager manager => InventoryManager.Instance;
     // folosita doar pentru tool
     public ItemState state;
@@ -552,9 +573,11 @@ public class InventorySlot
             instanceID = System.Guid.NewGuid().ToString();
     }
 
-    public InventorySlot(Item data, int index)
+    public InventorySlot(SlotType type, Item data, int index)
     {
-        slotIndex = index;
+        this.slotType = type; // Stabilim tipul slotului imediat
+        this.slotIndex = index;
+        GenerateID(); // Generăm ID-ul la creare
 
         // DACĂ SLOTUL ESTE INIȚIALIZAT GOL
         if (data == null)
@@ -564,14 +587,30 @@ public class InventorySlot
             count = 0;
             max_count = 0;
             state = null;
-            return; // Oprim execuția aici
+            return; 
         }
 
         // DACĂ ARE DATE (pentru adăugare normală sau încărcare)
         itemData = data;
         icon = data.icon;
         max_count = data.stackSize;
+        
+        // Dacă e un ToolItem, îi inițializăm starea (durabilitatea)
         InitializeState(data);
+    }
+
+    public bool CanAcceptItem(Item item)
+    {
+        if (item == null) return true; // Putem goli orice slot oricând
+
+        if (slotType == SlotType.Tool)
+        {
+            // Verificăm dacă obiectul este de tip ToolItem (sau o clasă care îl moștenește)
+            return item is ToolItem;
+        }
+
+        // Slotul General acceptă orice (Item simplu, ToolItem, etc.)
+        return true;
     }
 
     public void SetItem(Item data)
@@ -587,6 +626,8 @@ public class InventorySlot
         {
             state = new ItemState { currentDurability = data.maxDurability };
         }
+
+        OnSlotChanged?.Invoke(this);
     }
 
     public void Clear()
@@ -639,6 +680,8 @@ public class InventorySlot
         this.count = count;
         this.max_count = maxCount;
         this.state = state;
+
+        OnSlotChanged?.Invoke(this);
     }
 
     public void DropAll()

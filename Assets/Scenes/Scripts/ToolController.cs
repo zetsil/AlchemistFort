@@ -16,6 +16,7 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
 
     // Variabilă de stare pentru a preveni input-ul în timpul animației sau double-hit.
     private bool isAttacking = false;
+    public TrailRenderer _trail;
 
     // NOU: Proprietate ajutătoare care accesează direct slotul de la manager.
     private InventorySlot CurrentEquippedSlot => EquippedManager.Instance.GetEquippedSlot();
@@ -96,8 +97,29 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
 
         isAttacking = true;
         hitboxHandler.gameObject.SetActive(true);
-        hitboxHandler.ClearHitRegistry(); 
-        
+        hitboxHandler.ClearHitRegistry();
+
+        PlaySlashSound();
+
+    }
+
+
+    private void PlaySlashSound()
+    {
+        // Preluăm slotul echipat prin proprietatea existentă
+        InventorySlot slot = CurrentEquippedSlot;
+
+        if (slot != null && slot.itemData != null)
+        {
+            // Construim numele sunetului: "slash" + numele itemului (ex: "slashTopor")
+            string soundName = "slash_" + slot.itemData.itemName;
+            
+            // Trimitem cererea către sistemul de sunet prin GlobalEvents
+            GlobalEvents.TriggerPlaySound(soundName);
+            
+            // Opțional: Debug.Log pentru a verifica în consolă dacă numele e corect
+            // Debug.Log($"Playing sound: {soundName}");
+        }
     }
 
     /// <summary>
@@ -114,7 +136,7 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
 
         isAttacking = false; // Resetăm starea
     }
-    
+
     public void ForceResetAttack()
     {
         if (hitboxHandler != null)
@@ -128,5 +150,24 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     private void OnDisable()
     {
         ForceResetAttack();
+    }
+    
+    public void ActivaTrail()
+    {
+        if (_trail != null)
+        {
+            _trail.emitting = true;
+        }
+    }
+
+    /// <summary>
+    //  Dezactivează emisia trail-ului. Chemati-o la finalul atacului.
+    /// </summary>
+    public void DezactiveazaTrail()
+    {
+        if (_trail != null)
+        {
+            _trail.emitting = false;
+        }
     }
 }

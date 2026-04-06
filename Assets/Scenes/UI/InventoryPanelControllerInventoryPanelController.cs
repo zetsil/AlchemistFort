@@ -111,6 +111,8 @@ public class InventoryPanelController : MonoBehaviour
             equippedToolSlot.RegisterCallback<MouseDownEvent>(OnEquippedSlotMouseDown);
             equippedToolSlot.RegisterCallback<PointerEnterEvent>(OnEquippedSlotPointerEnter);
             equippedToolSlot.RegisterCallback<PointerLeaveEvent>(OnEquippedSlotPointerLeave);
+            // equippedToolSlot.RegisterCallback<PointerDownEvent>(evt => OnSlotPointerDown(evt, slotIndex, equippedToolSlot));
+            // equippedToolSlot.RegisterCallback<PointerUpEvent>(evt => OnSlotPointerUp(evt, slotIndex));
         }
 
         // La început, ascundem panoul.
@@ -362,6 +364,7 @@ public class InventoryPanelController : MonoBehaviour
             {
                 equippedToolIcon = equippedToolSlot.Q<VisualElement>("tool-icon");
                 equippedDurabilityLabel = equippedToolSlot.Q<Label>("durability-label");
+                SetupEquippedSlotUI();
             }
             else
             {
@@ -376,6 +379,64 @@ public class InventoryPanelController : MonoBehaviour
         }
     }
 
+
+
+    private void SetupEquippedSlotUI()
+    {
+        if (equippedToolSlot != null)
+        {
+            InventorySlot logicSlot = EquippedManager.Instance.GetEquippedSlot();
+
+            // 1. START DRAG: Când tragi DIN slotul de echipare
+            equippedToolSlot.RegisterCallback<PointerMoveEvent>(evt =>
+            {
+                if (evt.pressedButtons == 1 && draggedSlot == null)
+                {
+                    float dist = Vector2.Distance(pointerStartPos, evt.position);
+                    if (dist > dragThreshold)
+                    {
+                        if (logicSlot != null && logicSlot.itemData != null)
+                        {
+                            HideContextMenu();
+                            StartDrag(logicSlot, equippedToolSlot, evt.position);
+                        }
+                    }
+                }
+            });
+
+            // 2. MEMORARE POZIȚIE: Necesar pentru a calcula distanța de drag
+            equippedToolSlot.RegisterCallback<PointerDownEvent>(evt => 
+            {
+                pointerStartPos = evt.position; 
+            });
+
+            // 3. FINISH DROP: Când eliberezi mouse-ul PESTE acest slot
+            equippedToolSlot.RegisterCallback<PointerUpEvent>(evt =>
+            {
+                // Dacă avem un item "în zbor" (draggedSlot), încercăm să-l punem aici
+                if (draggedSlot != null)
+                {
+                    // Chemăm FinishDrop care va face verificarea de tip (Tool vs Item)
+                    FinishDrop(logicSlot);
+                }
+                else
+                {
+                    // Click scurt (opțional: de exemplu pentru a vedea detalii)
+                    // OnEquippedSlotClicked(logicSlot);
+                }
+            });
+
+            // 4. FEEDBACK VIZUAL (Opțional dar recomandat)
+            equippedToolSlot.RegisterCallback<PointerEnterEvent>(evt => 
+            {
+                if (logicSlot.itemData != null) 
+                    ShowTooltip(logicSlot, evt.position);
+            });
+            
+            equippedToolSlot.RegisterCallback<PointerLeaveEvent>(evt => HideTooltip());
+        }
+    }
+
     private void RegisterCallbacks()
     {
         if (exitButton != null)
@@ -384,20 +445,6 @@ public class InventoryPanelController : MonoBehaviour
         }
     }
 
-    // public void SetPanelVisibility(bool isVisible)
-    // {
-    //     if (rootElement != null)
-    //     {
-    //         rootElement.style.display = isVisible ? DisplayStyle.Flex : DisplayStyle.None;
-    //         isPanelOpen = isVisible;
-    //         ToggleGameInput(isVisible);
-
-    //         if (isVisible)
-    //         {
-    //             RefreshUI();
-    //         }
-    //     }
-    // }
 
     // NOU: Metodă publică pentru a comuta starea panoului
     public void TogglePanel()
@@ -634,11 +681,11 @@ public class InventoryPanelController : MonoBehaviour
         // }
     }
 
-    private void OnSlotPointerUp(PointerUpEvent evt, int targetSlotIndex)
+    private void OnSlotPointerUp(PointerUpEvent evt, InventorySlot targetSlot)
     {
-        InventorySlot targetSlot = InventoryManager.Instance.allSlots[targetSlotIndex];
         if (draggedSlot != null)
         {
+            // Acum targetSlot poate fi oricare: cel din inventar SAU cel din EquippedManager
             FinishDrop(targetSlot);
         }
     }
@@ -665,6 +712,7 @@ public class InventoryPanelController : MonoBehaviour
 
             // 2. Salvează indexul pentru a ști la ce slot din manager face referință
             int slotIndex = i;
+            InventorySlot slot = InventoryManager.Instance.allSlots[slotIndex];
 
             slotElement.RegisterCallback<PointerMoveEvent>(evt =>
             {
@@ -674,7 +722,7 @@ public class InventoryPanelController : MonoBehaviour
                     float dist = Vector2.Distance(pointerStartPos, evt.position);
                     if (dist > dragThreshold)
                     {
-                        InventorySlot slot = InventoryManager.Instance.allSlots[slotIndex];
+                        
                         if (slot.itemData != null)
                         {
                             HideContextMenu(); // ÎNCHIDEM meniul dacă cumva era deschis
@@ -695,16 +743,18 @@ public class InventoryPanelController : MonoBehaviour
                 }
                 else
                 {
-                    OnSlotPointerUp(evt, slotIndex); // Logica de Drop existentă
+                    OnSlotPointerUp(evt, slot); // Logica de Drop existentă
                 }
             });
 
             // 3. Înregistrează EVENIMENTELE O SINGURĂ DATĂ
             slotElement.RegisterCallback<PointerDownEvent>(evt => OnSlotPointerDown(evt, slotIndex, slotElement));
-            slotElement.RegisterCallback<PointerUpEvent>(evt => OnSlotPointerUp(evt, slotIndex));
+            // slotElement.RegisterCallback<PointerUpEvent>(evt => OnSlotPointerUp(evt, slot));
             slotElement.RegisterCallback<PointerEnterEvent>(evt => ShowTooltip(InventoryManager.Instance.allSlots[slotIndex], evt.position));
             slotElement.RegisterCallback<PointerLeaveEvent>(evt => HideTooltip());
             // slotElement.RegisterCallback<MouseDownEvent>(evt => OnSlotMouseDown(evt, slotIndex));
+
+
 
             slotsGridContainer.Add(slotElement);
             uiSlotElements.Add(slotElement);
@@ -800,7 +850,7 @@ public class InventoryPanelController : MonoBehaviour
         }
         else
         {
-            // Permitem Drop și pe sloturi goale!
+            // Permitem Drop și pe sloturi goale!FinishDrop
             slotElement.RegisterCallback<PointerUpEvent>(evt =>
             {
                 if (draggedSlot != null)
@@ -854,10 +904,23 @@ public class InventoryPanelController : MonoBehaviour
     {
         if (draggedSlot == null) return;
 
-        // Aici apelezi logica din InventoryManager pentru a face swap
-        // Presupunând că ai o metodă Swap(InventorySlot a, InventorySlot b) sau similar
-        // Dacă targetSlot e null, înseamnă că îl muți pe o poziție goală (doar schimbi indexul în listă)
-        
+        // --- LOGICA DE FILTRARE ---
+        // Verificăm dacă încercăm să punem ceva în slotul de Equipped
+        if (targetSlot == EquippedManager.Instance.GetEquippedSlot())
+        {
+            // Presupunând că ai o proprietate 'isTool' sau 'itemType' în ItemData
+            bool isItemTool = draggedSlot.itemData is ToolItem; // Sau: draggedSlot.itemData.itemType == ItemType.Tool
+
+            if (!isItemTool)
+            {
+                Debug.LogWarning("⚠️ Nu poți echipa acest obiect! Nu este o unealtă.");
+                StopDrag(); // Anulăm drag-ul fără swap
+                RefreshUI();
+                return;
+            }
+        }
+
+        // Dacă trece de verificare (sau dacă ținta e un slot normal de inventar), facem swap-ul
         InventoryManager.Instance.SwapSlots(draggedSlot, targetSlot);
 
         StopDrag();

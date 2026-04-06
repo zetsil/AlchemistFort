@@ -762,7 +762,7 @@ public class SaveManager : MonoBehaviour
             if (equippedSO != null) 
             {
                 // Cream un slot temporar doar pentru a-l pasa ca "cerere" către EquippedManager
-                InventorySlot tempSlot = new InventorySlot(equippedSO, -1);
+                InventorySlot tempSlot = new InventorySlot(SlotType.Tool, equippedSO, -1);
                 tempSlot.count = saveData.equippedSlot.amount;
                 
                 if (tempSlot.state != null && saveData.equippedSlot.durability != -1f)
