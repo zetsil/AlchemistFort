@@ -8,13 +8,13 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
 {
     // Referința la scriptul care gestionează coliziunile (Hitbox-ul propriu-zis)
     public EnemyHitboxHandler hitboxHandler;
-    
+
     // Referința la componenta NPC (pentru a obține Damage-ul)
     private NPCBase npcController;
 
     // Variabilă de stare pentru fereastra de atac
     public bool IsAttackWindowOpen => isAttackWindowOpen;
-    private bool isAttackWindowOpen = false; 
+    private bool isAttackWindowOpen = false;
 
     private void Awake()
     {
@@ -36,7 +36,7 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
         //     Debug.LogError($"EnemyAttackController pe {gameObject.name} nu are referință la ToolHitboxHandler.");
         // }
     }
-    
+
     // =================================================================
     // IMPLEMENTAREA IWeaponData
     // =================================================================
@@ -50,7 +50,7 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
     public ToolType GetToolType()
     {
         // Returnează tipul de atac al inamicului (ex: Claw, pentru a afecta rezistența)
-        return ToolType.Claw; 
+        return ToolType.Claw;
     }
 
     public void ApplyToolDurabilityLoss()
@@ -74,7 +74,7 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
         {
             isAttackWindowOpen = true;
             hitboxHandler.gameObject.SetActive(true);
-            hitboxHandler.ClearHitRegistry(); 
+            hitboxHandler.ClearHitRegistry();
         }
     }
 
@@ -85,7 +85,12 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
         {
             hitboxHandler.gameObject.SetActive(false);
         }
-        
-        isAttackWindowOpen = false; 
+
+        isAttackWindowOpen = false;
+    }
+    
+    public void OnHitConfirmed()
+    {
+        // Inamicii nu au squash.
     }
 }

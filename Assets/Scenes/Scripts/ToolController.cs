@@ -1,98 +1,113 @@
+using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Componentă atașată obiectului uneltei echipate (Topor/Sabie).
-/// Gestionează sincronizarea atacului (Animation Events), citirea datelor
-/// de la InventorySlot și comunicarea cu Hitbox-ul.
-/// </summary>
 public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
 {
-    // Variabila veche publică este eliminată (sau transformată în privată fără [Tooltip])
-    // public InventorySlot equippedSlot; 
-
     [Header("Referințe Componente")]
-    [Tooltip("Referința la scriptul atașat GameObject-ului Hitbox (ToolHitboxHandler).")]
     public ToolHitboxHandler hitboxHandler;
-
-    // Variabilă de stare pentru a preveni input-ul în timpul animației sau double-hit.
-    private bool isAttacking = false;
     public TrailRenderer _trail;
 
-    // NOU: Proprietate ajutătoare care accesează direct slotul de la manager.
-    private InventorySlot CurrentEquippedSlot => EquippedManager.Instance.GetEquippedSlot();
+    // --- Hitbox state (neschimbat) ---
+    private bool isAttacking = false;
 
+    // --- Combo state ---
+    private Queue<string> _attackQueue = new Queue<string>();
+    private string[] _slashTriggers = { "Slash1", "Slash2", "Slash3" };
+    private int _currentIndex = 0;
+
+    private bool _isInComboSequence = false; // Suntem în mijlocul unui combo?
+    private bool _listenForCombo = false;    // Fereastra în care acceptăm next click
+    private bool _comboQueued = false;       // A venit un click în fereastră?
+
+    private Animator _animator;
+    private InventorySlot CurrentEquippedSlot => EquippedManager.Instance.GetEquippedSlot();
 
     private void Awake()
     {
+        _animator = GetComponent<Animator>();
+
         if (hitboxHandler != null)
-        {
             hitboxHandler.weaponDataSource = this;
-        }
         else
-        {
             Debug.LogError($"ToolController pe {gameObject.name} nu are referință la ToolHitboxHandler.");
-        }
+    }
+
+    private void OnEnable()  => GlobalEvents.OnAnimationTriggerRequested += HandleAnimationRequest;
+    private void OnDisable()
+    {
+        GlobalEvents.OnAnimationTriggerRequested -= HandleAnimationRequest;
+        ForceResetAttack();
     }
 
     // =================================================================
-    // IMPLEMENTAREA IWeaponData (Sursa de date pentru Hitbox)
+    // COMBO LOGIC
     // =================================================================
 
-    public float GetAttackDamage()
+    private void HandleAnimationRequest(string triggerName)
     {
-        InventorySlot slot = CurrentEquippedSlot; // Folosim proprietatea de acces
-
-        // 1. Verificăm dacă există un item echipat.
-        if (slot == null || slot.itemData == null)
+        if (!_isInComboSequence)
         {
-            return 0f;
+            // Prima lovitură — pornim direct
+            PlayNextAttack();
         }
-
-        // 2. Încercăm conversia sigură (as) la ToolItem pentru a accesa attackDamage.
-        ToolItem tool = slot.itemData as ToolItem;
-
-        // 3. Dacă itemul este o unealtă, returnăm damage-ul, altfel 0.
-        if (tool != null)
+        else if (_listenForCombo)
         {
-            return tool.attackDamage;
+            // Suntem în fereastră, reținem intenția
+            _comboQueued = true;
         }
-
-        return 0f;
+        // Dacă _listenForCombo e false, clickul e ignorat (prea devreme sau prea târziu)
     }
 
-    public ToolType GetToolType()
+    private void PlayNextAttack()
     {
-        // Folosim proprietatea ajutătoare ToolItemData din slot, care face deja conversia 'as ToolItem'.
-        // Folosim proprietatea de acces
-        return CurrentEquippedSlot?.ToolItemData != null ? CurrentEquippedSlot.ToolItemData.toolCategory : ToolType.None;
+        _isInComboSequence = true;
+        _listenForCombo = false;
+        _comboQueued = false;
+
+        string trigger = _slashTriggers[_currentIndex];
+        _currentIndex = (_currentIndex + 1) % _slashTriggers.Length;
+
+        _animator.SetTrigger(trigger);
     }
 
-    public void ApplyToolDurabilityLoss()
+    private void ResetCombo()
     {
-        // Aplicăm uzura direct pe Slotul din Inventar (obținut prin proprietatea de acces).
-        if (CurrentEquippedSlot != null)
-        {
-            // Apelăm metoda care gestionează scăderea durabilității și eliminarea din slot.
-            CurrentEquippedSlot.ApplyDurabilityLoss();
-        }
-    }
-
-    public void NotifyHitboxCleared()
-    {
-        // Funcție necesară pentru interfață, poate fi goală.
+        _isInComboSequence = false;
+        _listenForCombo = false;
+        _comboQueued = false;
+        _currentIndex = 0;
     }
 
     // =================================================================
-    // ANIMATION EVENTS (APELATE DE TIMELINE)
+    // ANIMATION EVENTS
     // =================================================================
 
     /// <summary>
+    /// Pus în clipul de animație când vrei să înceapă fereastra de combo.
+    /// </summary>
+    public void OpenComboWindow()
+    {
+        _listenForCombo = true;
+    }
+
+    /// <summary>
+    /// Pus la sfârșitul fiecărui clip Slash1, Slash2, Slash3.
+    /// </summary>
+    public void OnAttackFinished()
+    {
+        _listenForCombo = false;
+
+        if (_comboQueued)
+            PlayNextAttack();
+        else
+            ResetCombo();
+    }
+
+    /// <summary>
     /// Apelată de Animation Event la începutul fazei de lovitură.
-    /// Activează Hitbox-ul și resetează registrul de lovituri (HashSet).
     /// </summary>
     public void StartAttackWindow()
     {
-        // Verificăm dacă avem hitbox și dacă nu cumva e deja activ
         if (hitboxHandler == null) return;
 
         isAttacking = true;
@@ -100,74 +115,72 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
         hitboxHandler.ClearHitRegistry();
 
         PlaySlashSound();
-
-    }
-
-
-    private void PlaySlashSound()
-    {
-        // Preluăm slotul echipat prin proprietatea existentă
-        InventorySlot slot = CurrentEquippedSlot;
-
-        if (slot != null && slot.itemData != null)
-        {
-            // Construim numele sunetului: "slash" + numele itemului (ex: "slashTopor")
-            string soundName = "slash_" + slot.itemData.itemName;
-            
-            // Trimitem cererea către sistemul de sunet prin GlobalEvents
-            GlobalEvents.TriggerPlaySound(soundName);
-            
-            // Opțional: Debug.Log pentru a verifica în consolă dacă numele e corect
-            // Debug.Log($"Playing sound: {soundName}");
-        }
     }
 
     /// <summary>
     /// Apelată de Animation Event la sfârșitul fazei de lovitură.
-    /// Dezactivează Hitbox-ul.
     /// </summary>
     public void EndAttackWindow()
     {
         if (hitboxHandler != null)
-        {
-            // Dezactivăm ÎNTREGUL GameObject Hitbox
             hitboxHandler.gameObject.SetActive(false);
-        }
 
-        isAttacking = false; // Resetăm starea
+        isAttacking = false;
     }
 
     public void ForceResetAttack()
     {
         if (hitboxHandler != null)
-        {
             hitboxHandler.gameObject.SetActive(false);
-        }
+
         isAttacking = false;
+        ResetCombo();
     }
 
-    // Opțional: Dezactivăm automat hitbox-ul dacă obiectul uneltei este dezactivat
-    private void OnDisable()
+    // =================================================================
+    // IWEAPONDATA
+    // =================================================================
+
+    public float GetAttackDamage()
     {
-        ForceResetAttack();
+        InventorySlot slot = CurrentEquippedSlot;
+        if (slot == null || slot.itemData == null) return 0f;
+        ToolItem tool = slot.itemData as ToolItem;
+        return tool != null ? tool.attackDamage : 0f;
     }
-    
+
+    public ToolType GetToolType()
+    {
+        return CurrentEquippedSlot?.ToolItemData != null
+            ? CurrentEquippedSlot.ToolItemData.toolCategory
+            : ToolType.None;
+    }
+
+    public void ApplyToolDurabilityLoss()
+    {
+        CurrentEquippedSlot?.ApplyDurabilityLoss();
+    }
+
+    public void NotifyHitboxCleared() { }
+
+    // =================================================================
+    // TRAIL + SOUND
+    // =================================================================
+
+    private void PlaySlashSound()
+    {
+        InventorySlot slot = CurrentEquippedSlot;
+        if (slot != null && slot.itemData != null)
+            GlobalEvents.TriggerPlaySound("slash_" + slot.itemData.itemName);
+    }
+
     public void ActivaTrail()
     {
-        if (_trail != null)
-        {
-            _trail.emitting = true;
-        }
+        if (_trail != null) _trail.emitting = true;
     }
 
-    /// <summary>
-    //  Dezactivează emisia trail-ului. Chemati-o la finalul atacului.
-    /// </summary>
     public void DezactiveazaTrail()
     {
-        if (_trail != null)
-        {
-            _trail.emitting = false;
-        }
+        if (_trail != null) _trail.emitting = false;
     }
 }

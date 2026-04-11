@@ -15,4 +15,3 @@ MonoBehaviour:
   soundName: slash_Axe
   clips:
   - {fileID: 8300000, guid: 7301ce75443c9dfaab60272ca34ecdf1, type: 3}
-  - {fileID: 8300000, guid: 166dc298c2cd764adaaf86a3f83b5a3c, type: 3}

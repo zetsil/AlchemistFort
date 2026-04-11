@@ -76,7 +76,7 @@ public class InventoryPanelController : MonoBehaviour
         return isPanelOpen;
     }
 
-    private void OnEnable()
+    private void Start()
     {
         var uiDocument = GetComponent<UIDocument>();
         if (uiDocument == null)

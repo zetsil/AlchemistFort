@@ -13,7 +13,7 @@ public class ToolHitboxHandler : MonoBehaviour
 
     [Tooltip("Referință la componenta ToolController (implementează IWeaponData).")]
     // Folosim interfața pentru a menține scriptul generic și decuplat de ToolController.
-    public IWeaponData weaponDataSource; 
+    public IWeaponData weaponDataSource;
 
     // =================================================================
     // INTERFAȚA DE DATE ȘI ACȚIUNI
@@ -28,6 +28,7 @@ public class ToolHitboxHandler : MonoBehaviour
         ToolType GetToolType();
         void ApplyToolDurabilityLoss();
         void NotifyHitboxCleared(); 
+        
     }
 
     // =================================================================
