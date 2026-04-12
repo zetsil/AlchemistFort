@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: Hit_Axe_Tree
   m_EditorClassIdentifier: Assembly-CSharp::SoundClipData
   soundName: Hit_Axe_Tree
+  useRandomPitch: 1
+  minPitch: 0.9
+  maxPitch: 1.1
   clips:
   - {fileID: 8300000, guid: 52d08791afcacbc81b2074619f5efde7, type: 3}
   - {fileID: 8300000, guid: 22ed717a64d65aec9aeabd0e62f6aa16, type: 3}

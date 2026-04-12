@@ -7,6 +7,12 @@ public class SoundClipData : ScriptableObject
     // Numele este implicit cel al fișierului asset, dar îl păstrăm pentru debug
     [Tooltip("Numele evenimentului audio (Ex: 'AxeHit')")]
     public string soundName = "New Event";
+
+    [Header("Variatie Pitch")]
+    [Tooltip("Daca este activat, sunetul va avea un pitch random la fiecare redare.")]
+    public bool useRandomPitch = false;
+    [Range(0.1f, 2f)] public float minPitch = 0.9f;
+    [Range(0.1f, 2f)] public float maxPitch = 1.1f;
     
     [Tooltip("Lista de sunete alternative (variante) pentru acest eveniment.")]
     public AudioClip[] clips;

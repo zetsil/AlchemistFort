@@ -105,7 +105,7 @@ public class AudioManager : MonoBehaviour
             AudioClip clip = soundData.GetNextClip();
             if (clip != null)
             {
-                StartCoroutine(PlayClip3D(clip, position));
+                StartCoroutine(PlayClip3D(clip, position, soundData));;
             }
             else
             {
@@ -118,21 +118,27 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    private IEnumerator PlayClip3D(AudioClip clip, Vector3 position)
+    private IEnumerator PlayClip3D(AudioClip clip, Vector3 position, SoundClipData data)
     {
         GameObject tempGO = new GameObject("TempAudio_3D");
         tempGO.transform.position = position;
 
         AudioSource src = tempGO.AddComponent<AudioSource>();
         src.clip = clip;
-        src.spatialBlend = 1f;         // Full 3D
+        src.spatialBlend = 1f;
+        
+        // Aici aplicăm pitch-ul
+        if (data.useRandomPitch)
+        {
+            src.pitch = Random.Range(data.minPitch, data.maxPitch);
+        }
+
         src.rolloffMode = AudioRolloffMode.Linear;
-        src.minDistance = 5f;          // Volum maxim până la 5 unități
-        src.maxDistance = 50f;         // Ajustează după nevoie
-        src.volume = 1f;
+        src.minDistance = 5f;
+        src.maxDistance = 50f;
         src.Play();
 
-        yield return new WaitForSeconds(clip.length);
+        yield return new WaitForSeconds(clip.length / src.pitch); // Ajustăm așteptarea în funcție de pitch
         Destroy(tempGO);
     }
 
@@ -246,7 +252,16 @@ public class AudioManager : MonoBehaviour
 
             if (clip != null)
             {
-                // Folosim AudioSource-ul dedicat efectelor
+                // Aplicăm pitch-ul pe AudioSource-ul de efecte
+                if (soundData.useRandomPitch)
+                {
+                    effectsAudioSource.pitch = Random.Range(soundData.minPitch, soundData.maxPitch);
+                }
+                else
+                {
+                    effectsAudioSource.pitch = 1f; // Resetăm la normal dacă nu folosim random
+                }
+
                 effectsAudioSource.PlayOneShot(clip);
             }
         }

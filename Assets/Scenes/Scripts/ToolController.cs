@@ -111,9 +111,13 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
         if (hitboxHandler == null) return;
 
         isAttacking = true;
-        hitboxHandler.gameObject.SetActive(true);
-        hitboxHandler.ClearHitRegistry();
+        
+        hitboxHandler.gameObject.SetActive(true); 
+        
+        var col = hitboxHandler.GetComponent<Collider>();
+        if(col != null) col.enabled = true;
 
+        hitboxHandler.ClearHitRegistry();
         PlaySlashSound();
     }
 
@@ -123,7 +127,10 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     public void EndAttackWindow()
     {
         if (hitboxHandler != null)
-            hitboxHandler.gameObject.SetActive(false);
+        {
+            var col = hitboxHandler.GetComponent<Collider>();
+            if(col != null) col.enabled = false;
+        }
 
         isAttacking = false;
     }
