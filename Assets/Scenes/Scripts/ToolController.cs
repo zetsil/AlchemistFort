@@ -93,14 +93,25 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     /// <summary>
     /// Pus la sfârșitul fiecărui clip Slash1, Slash2, Slash3.
     /// </summary>
-    public void OnAttackFinished()
+    public void OnAttackFinished(string type)
     {
-        _listenForCombo = false;
+        // Dacă nu e fereastra de combo activă, ignorăm
+        if (!_isInComboSequence) return;
 
+        // Dacă am apăsat click pentru următorul atac (_comboQueued), 
+        // lăsăm orice eveniment (chiar și cel de la mijloc) să declanșeze atacul următor.
+        // Asta face jocul să se simtă "fast-paced".
         if (_comboQueued)
+        {
             PlayNextAttack();
-        else
+            return; 
+        }
+
+        // DACĂ NU avem click în coadă, resetăm DOAR la evenimentul marcat ca "Final"
+        if (type == "Final")
+        {
             ResetCombo();
+        }
     }
 
     /// <summary>

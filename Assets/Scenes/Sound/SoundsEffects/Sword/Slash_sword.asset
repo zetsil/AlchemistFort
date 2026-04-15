@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a7ed7faba97d5e0778949db6e06eae8e, type: 3}
-  m_Name: Hit_Sword_Zombie
+  m_Name: Slash_sword
   m_EditorClassIdentifier: Assembly-CSharp::SoundClipData
-  soundName: Hit_Sword_Zombie
+  soundName: slash_Sword
   useRandomPitch: 1
-  minPitch: 1.43
-  maxPitch: 2
+  minPitch: 1.27
+  maxPitch: 1.662
   clips:
-  - {fileID: 8300000, guid: 54825ebae64ad2024b3197274c771134, type: 3}
+  - {fileID: 8300000, guid: 8ce16da19ff94ee8cb3af44dc4fd0d03, type: 3}

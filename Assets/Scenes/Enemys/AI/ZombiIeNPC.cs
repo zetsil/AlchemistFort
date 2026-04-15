@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Collections;
 
 public class ZombieNPC : NPCBase, IHasBasePoint
 {
@@ -89,6 +90,7 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         // O condiție simplă pentru a evita Aggro-ul dacă NPC-ul moare sau e imun
         if (currentHealth <= 0) return;
         if (currentHealth == MaxHealth && baseDamage > 0) return;
+        DoHitStop(0.05f);
 
         // 2. Logica de AGGRO: Găsim Player-ul global (identificat prin Tag)
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -108,6 +110,25 @@ public class ZombieNPC : NPCBase, IHasBasePoint
             }
         }
     }
+
+    private void DoHitStop(float duration)
+    {
+        // Oprim timpul aproape de tot (nu 0 fix, ca să nu apară erori de calcul)
+        Time.timeScale = 0.01f;
+
+        // Resetăm timpul după X secunde
+        // Atenție: folosim WaitForSecondsRealtime pentru că timpul jocului e înghețat!
+        StartCoroutine(ResetTimeScale(duration));
+    }
+
+    private IEnumerator ResetTimeScale(float delay)
+    {
+        yield return new WaitForSecondsRealtime(delay);
+        Time.timeScale = 1.0f;
+    }
+
+
+    
 
     protected override void SetupStateLevels()
     {
@@ -184,9 +205,11 @@ public class ZombieNPC : NPCBase, IHasBasePoint
         // 1. STOP the knockback logic immediately
         StopAllCoroutines(); 
         isDead = true;
+        DoHitStop(0.05f);
+        TriggerFlash();
 
         // 2. Shut down AI and Main Physics
-        if (Agent != null) 
+        if (Agent != null)
         {
             Agent.isStopped = true;
             Agent.enabled = false;

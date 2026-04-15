@@ -145,7 +145,7 @@ public abstract class Entity : MonoBehaviour
         {
             // 0.07f este o valoare standard pentru un impact satisfăcător
             // HitStopManager.Instance.RequestHitStop(0.05f);
-            ApplyKnockbackFromCenter(8f);
+            // ApplyKnockbackFromCenter(8f);
         }
 
         if (healthBar != null)
@@ -159,7 +159,7 @@ public abstract class Entity : MonoBehaviour
     }
 
     // --- LOGICĂ FLASH ---
-    private void TriggerFlash()
+    public void TriggerFlash()
     {
         if (flashSettings.targetRenderers.Count == 0) return;
         
