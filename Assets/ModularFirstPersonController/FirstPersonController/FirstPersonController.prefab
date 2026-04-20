@@ -639,6 +639,7 @@ GameObject:
   - component: {fileID: 4459864851310106427}
   - component: {fileID: 3508541975111549212}
   - component: {fileID: 7871008756656545259}
+  - component: {fileID: 8973308958102318334}
   m_Layer: 0
   m_Name: PlayerCamera
   m_TagString: MainCamera
@@ -779,6 +780,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 819ad814826feefef9b81f6f1fac065a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CameraShakeListener
+--- !u!114 &8973308958102318334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4459864851310106424}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3562a27b66e86dfd89727a767e596b51, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraAnimations
+  mainCamera: {fileID: 0}
+  shakeAngle: 2
+  shakeDuration: 0.01
+  punchAmount: 0.05
+  punchDuration: 0.01
+  punchReturnDuration: 0.02
+  swordSlideAmount: 0.2
+  swordSlideDuration: 0.1
+  swordReturnDuration: 0.2
 --- !u!1 &4459864851397454630
 GameObject:
   m_ObjectHideFlags: 0

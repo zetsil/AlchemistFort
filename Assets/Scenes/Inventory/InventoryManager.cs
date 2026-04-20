@@ -6,6 +6,7 @@ using System;
 public class InventoryManager : MonoBehaviour
 {
     public static InventoryManager Instance { get; private set; }
+    public event Action OnInventoryDataChanged;
 
     // Map: key = numele itemului, value = lista sloturilor de acel tip
     private Dictionary<string, List<InventorySlot>> inventory = new Dictionary<string, List<InventorySlot>>();
@@ -44,14 +45,22 @@ public class InventoryManager : MonoBehaviour
 
 
     private void InitializeEmptySlots()
+{
+    allSlots.Clear();
+    for (int i = 0; i < max_slots; i++)
     {
-        allSlots.Clear();
-        for (int i = 0; i < max_slots; i++)
-        {
-            // Creăm un slot "gol" (itemData = null, count = 0)
-            allSlots.Add(new InventorySlot(SlotType.General, null, i));
-        }
+        InventorySlot newSlot = new InventorySlot(SlotType.General, null, i);
+        
+        // ABONARE: Când acest slot execută OnSlotChanged, 
+        // managerul va executa RebuildInventoryDictionary și va anunța UI-ul
+        newSlot.OnSlotChanged += (slot) => {
+            // RebuildInventoryDictionary();
+            OnInventoryDataChanged?.Invoke();
+        };
+
+        allSlots.Add(newSlot);
     }
+}
     
 
     public bool AddItemFromEquipped(InventorySlot equippedSlot)

@@ -76,35 +76,51 @@ public class QuickSlotManager : MonoBehaviour
     }
 
 
+    // private void OnEnable()
+    // {
+    //     // 1. Ascultăm slotul de echipament (mâna)
+    //     if (EquippedManager.Instance != null)
+    //     {
+    //         EquippedManager.Instance.GetEquippedSlot().OnSlotChanged += HandleGlobalSlotChange;
+    //     }
+
+    //     // 2. Ascultăm toate sloturile din inventar
+    //     if (InventoryManager.Instance != null)
+    //     {
+    //         foreach (var slot in InventoryManager.Instance.allSlots)
+    //         {
+    //             slot.OnSlotChanged += HandleGlobalSlotChange;
+    //         }
+    //     }
+    // }
+
+    // private void OnDisable()
+    // {
+    //     // Dezabonare pentru a evita memory leaks
+    //     if (EquippedManager.Instance != null)
+    //         EquippedManager.Instance.GetEquippedSlot().OnSlotChanged -= HandleGlobalSlotChange;
+
+    //     if (InventoryManager.Instance != null)
+    //     {
+    //         foreach (var slot in InventoryManager.Instance.allSlots)
+    //             slot.OnSlotChanged -= HandleGlobalSlotChange;
+    //     }
+    // }
+
+
     private void OnEnable()
     {
-        // 1. Ascultăm slotul de echipament (mâna)
-        if (EquippedManager.Instance != null)
-        {
-            EquippedManager.Instance.GetEquippedSlot().OnSlotChanged += HandleGlobalSlotChange;
-        }
-
-        // 2. Ascultăm toate sloturile din inventar
         if (InventoryManager.Instance != null)
         {
-            foreach (var slot in InventoryManager.Instance.allSlots)
-            {
-                slot.OnSlotChanged += HandleGlobalSlotChange;
-            }
+            // Când managerul zice că s-a schimbat ceva în date, dăm refresh la Hotbar
+            InventoryManager.Instance.OnInventoryDataChanged += RequestUIRefresh;
         }
     }
 
     private void OnDisable()
     {
-        // Dezabonare pentru a evita memory leaks
-        if (EquippedManager.Instance != null)
-            EquippedManager.Instance.GetEquippedSlot().OnSlotChanged -= HandleGlobalSlotChange;
-
         if (InventoryManager.Instance != null)
-        {
-            foreach (var slot in InventoryManager.Instance.allSlots)
-                slot.OnSlotChanged -= HandleGlobalSlotChange;
-        }
+            InventoryManager.Instance.OnInventoryDataChanged -= RequestUIRefresh;
     }
 
     private InventorySlot GetFirstAvailableInventorySlot(string itemName)

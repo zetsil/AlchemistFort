@@ -7,6 +7,9 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     public ToolHitboxHandler hitboxHandler;
     public TrailRenderer _trail;
 
+    [Header("VFX & Ground Scanning")]
+    [SerializeField] private WeaponGroundScanner groundScanner;
+
     // --- Hitbox state (neschimbat) ---
     private bool isAttacking = false;
 
@@ -14,6 +17,8 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     private Queue<string> _attackQueue = new Queue<string>();
     private string[] _slashTriggers = { "Slash1", "Slash2", "Slash3" };
     private int _currentIndex = 0;
+
+    private string _activeAttackName;
 
     private bool _isInComboSequence = false; // Suntem în mijlocul unui combo?
     private bool _listenForCombo = false;    // Fereastra în care acceptăm next click
@@ -30,7 +35,10 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
             hitboxHandler.weaponDataSource = this;
         else
             Debug.LogError($"ToolController pe {gameObject.name} nu are referință la ToolHitboxHandler.");
-    }
+
+        if (groundScanner == null)
+            Debug.LogWarning($"GroundScanner nu este asignat pe {gameObject.name}. Praful de pe pământ nu va apărea.");    
+        }
 
     private void OnEnable()  => GlobalEvents.OnAnimationTriggerRequested += HandleAnimationRequest;
     private void OnDisable()
@@ -56,6 +64,29 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
             _comboQueued = true;
         }
         // Dacă _listenForCombo e false, clickul e ignorat (prea devreme sau prea târziu)
+    }
+
+
+    /// <summary>
+    /// Apelată de Animation Event pentru a activa scanarea de praf pe pământ.
+    /// </summary>
+    public void StartGroundPrafScan()
+    {
+        if (groundScanner != null)
+        {
+            groundScanner.StartScanning();
+        }
+    }
+
+    /// <summary>
+    /// Apelată de Animation Event pentru a opri scanarea.
+    /// </summary>
+    public void StopGroundPrafScan()
+    {
+        if (groundScanner != null)
+        {
+            groundScanner.StopScanning();
+        }
     }
 
     private void PlayNextAttack()
@@ -117,19 +148,27 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     /// <summary>
     /// Apelată de Animation Event la începutul fazei de lovitură.
     /// </summary>
-    public void StartAttackWindow()
+    public void StartAttackWindow(string attackName)
     {
         if (hitboxHandler == null) return;
 
         isAttacking = true;
-        
-        hitboxHandler.gameObject.SetActive(true); 
-        
+        _activeAttackName = attackName;
+
+        hitboxHandler.gameObject.SetActive(true);
+
         var col = hitboxHandler.GetComponent<Collider>();
-        if(col != null) col.enabled = true;
+        if (col != null) col.enabled = true;
 
         hitboxHandler.ClearHitRegistry();
         PlaySlashSound();
+        // StartGroundPrafScan();
+    }
+    
+
+    public string GetCurrentAttackName() 
+    {
+        return _activeAttackName;
     }
 
     /// <summary>
@@ -140,10 +179,11 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
         if (hitboxHandler != null)
         {
             var col = hitboxHandler.GetComponent<Collider>();
-            if(col != null) col.enabled = false;
+            if (col != null) col.enabled = false;
         }
 
         isAttacking = false;
+        StopGroundPrafScan();
     }
 
     public void ForceResetAttack()
@@ -189,7 +229,7 @@ public class ToolController : MonoBehaviour, ToolHitboxHandler.IWeaponData
     {
         InventorySlot slot = CurrentEquippedSlot;
         if (slot != null && slot.itemData != null)
-            GlobalEvents.TriggerPlaySound("slash_" + slot.itemData.itemName);
+            GlobalEvents.TriggerPlaySound("Slash_" + slot.itemData.itemName);
     }
 
     public void ActivaTrail()

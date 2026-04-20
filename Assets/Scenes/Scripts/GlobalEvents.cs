@@ -40,6 +40,7 @@ public static class GlobalEvents
     public static event Action<string, Vector3> OnPlaySoundAtPosition;
     public static System.Action OnToxicGasStart;
     public static System.Action OnToxicGasStop;
+    public static event Action<string> OnAttackImpactPerformed;
 
     public static void NotifyToxicGasStart() => OnToxicGasStart?.Invoke();
     public static void NotifyToxicGasStop() => OnToxicGasStop?.Invoke();
@@ -52,6 +53,11 @@ public static class GlobalEvents
     public static void NotifyEnemyDeath(Entity enemy)
     {
         OnEnemyDeath?.Invoke(enemy);
+    }
+
+    public static void NotifyAttackImpact(string attackType)
+    {
+        OnAttackImpactPerformed?.Invoke(attackType);
     }
 
     public static void RequestEquip(ToolItem tool)

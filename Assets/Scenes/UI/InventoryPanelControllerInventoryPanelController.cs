@@ -98,11 +98,17 @@ public class InventoryPanelController : MonoBehaviour
         if (EquippedManager.Instance != null)
         {
             EquippedManager.Instance.OnSlotEquippedStateChanged += RefreshEquippedToolUI;
+
         }
 
         if (QuickSlotManager.Instance != null)
         {
             QuickSlotManager.Instance.OnQuickSlotUIUpdate +=  RefreshHotbarVisuals;
+        }
+
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.OnInventoryDataChanged += RefreshHotbarVisuals;
         }
 
         // 5. NOU: Atașează callback-ul de click pe slotul echipat
@@ -165,6 +171,11 @@ public class InventoryPanelController : MonoBehaviour
                 equippedToolSlot.UnregisterCallback<PointerEnterEvent>(OnEquippedSlotPointerEnter);
                 equippedToolSlot.UnregisterCallback<PointerLeaveEvent>(OnEquippedSlotPointerLeave);
             }
+        
+        if (InventoryManager.Instance != null)
+        {
+            InventoryManager.Instance.OnInventoryDataChanged -= RefreshHotbarVisuals;
+        }
 
         // Dezabonare callback-uri pentru butoanele meniului
         btnUse.clicked -= OnContextActionClicked;
@@ -1131,12 +1142,12 @@ public class InventoryPanelController : MonoBehaviour
         HideContextMenu();
         RefreshUI();
     }
-    
+
     // ===============================================
     // LOGICA SLOTULUI ECHIPAT
     // ===============================================
 
-   public void RefreshEquippedToolUI(InventorySlot slot)
+    public void RefreshEquippedToolUI(InventorySlot slot)
     {
         // Ne asigurăm că toate elementele UI necesare sunt prezente
         if (equippedToolIcon == null || equippedDurabilityLabel == null || equippedToolTypeLabel == null) return;
@@ -1150,15 +1161,15 @@ public class InventoryPanelController : MonoBehaviour
         {
             // 1. Echipat: Afișează Iconița și Info
             equippedToolIcon.style.backgroundImage = new StyleBackground(toolData.icon);
-            equippedToolIcon.style.display = DisplayStyle.Flex; 
-            
+            equippedToolIcon.style.display = DisplayStyle.Flex;
+
             // Afișează Durabilitatea (folosim datele dinamice din slot.state)
             // NOTĂ: Dacă dorești % din total, folosește (current / max) * 100
             float durabilityPercentage = (toolState.currentDurability / toolData.maxDurability) * 100f;
-            
+
             equippedDurabilityLabel.text = $"{durabilityPercentage:F0}% ({toolState.currentDurability:F0})";
             equippedDurabilityLabel.style.display = DisplayStyle.Flex;
-            
+
             // Afișează Tipul
             equippedToolTypeLabel.text = $"Type: {toolData.toolCategory}";
         }
@@ -1167,12 +1178,13 @@ public class InventoryPanelController : MonoBehaviour
             // 2. Dezechipat: Ascunde Iconița și Info
             equippedToolIcon.style.backgroundImage = null;
             equippedToolIcon.style.display = DisplayStyle.None;
-            
+
             equippedDurabilityLabel.text = string.Empty;
             equippedDurabilityLabel.style.display = DisplayStyle.None;
-            
+
             equippedToolTypeLabel.text = "Type: None";
         }
+        UpdateHotbarVisuals();
     }
 
 

@@ -172,6 +172,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: a96689c52ac5dcc1b8528930c055df89, type: 2}
   - {fileID: 11400000, guid: 856b6e48128069fc48e30610003fb083, type: 2}
   - {fileID: 11400000, guid: ea6859dd7751d9376a698dd28d3c4b4d, type: 2}
+  - {fileID: 11400000, guid: fdf2a04c03dbe87599f1f0c02ca2551b, type: 2}
   dayBackgroundSounds:
   - {fileID: 8300000, guid: bc6336210374f02a48f52becad3d0006, type: 3}
   - {fileID: 8300000, guid: 4704f4100ef2b8017b4c6743834465ca, type: 3}

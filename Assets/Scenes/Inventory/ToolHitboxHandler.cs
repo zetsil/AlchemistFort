@@ -12,9 +12,15 @@ public class ToolHitboxHandler : MonoBehaviour
     // prevenind aplicarea damage-ului de mai multe ori pe aceeași țintă.
     private HashSet<Collider> hitTargets = new HashSet<Collider>();
 
+    [Header("VFX References")]
+    [SerializeField] private ParticleSystem impactVFX; // Referință către sistemul de particule (ex. Hit Flash 2D)
+    [SerializeField] private bool followWeapon = true;
+
     [Tooltip("Referință la componenta ToolController (implementează IWeaponData).")]
     // Folosim interfața pentru a menține scriptul generic și decuplat de ToolController.
     public IWeaponData weaponDataSource;
+
+    
     
     [Header("Efect Squash & Stretch")]
     [SerializeField] private Transform weaponVisual; // Obiectul care conține mesh-ul armei
@@ -36,6 +42,7 @@ public class ToolHitboxHandler : MonoBehaviour
         ToolType GetToolType();
         void ApplyToolDurabilityLoss();
         void NotifyHitboxCleared();
+        string GetCurrentAttackName();
 
     }
 
@@ -61,9 +68,11 @@ public class ToolHitboxHandler : MonoBehaviour
 
         if (targetEntity != null && !targetEntity.isDead && targetEntity.entityData != null)
         {
-
+            // --- EFECTUL VIZUAL PE ARMĂ ---
+            PlayImpactVFX(other);
             // --- EFECTUL DE BUMP ---
             ApplyHitBump();
+            string attackType = weaponDataSource.GetCurrentAttackName();
 
             float damage = weaponDataSource.GetAttackDamage();
             ToolType toolType = weaponDataSource.GetToolType();
@@ -73,6 +82,10 @@ public class ToolHitboxHandler : MonoBehaviour
 
             // 2. Construim cheia: ex. "Hit_Pickaxe_Rock" sau "Hit_Sword_Goblin"
             string particleKey = $"Hit_{toolType}_{targetName}";
+
+
+            // NOTIFICĂ sistemul de cameră că a avut loc un impact
+            GlobalEvents.NotifyAttackImpact(attackType);
 
             // 3. Punctul de impact
             Vector3 impactPoint = other.ClosestPoint(transform.position);
@@ -98,6 +111,26 @@ public class ToolHitboxHandler : MonoBehaviour
         }
     }
 
+
+    private void PlayImpactVFX(Collider other)
+    {
+        if (impactVFX == null)
+        {
+            Debug.LogWarning("[VFX] impactVFX este NULL — nu e asignat în Inspector!");
+            return;
+        }
+
+        Debug.Log($"[VFX] PlayImpactVFX chemat pe {other.name}");
+
+        if (!followWeapon)
+        {
+            Vector3 impactPoint = other.ClosestPoint(transform.position);
+            impactVFX.transform.position = impactPoint;
+        }
+
+        // impactVFX.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        impactVFX.Play();
+    }
     private void ApplyHitBump()
     {
         if (weaponVisual == null) return;

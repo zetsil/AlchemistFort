@@ -58,6 +58,11 @@ public class EnemyAttackController : MonoBehaviour, ToolHitboxHandler.IWeaponDat
         // Inamicii nu pierd durabilitate.
     }
 
+    public string GetCurrentAttackName()
+    {
+        return "enemy";
+    }
+
     public void NotifyHitboxCleared()
     {
         // Funcție necesară pentru interfață.

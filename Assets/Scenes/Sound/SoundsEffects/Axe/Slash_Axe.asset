@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7ed7faba97d5e0778949db6e06eae8e, type: 3}
   m_Name: Slash_Axe
   m_EditorClassIdentifier: Assembly-CSharp::SoundClipData
-  soundName: slash_Axe
+  soundName: Slash_Axe
   useRandomPitch: 1
   minPitch: 0.9
   maxPitch: 1.1

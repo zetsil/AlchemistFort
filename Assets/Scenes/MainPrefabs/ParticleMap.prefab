@@ -51,3 +51,9 @@ MonoBehaviour:
     prefab: {fileID: 1850033487435682, guid: 2c4b2397ab17cce4bae0e99c1004869d, type: 3}
   - key: Hit_Sword_Zombie
     prefab: {fileID: 1743637094903878, guid: 021a2f7a2c5bc4449b4c64a66a050e8c, type: 3}
+  - key: Hit_Pickaxe_MiningRock
+    prefab: {fileID: 1075911434913256, guid: 5490db4cc4dbced44b137549b1a4e6f1, type: 3}
+  - key: Hit_Pickaxe_MiningIron
+    prefab: {fileID: 1075911434913256, guid: 5490db4cc4dbced44b137549b1a4e6f1, type: 3}
+  - key: Hit_Pickaxe_MiningCoal
+    prefab: {fileID: 1075911434913256, guid: 5490db4cc4dbced44b137549b1a4e6f1, type: 3}

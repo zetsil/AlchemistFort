@@ -2287,13 +2287,20 @@ AnimationClip:
     messageOptions: 0
   - time: 0.32
     functionName: StartAttackWindow
-    data: 
+    data: SwordSlashRight
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
   - time: 0.32
     functionName: ActivaTrail
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.4
+    functionName: StartGroundPrafScan
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

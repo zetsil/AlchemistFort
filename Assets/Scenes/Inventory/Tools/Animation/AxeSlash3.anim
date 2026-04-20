@@ -1488,13 +1488,20 @@ AnimationClip:
     messageOptions: 0
   - time: 0.1
     functionName: StartAttackWindow
-    data: 
+    data: Axe
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
   - time: 0.2
     functionName: ActivaTrail
+    data: 
+    objectReferenceParameter: {fileID: 0}
+    floatParameter: 0
+    intParameter: 0
+    messageOptions: 0
+  - time: 0.3
+    functionName: StartGroundPrafScan
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
