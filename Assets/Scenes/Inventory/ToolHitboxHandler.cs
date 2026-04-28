@@ -116,21 +116,30 @@ public class ToolHitboxHandler : MonoBehaviour
     {
         if (impactVFX == null)
         {
-            Debug.LogWarning("[VFX] impactVFX este NULL — nu e asignat în Inspector!");
+            Debug.LogWarning("[VFX] impactVFX este NULL!");
             return;
         }
 
-        Debug.Log($"[VFX] PlayImpactVFX chemat pe {other.name}");
+        // 1. Calculăm punctul de impact cel mai apropiat
+        Vector3 impactPoint = other.ClosestPoint(transform.position);
+        impactVFX.transform.position = impactPoint;
 
-        if (!followWeapon)
-        {
-            Vector3 impactPoint = other.ClosestPoint(transform.position);
-            impactVFX.transform.position = impactPoint;
-        }
+        // 2. ROTAȚIA PENTRU SEMILUNĂ/SLASH:
+        // Copiem rotația exactă a uneltei în acest moment.
+        // Deoarece hitbox-ul (this.transform) se rotește odată cu animația de swing,
+        // VFX-ul va moșteni acea rotație, aliniind arcul semilunii cu traiectoria loviturii.
+        
+        impactVFX.transform.rotation = transform.rotation;
 
-        // impactVFX.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        // 3. (OPȚIONAL) CORECȚIE DE AXĂ
+        // Dacă în Unity semiluna ta stă "pe cant" sau e rotită greșit față de armă,
+        // va trebui să adaugi o rotație locală aici.
+        // De exemplu, dacă trebuie rotită 90 de grade pe axa X:
+        // impactVFX.transform.Rotate(90, 0, 0, Space.Self);
+
         impactVFX.Play();
     }
+    
     private void ApplyHitBump()
     {
         if (weaponVisual == null) return;

@@ -71,7 +71,7 @@ Transform:
   - {fileID: 2492454132824167621}
   - {fileID: 3700238587644448068}
   m_Father: {fileID: 6406276353299293521}
-  m_LocalEulerAnglesHint: {x: 63.617283, y: -10.688583, z: 15.388971}
+  m_LocalEulerAnglesHint: {x: 77.130066, y: 83.307526, z: 80.03592}
 --- !u!33 &7260959411464912577
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -177,6 +177,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ToolController
   hitboxHandler: {fileID: 7117910455793196364}
   _trail: {fileID: 7825306716414723618}
+  groundScanner: {fileID: 0}
 --- !u!54 &6608379871789896351
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -365,7 +366,7 @@ TrailRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 49ce1792a710a7c4ba022d5c6ce9a4e3, type: 2}
+  - {fileID: 2100000, guid: 5c7552b128182c981b61e7f357a07343, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -398,7 +399,7 @@ TrailRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.056098938
+        value: 0.14272481
         inSlope: 0
         outSlope: 0
         tangentMode: 0

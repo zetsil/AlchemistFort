@@ -8,7 +8,7 @@ using System.Collections.Generic;
 public class EnemyHitboxHandler : MonoBehaviour
 {
     // Referința la NPC-ul părinte pentru a obține Damage-ul și ToolType-ul de atac.
-    private NPCBase npcController; 
+    private Entity npcController; 
     
     // Registru pentru a stoca obiectele deja lovite într-o fereastră de atac.
     HashSet<AllyEntity> hitRegistry = new HashSet<AllyEntity>();
@@ -17,11 +17,11 @@ public class EnemyHitboxHandler : MonoBehaviour
     private void Awake()
     {
         // Găsim referința la NPC/Zombi în ierarhia părinte
-        npcController = GetComponentInParent<NPCBase>();
+        npcController = GetComponentInParent<Entity>();
 
         if (npcController == null)
         {
-            Debug.LogError($"EnemyHitboxHandler pe {gameObject.name} nu a găsit un NPCBase părinte!");
+            Debug.LogError($"EnemyHitboxHandler pe {gameObject.name} nu a găsit un Entity părinte!");
         }
     }
 
