@@ -41,6 +41,12 @@ public static class GlobalEvents
     public static System.Action OnToxicGasStart;
     public static System.Action OnToxicGasStop;
     public static event Action<string> OnAttackImpactPerformed;
+    // --- EVENIMENTE NOI PENTRU APĂ ---
+    public static event Action OnEnterWater;
+    public static event Action OnExitWater;
+
+    public static void NotifyEnterWater() => OnEnterWater?.Invoke();
+    public static void NotifyExitWater() => OnExitWater?.Invoke();
 
     public static void NotifyToxicGasStart() => OnToxicGasStart?.Invoke();
     public static void NotifyToxicGasStop() => OnToxicGasStop?.Invoke();

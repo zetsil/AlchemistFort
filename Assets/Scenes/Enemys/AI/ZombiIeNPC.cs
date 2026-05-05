@@ -17,7 +17,6 @@ public class ZombieNPC : NPCBase, IHasBasePoint
 
 
     [Header("Death & Ragdoll")]
-    [SerializeField] private float destroyDelay = 5f; 
     private Rigidbody[] ragdollRigidbodies;
     private Collider[] ragdollColliders;
 

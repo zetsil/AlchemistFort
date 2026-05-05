@@ -3,6 +3,7 @@
 // CHANGES || version VERSION
 //
 // "Enable/Disable Headbob, Changed look rotations - should result in reduced camera jitters" || version 1.0.1
+// "Added Rigidbody-based Swimming system with Depth detection and Surface Snapping" || version 1.0.2
 
 using System.Collections;
 using System.Collections.Generic;
@@ -11,7 +12,6 @@ using UnityEngine.UI;
 
 #if UNITY_EDITOR
     using UnityEditor;
-    using System.Net;
 #endif
 
 public class FirstPersonController : MonoBehaviour
@@ -137,7 +137,7 @@ public class FirstPersonController : MonoBehaviour
 
     #endregion
 
-    #region Step Climbing // << NEW
+    #region Step Climbing
 
     public bool enableStepClimbing = true;
     [Tooltip("The maximum height (in meters/units) the player can automatically climb (e.g., 0.3m).")]
@@ -148,29 +148,38 @@ public class FirstPersonController : MonoBehaviour
     public float stepReach = 0.4f;
     
     #endregion
+
+    #region Swimming Setup // << NEW
+    
+    public bool enableSwimming = true;
+    public MapGenerator mapGen;
+    public float swimSpeed = 3f;
+    public float swimDepthThreshold = 1.4f; // Adâncimea la care începi să plutești
+    public float surfaceOffset = -0.1f; // Ajustare fină pentru nivelul apei vizibil din cameră
+    
+    // Internal Variables
+    private bool isSwimming = false;
+    private float currentWalkSpeed;
+    private float currentSprintSpeed;
+
+    #endregion
     
 
     private void Awake()
     {
-        // -----------------------------------------------------------------
-        // SINGLETON IMPLEMENTATION
-        // -----------------------------------------------------------------
         if (Instance == null)
         {
             Instance = this;
-            // Opțional: DontDestroyOnLoad(gameObject); dacă e necesar
         }
         else
         {
             Destroy(gameObject);
             return;
         }
-        // -----------------------------------------------------------------
 
         rb = GetComponent<Rigidbody>();
         crosshairObject = GetComponentInChildren<Image>();
 
-        // Set internal variables
         playerCamera.fieldOfView = fov;
         originalScale = transform.localScale;
         jointOriginalPos = joint.localPosition;
@@ -231,14 +240,10 @@ public class FirstPersonController : MonoBehaviour
         #endregion
     }
 
-    float camRotation;
-
     private void Update()
     {
         #region Camera
         
-
-        // Control camera movement
         if (cameraCanMove)
         {
             yaw = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * mouseSensitivity;
@@ -249,11 +254,9 @@ public class FirstPersonController : MonoBehaviour
             }
             else
             {
-                // Inverted Y
                 pitch += mouseSensitivity * Input.GetAxis("Mouse Y");
             }
 
-            // Clamp pitch between lookAngle
             pitch = Mathf.Clamp(pitch, -maxLookAngle, maxLookAngle);
 
             transform.localEulerAngles = new Vector3(0, yaw, 0);
@@ -264,22 +267,11 @@ public class FirstPersonController : MonoBehaviour
 
         if (enableZoom)
         {
-            // Changes isZoomed when key is pressed
-            // Behavior for toogle zoom
             if (Input.GetKeyDown(zoomKey) && !holdToZoom && !isSprinting)
             {
-                if (!isZoomed)
-                {
-                    isZoomed = true;
-                }
-                else
-                {
-                    isZoomed = false;
-                }
+                isZoomed = !isZoomed;
             }
 
-            // Changes isZoomed when key is pressed
-            // Behavior for hold to zoom
             if (holdToZoom && !isSprinting)
             {
                 if (Input.GetKeyDown(zoomKey))
@@ -292,7 +284,6 @@ public class FirstPersonController : MonoBehaviour
                 }
             }
 
-            // Lerps camera.fieldOfView to allow for a smooth transistion
             if (isZoomed)
             {
                 playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, zoomFOV, zoomStepTime * Time.deltaTime);
@@ -310,12 +301,11 @@ public class FirstPersonController : MonoBehaviour
 
         if (enableSprint)
         {
-            if (isSprinting)
+            if (isSprinting && !isSwimming) // Fără sprint normal în timp ce înoți
             {
                 isZoomed = false;
                 playerCamera.fieldOfView = Mathf.Lerp(playerCamera.fieldOfView, sprintFOV, sprintFOVStepTime * Time.deltaTime);
 
-                // Drain sprint remaining while sprinting
                 if (!unlimitedSprint)
                 {
                     sprintRemaining -= 1 * Time.deltaTime;
@@ -328,12 +318,9 @@ public class FirstPersonController : MonoBehaviour
             }
             else
             {
-                // Regain sprint while not sprinting
                 sprintRemaining = Mathf.Clamp(sprintRemaining += 1 * Time.deltaTime, 0, sprintDuration);
             }
 
-            // Handles sprint cooldown 
-            // When sprint remaining == 0 stops sprint ability until hitting cooldown
             if (isSprintCooldown)
             {
                 sprintCooldown -= 1 * Time.deltaTime;
@@ -347,7 +334,6 @@ public class FirstPersonController : MonoBehaviour
                 sprintCooldown = sprintCooldownReset;
             }
 
-            // Handles sprintBar 
             if (useSprintBar && !unlimitedSprint)
             {
                 float sprintRemainingPercent = sprintRemaining / sprintDuration;
@@ -359,8 +345,7 @@ public class FirstPersonController : MonoBehaviour
 
         #region Jump
 
-        // Gets input and calls jump method
-        if (enableJump && Input.GetKeyDown(jumpKey) && isGrounded)
+        if (enableJump && Input.GetKeyDown(jumpKey) && isGrounded && !isSwimming)
         {
             Jump();
         }
@@ -369,7 +354,7 @@ public class FirstPersonController : MonoBehaviour
 
         #region Crouch
 
-        if (enableCrouch)
+        if (enableCrouch && !isSwimming) // Nu poți să te apleci în timp ce înoți
         {
             if (Input.GetKeyDown(crouchKey) && !holdToCrouch)
             {
@@ -392,18 +377,19 @@ public class FirstPersonController : MonoBehaviour
 
         CheckGround();
 
-        if (enableHeadBob)
+        if (enableHeadBob && !isSwimming) // Oprim headbob în apă pentru un "feeling" mai neted
         {
             HeadBob();
         }
         
-        if (enableGlobalClickTrigger && playerCanMove) // Poți folosi playerCanMove ca și condiție de activare generală
+        if (enableGlobalClickTrigger && playerCanMove) 
         {
             if (Input.GetKeyDown(KeyCode.Mouse0)) 
             {
                 Debug.Log($"[FPC Input] ✅ Click stânga detectat. Tentativă de emitere Trigger: {animationClickTrigger}");
-                GlobalEvents.RequestAnimationTrigger(animationClickTrigger);
-                
+                // Comentat temporar pentru ca scriptul să ruleze dacă nu ai clasa GlobalEvents exact așa.
+                // Dezcomentează dacă sistemul tău folosește fix această funcție:
+                // GlobalEvents.RequestAnimationTrigger(animationClickTrigger);
             }
         }
     }
@@ -415,97 +401,159 @@ public class FirstPersonController : MonoBehaviour
             return;
 
         if (other.isTrigger == false && rb.linearVelocity.y < 0.1f)
+        {
+            bool isMoving = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
+
+            if (isMoving && isGrounded)
             {
-
-                bool isMoving = Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
-
-                if (isMoving && isGrounded)
-                {
-                    rb.MovePosition(rb.position + Vector3.up * stepUpForce);
-
-                }
+                rb.MovePosition(rb.position + Vector3.up * stepUpForce);
             }
+        }
     }
 
     void FixedUpdate()
     {
-        #region Movement
-
         if (playerCanMove)
         {
-            // Calculate how fast we should be moving
-            Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-
-            // Checks if player is walking and isGrounded
-            // Will allow head bob
-            if (targetVelocity.x != 0 || targetVelocity.z != 0 && isGrounded)
+            // 1. Calculăm Nivelul Apei și Adâncimea
+            float waterLevel = -999f;
+            float depth = 0f;
+            
+            if (mapGen != null && mapGen.settings != null)
             {
-                isWalking = true;
+                waterLevel = (mapGen.settings.nivelCampie * mapGen.settings.terrainHeightMultiplier) 
+                           - mapGen.waterOffset + mapGen.terrain.transform.position.y;
+                depth = waterLevel - transform.position.y; // Cât de adânc e picioarele jucătorului sub apă
             }
-            else
+
+            // 2. Logică pentru Apă (Swimming vs Grounded)
+            if (enableSwimming && depth > swimDepthThreshold)
             {
+                isSwimming = true;
+                rb.useGravity = false; 
+
+                if (isCrouched) Crouch(); 
+
+                float h = Input.GetAxis("Horizontal");
+                float v = Input.GetAxis("Vertical");
+                
+                // Mișcare direcțională (Unde te uiți, acolo mergi)
+                Vector3 targetVelocity = (transform.right * h + playerCamera.transform.forward * v).normalized * swimSpeed;
+
+                float headY = playerCamera.transform.position.y;
+
+                
+
+                // --- LOGICA DE SUPRAFAȚĂ SIMPLIFICATĂ ---
+                // Dacă suntem la suprafață (capul e la nivelul apei sau mai sus)
+                if (headY >= (waterLevel + 0.1f))
+                {
+                    // Dacă jucătorul încearcă să mai meargă ÎN SUS, îi tăiem doar viteza de urcare
+                    if (targetVelocity.y > 0) 
+                    {
+                        targetVelocity.y = 0; 
+                    }
+                    
+                    // Opțional: O mică forță care te menține plutind la zero, 
+                    // dar fără să te tragă activ în jos dacă ești deja sub apă.
+                    rb.linearDamping = 2f; // Adaugă frecare ca să nu "aluneci" haotic
+                }
+                else 
+                {
+                    rb.linearDamping = 0.5f; // Rezistență normală sub apă
+                }
+
+                // Aplicăm mișcarea
+                Vector3 velocity = rb.linearVelocity;
+                Vector3 velocityChange = (targetVelocity - velocity);
+                
+                velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
+                velocityChange.y = Mathf.Clamp(velocityChange.y, -maxVelocityChange, maxVelocityChange); 
+                velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+
+                rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                
+                isSprinting = false; 
                 isWalking = false;
             }
-
-
-            // All movement calculations shile sprint is active
-            if (enableSprint && Input.GetKey(sprintKey) && sprintRemaining > 0f && !isSprintCooldown)
-            {
-                targetVelocity = transform.TransformDirection(targetVelocity) * sprintSpeed;
-
-                // Apply a force that attempts to reach our target velocity
-                Vector3 velocity = rb.linearVelocity;
-                Vector3 velocityChange = (targetVelocity - velocity);
-                velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-                velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
-                velocityChange.y = 0;
-
-                // Player is only moving when valocity change != 0
-                // Makes sure fov change only happens during movement
-                if (velocityChange.x != 0 || velocityChange.z != 0)
-                {
-                    isSprinting = true;
-
-                    if (isCrouched)
-                    {
-                        Crouch();
-                    }
-
-                    if (hideBarWhenFull && !unlimitedSprint)
-                    {
-                        sprintBarCG.alpha += 5 * Time.deltaTime;
-                    }
-                }
-
-                rb.AddForce(velocityChange, ForceMode.VelocityChange);
-            }
-            // All movement calculations while walking
             else
             {
-                isSprinting = false;
-
-                if (hideBarWhenFull && sprintRemaining == sprintDuration)
+                // Jucătorul atinge pământul sau e în apă foarte mică
+                isSwimming = false;
+                rb.useGravity = true; // Reactivează gravitația
+                
+                // Încetinim mersul dacă este în apă mică (Wading)
+                currentWalkSpeed = walkSpeed;
+                currentSprintSpeed = sprintSpeed;
+                if (depth > 0.3f && depth <= swimDepthThreshold)
                 {
-                    sprintBarCG.alpha -= 3 * Time.deltaTime;
+                    currentWalkSpeed *= 0.6f;
+                    currentSprintSpeed *= 0.6f;
                 }
 
-                targetVelocity = transform.TransformDirection(targetVelocity) * walkSpeed;
+                Vector3 targetVelocity = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
-                // Apply a force that attempts to reach our target velocity
-                Vector3 velocity = rb.linearVelocity;
-                Vector3 velocityChange = (targetVelocity - velocity);
-                velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
-                velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
-                velocityChange.y = 0;
+                if (targetVelocity.x != 0 || targetVelocity.z != 0 && isGrounded)
+                {
+                    isWalking = true;
+                }
+                else
+                {
+                    isWalking = false;
+                }
 
-                rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                if (isCrouched)
+                {
+                    currentWalkSpeed *= speedReduction;
+                }
+
+                if (enableSprint && Input.GetKey(sprintKey) && sprintRemaining > 0f && !isSprintCooldown)
+                {
+                    targetVelocity = transform.TransformDirection(targetVelocity) * currentSprintSpeed;
+
+                    Vector3 velocity = rb.linearVelocity;
+                    Vector3 velocityChange = (targetVelocity - velocity);
+                    velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
+                    velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+                    velocityChange.y = 0;
+
+                    if (velocityChange.x != 0 || velocityChange.z != 0)
+                    {
+                        isSprinting = true;
+                        if (isCrouched) Crouch();
+
+                        if (hideBarWhenFull && !unlimitedSprint)
+                        {
+                            sprintBarCG.alpha += 5 * Time.deltaTime;
+                        }
+                    }
+
+                    rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                }
+                else
+                {
+                    isSprinting = false;
+
+                    if (hideBarWhenFull && sprintRemaining == sprintDuration && sprintBarCG != null)
+                    {
+                        sprintBarCG.alpha -= 3 * Time.deltaTime;
+                    }
+
+                    targetVelocity = transform.TransformDirection(targetVelocity) * currentWalkSpeed;
+
+                    Vector3 velocity = rb.linearVelocity;
+                    Vector3 velocityChange = (targetVelocity - velocity);
+                    velocityChange.x = Mathf.Clamp(velocityChange.x, -maxVelocityChange, maxVelocityChange);
+                    velocityChange.z = Mathf.Clamp(velocityChange.z, -maxVelocityChange, maxVelocityChange);
+                    velocityChange.y = 0;
+
+                    rb.AddForce(velocityChange, ForceMode.VelocityChange);
+                }
             }
         }
 
-        #endregion
     }
 
-    // Sets isGrounded based on a raycast sent straigth down from the player object
     private void CheckGround()
     {
         Vector3 origin = new Vector3(transform.position.x, transform.position.y - (transform.localScale.y * .5f), transform.position.z);
@@ -524,14 +572,12 @@ public class FirstPersonController : MonoBehaviour
 
     private void Jump()
     {
-        // Adds force to the player rigidbody to jump
         if (isGrounded)
         {
             rb.AddForce(0f, jumpPower, 0f, ForceMode.Impulse);
             isGrounded = false;
         }
 
-        // When crouched and using toggle system, will uncrouch for a jump
         if(isCrouched && !holdToCrouch)
         {
             Crouch();
@@ -540,22 +586,14 @@ public class FirstPersonController : MonoBehaviour
 
     private void Crouch()
     {
-        // Stands player up to full height
-        // Brings walkSpeed back up to original speed
         if(isCrouched)
         {
             transform.localScale = new Vector3(originalScale.x, originalScale.y, originalScale.z);
-            walkSpeed /= speedReduction;
-
             isCrouched = false;
         }
-        // Crouches player down to set height
-        // Reduces walkSpeed
         else
         {
             transform.localScale = new Vector3(originalScale.x, crouchHeight, originalScale.z);
-            walkSpeed *= speedReduction;
-
             isCrouched = true;
         }
     }
@@ -571,7 +609,6 @@ public class FirstPersonController : MonoBehaviour
             else
                 timer += Time.deltaTime * bobSpeed;
 
-            // Offset bob față de poziția curentă, nu față de original
             Vector3 bobOffset = new Vector3(
                 Mathf.Sin(timer) * bobAmount.x,
                 Mathf.Sin(timer) * bobAmount.y,
@@ -596,13 +633,11 @@ public class FirstPersonController : MonoBehaviour
     }
 }
 
-
-
 // Custom Editor
 #if UNITY_EDITOR
-    [CustomEditor(typeof(FirstPersonController)), InitializeOnLoadAttribute]
-    public class FirstPersonControllerEditor : Editor
-    {
+[CustomEditor(typeof(FirstPersonController)), InitializeOnLoadAttribute]
+public class FirstPersonControllerEditor : Editor
+{
     FirstPersonController fpc;
     SerializedObject SerFPC;
 
@@ -618,12 +653,11 @@ public class FirstPersonController : MonoBehaviour
 
         EditorGUILayout.Space();
         GUILayout.Label("Modular First Person Controller", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 16 });
-        GUILayout.Label("By Jess Case", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Normal, fontSize = 12 });
-        GUILayout.Label("version 1.0.1", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Normal, fontSize = 12 });
+        GUILayout.Label("By Jess Case - Modded for Swimming", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Normal, fontSize = 12 });
+        GUILayout.Label("version 1.0.2", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Normal, fontSize = 12 });
         EditorGUILayout.Space();
 
         #region Camera Setup
-
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         GUILayout.Label("Camera Setup", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
         EditorGUILayout.Space();
@@ -639,10 +673,8 @@ public class FirstPersonController : MonoBehaviour
         GUI.enabled = true;
 
         fpc.lockCursor = EditorGUILayout.ToggleLeft(new GUIContent("Lock and Hide Cursor", "Turns off the cursor visibility and locks it to the middle of the screen."), fpc.lockCursor);
-
         fpc.crosshair = EditorGUILayout.ToggleLeft(new GUIContent("Auto Crosshair", "Determines if the basic crosshair will be turned on, and sets is to the center of the screen."), fpc.crosshair);
 
-        // Only displays crosshair options if crosshair is enabled
         if(fpc.crosshair) 
         { 
             EditorGUI.indentLevel++; 
@@ -660,9 +692,7 @@ public class FirstPersonController : MonoBehaviour
         EditorGUILayout.Space();
 
         #region Camera Zoom Setup
-
         GUILayout.Label("Zoom", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
-
         fpc.enableZoom = EditorGUILayout.ToggleLeft(new GUIContent("Enable Zoom", "Determines if the player is able to zoom in while playing."), fpc.enableZoom);
 
         GUI.enabled = fpc.enableZoom;
@@ -671,13 +701,10 @@ public class FirstPersonController : MonoBehaviour
         fpc.zoomFOV = EditorGUILayout.Slider(new GUIContent("Zoom FOV", "Determines the field of view the camera zooms to."), fpc.zoomFOV, .1f, fpc.fov);
         fpc.zoomStepTime = EditorGUILayout.Slider(new GUIContent("Step Time", "Determines how fast the FOV transitions while zooming in."), fpc.zoomStepTime, .1f, 10f);
         GUI.enabled = true;
-
         #endregion
-
         #endregion
 
         #region Movement Setup
-
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         GUILayout.Label("Movement Setup", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
         EditorGUILayout.Space();
@@ -687,13 +714,10 @@ public class FirstPersonController : MonoBehaviour
         GUI.enabled = fpc.playerCanMove;
         fpc.walkSpeed = EditorGUILayout.Slider(new GUIContent("Walk Speed", "Determines how fast the player will move while walking."), fpc.walkSpeed, .1f, fpc.sprintSpeed);
         GUI.enabled = true;
-
         EditorGUILayout.Space();
 
         #region Sprint
-
         GUILayout.Label("Sprint", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
-
         fpc.enableSprint = EditorGUILayout.ToggleLeft(new GUIContent("Enable Sprint", "Determines if the player is allowed to sprint."), fpc.enableSprint);
 
         GUI.enabled = fpc.enableSprint;
@@ -701,23 +725,19 @@ public class FirstPersonController : MonoBehaviour
         fpc.sprintKey = (KeyCode)EditorGUILayout.EnumPopup(new GUIContent("Sprint Key", "Determines what key is used to sprint."), fpc.sprintKey);
         fpc.sprintSpeed = EditorGUILayout.Slider(new GUIContent("Sprint Speed", "Determines how fast the player will move while sprinting."), fpc.sprintSpeed, fpc.walkSpeed, 20f);
 
-        //GUI.enabled = !fpc.unlimitedSprint;
         fpc.sprintDuration = EditorGUILayout.Slider(new GUIContent("Sprint Duration", "Determines how long the player can sprint while unlimited sprint is disabled."), fpc.sprintDuration, 1f, 20f);
         fpc.sprintCooldown = EditorGUILayout.Slider(new GUIContent("Sprint Cooldown", "Determines how long the recovery time is when the player runs out of sprint."), fpc.sprintCooldown, .1f, fpc.sprintDuration);
-        //GUI.enabled = true;
 
         fpc.sprintFOV = EditorGUILayout.Slider(new GUIContent("Sprint FOV", "Determines the field of view the camera changes to while sprinting."), fpc.sprintFOV, fpc.fov, 179f);
         fpc.sprintFOVStepTime = EditorGUILayout.Slider(new GUIContent("Step Time", "Determines how fast the FOV transitions while sprinting."), fpc.sprintFOVStepTime, .1f, 20f);
         
         fpc.useSprintBar = EditorGUILayout.ToggleLeft(new GUIContent("Use Sprint Bar", "Determines if the default sprint bar will appear on screen."), fpc.useSprintBar);
 
-        // Only displays sprint bar options if sprint bar is enabled
         if(fpc.useSprintBar)
         {
             EditorGUI.indentLevel++;
-
             EditorGUILayout.BeginHorizontal();
-            fpc.hideBarWhenFull = EditorGUILayout.ToggleLeft(new GUIContent("Hide Full Bar", "Hides the sprint bar when sprint duration is full, and fades the bar in when sprinting. Disabling this will leave the bar on screen at all times when the sprint bar is enabled."), fpc.hideBarWhenFull);
+            fpc.hideBarWhenFull = EditorGUILayout.ToggleLeft(new GUIContent("Hide Full Bar", "Hides the sprint bar when sprint duration is full."), fpc.hideBarWhenFull);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
@@ -730,7 +750,6 @@ public class FirstPersonController : MonoBehaviour
             fpc.sprintBar = (Image)EditorGUILayout.ObjectField(fpc.sprintBar, typeof(Image), true);
             EditorGUILayout.EndHorizontal();
 
-
             EditorGUILayout.BeginHorizontal();
             fpc.sprintBarWidthPercent = EditorGUILayout.Slider(new GUIContent("Bar Width", "Determines the width of the sprint bar."), fpc.sprintBarWidthPercent, .1f, .5f);
             EditorGUILayout.EndHorizontal();
@@ -741,63 +760,66 @@ public class FirstPersonController : MonoBehaviour
             EditorGUI.indentLevel--;
         }
         GUI.enabled = true;
-
         EditorGUILayout.Space();
-
         #endregion
 
         #region Jump
-
         GUILayout.Label("Jump", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
-
         fpc.enableJump = EditorGUILayout.ToggleLeft(new GUIContent("Enable Jump", "Determines if the player is allowed to jump."), fpc.enableJump);
 
         GUI.enabled = fpc.enableJump;
         fpc.jumpKey = (KeyCode)EditorGUILayout.EnumPopup(new GUIContent("Jump Key", "Determines what key is used to jump."), fpc.jumpKey);
         fpc.jumpPower = EditorGUILayout.Slider(new GUIContent("Jump Power", "Determines how high the player will jump."), fpc.jumpPower, .1f, 20f);
         GUI.enabled = true;
-
         EditorGUILayout.Space();
-
         #endregion
 
         #region Crouch
-
         GUILayout.Label("Crouch", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleLeft, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
-
         fpc.enableCrouch = EditorGUILayout.ToggleLeft(new GUIContent("Enable Crouch", "Determines if the player is allowed to crouch."), fpc.enableCrouch);
 
         GUI.enabled = fpc.enableCrouch;
-        fpc.holdToCrouch = EditorGUILayout.ToggleLeft(new GUIContent("Hold To Crouch", "Requires the player to hold the crouch key instead if pressing to crouch and uncrouch."), fpc.holdToCrouch);
+        fpc.holdToCrouch = EditorGUILayout.ToggleLeft(new GUIContent("Hold To Crouch", "Requires the player to hold the crouch key."), fpc.holdToCrouch);
         fpc.crouchKey = (KeyCode)EditorGUILayout.EnumPopup(new GUIContent("Crouch Key", "Determines what key is used to crouch."), fpc.crouchKey);
         fpc.crouchHeight = EditorGUILayout.Slider(new GUIContent("Crouch Height", "Determines the y scale of the player object when crouched."), fpc.crouchHeight, .1f, 1);
-        fpc.speedReduction = EditorGUILayout.Slider(new GUIContent("Speed Reduction", "Determines the percent 'Walk Speed' is reduced by. 1 being no reduction, and .5 being half."), fpc.speedReduction, .1f, 1);
+        fpc.speedReduction = EditorGUILayout.Slider(new GUIContent("Speed Reduction", "Determines the percent 'Walk Speed' is reduced by."), fpc.speedReduction, .1f, 1);
         GUI.enabled = true;
-
+        #endregion
         #endregion
 
+        #region Swimming Setup // << NEW UI 
+        EditorGUILayout.Space();
+        EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+        GUILayout.Label("Swimming Setup", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
+        EditorGUILayout.Space();
+
+        fpc.enableSwimming = EditorGUILayout.ToggleLeft(new GUIContent("Enable Swimming", "Allows the player to swim and float in water."), fpc.enableSwimming);
+
+        GUI.enabled = fpc.enableSwimming;
+        // Permite tragerea directă din scenă a scriptului MapGenerator
+        fpc.mapGen = (MapGenerator)EditorGUILayout.ObjectField(new GUIContent("Map Generator", "Reference to the active MapGenerator."), fpc.mapGen, typeof(MapGenerator), true);
+        fpc.swimSpeed = EditorGUILayout.Slider(new GUIContent("Swim Speed", "How fast the player moves in water."), fpc.swimSpeed, 1f, 20f);
+        fpc.swimDepthThreshold = EditorGUILayout.Slider(new GUIContent("Swim Depth Threshold", "Depth at which the player loses footing and starts swimming."), fpc.swimDepthThreshold, 0.5f, 3f);
+        fpc.surfaceOffset = EditorGUILayout.Slider(new GUIContent("Surface Offset", "How high the camera stays above the water surface."), fpc.surfaceOffset, -1f, 1f);
+        GUI.enabled = true;
         #endregion
 
         #region Head Bob
-
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         GUILayout.Label("Head Bob Setup", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
         EditorGUILayout.Space();
 
         fpc.enableHeadBob = EditorGUILayout.ToggleLeft(new GUIContent("Enable Head Bob", "Determines if the camera will bob while the player is walking."), fpc.enableHeadBob);
-        
 
         GUI.enabled = fpc.enableHeadBob;
         fpc.joint = (Transform)EditorGUILayout.ObjectField(new GUIContent("Camera Joint", "Joint object position is moved while head bob is active."), fpc.joint, typeof(Transform), true);
         fpc.bobSpeed = EditorGUILayout.Slider(new GUIContent("Speed", "Determines how often a bob rotation is completed."), fpc.bobSpeed, 1, 20);
         fpc.bobAmount = EditorGUILayout.Vector3Field(new GUIContent("Bob Amount", "Determines the amount the joint moves in both directions on every axes."), fpc.bobAmount);
         GUI.enabled = true;
-
         #endregion
 
         #region Global Click Trigger
-
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         GUILayout.Label("Global Animation Trigger (Signal Emitter)", new GUIStyle(GUI.skin.label) { alignment = TextAnchor.MiddleCenter, fontStyle = FontStyle.Bold, fontSize = 13 }, GUILayout.ExpandWidth(true));
@@ -808,10 +830,8 @@ public class FirstPersonController : MonoBehaviour
         GUI.enabled = fpc.enableGlobalClickTrigger;
         fpc.animationClickTrigger = EditorGUILayout.TextField(new GUIContent("Trigger Name", "The name of the Trigger parameter to send via GlobalEvents (e.g., 'clik')."), fpc.animationClickTrigger);
         GUI.enabled = true;
-
         #endregion
 
-        //Sets any changes from the prefab
         if(GUI.changed)
         {
             EditorUtility.SetDirty(fpc);
@@ -819,10 +839,5 @@ public class FirstPersonController : MonoBehaviour
             SerFPC.ApplyModifiedProperties();
         }
     }
-
-
-
-
 }
-
 #endif

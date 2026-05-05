@@ -9,6 +9,7 @@ public abstract class Entity : MonoBehaviour
     [Tooltip("Sursa de date a entității (Viață, Loot, Vulnerabilități).")]
     public EntityData entityData;
     private EntityHealthBar healthBar;
+    public float destroyDelay = 0.1f;
 
     // === STATISTICI DINAMICE ===
     [Header("Statistici Dinamice")]
@@ -16,6 +17,7 @@ public abstract class Entity : MonoBehaviour
     public int CurrentHealth => currentHealth;
     public bool isDead = false;
     public int MaxHealth { get; private set; }
+    
 
     // === OPȚIUNI FLASH (VIZUAL) ===
     [System.Serializable]
@@ -262,7 +264,7 @@ public abstract class Entity : MonoBehaviour
         }
 
         DropLoot();
-        Destroy(gameObject);
+        Destroy(gameObject, destroyDelay);
     }
 
     public void ApplyKnockbackFromCenter(float force)
