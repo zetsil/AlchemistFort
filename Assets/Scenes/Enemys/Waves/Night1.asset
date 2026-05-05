@@ -13,11 +13,11 @@ MonoBehaviour:
   m_Name: Night1
   m_EditorClassIdentifier: Assembly-CSharp::DayWaveData
   dayIndex: 0
-  dayDurationSeconds: 600
+  dayDurationSeconds: 200
   spawnEntries:
-  - timeInSeconds: 20
+  - timeInSeconds: 10
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
-    spawnCount: 1
+    spawnCount: 4
     spawnRadius: 2
   - timeInSeconds: 100
     enemyData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}

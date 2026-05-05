@@ -389,7 +389,7 @@ public class FirstPersonController : MonoBehaviour
                 Debug.Log($"[FPC Input] ✅ Click stânga detectat. Tentativă de emitere Trigger: {animationClickTrigger}");
                 // Comentat temporar pentru ca scriptul să ruleze dacă nu ai clasa GlobalEvents exact așa.
                 // Dezcomentează dacă sistemul tău folosește fix această funcție:
-                // GlobalEvents.RequestAnimationTrigger(animationClickTrigger);
+                GlobalEvents.RequestAnimationTrigger(animationClickTrigger);
             }
         }
     }

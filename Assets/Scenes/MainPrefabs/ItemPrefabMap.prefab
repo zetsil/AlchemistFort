@@ -83,7 +83,7 @@ MonoBehaviour:
     visualPrefab: {fileID: 1227510837065597729, guid: d9b4d722336c32f96809f1880aa21052, type: 3}
   entityVisuals:
   - entityData: {fileID: 11400000, guid: 717ed712264e649fb8921ebd370dca10, type: 2}
-    visualPrefab: {fileID: 1400600423447001047, guid: ab14be3530aaca788bfb5f9af73d01a6, type: 3}
+    visualPrefab: {fileID: 6000254147714847769, guid: ac641dcbd4187f158b1d891da445c445, type: 3}
   - entityData: {fileID: 11400000, guid: a91b5da2161ea7df38a75bfc77181be6, type: 2}
     visualPrefab: {fileID: 8866365951013264202, guid: c2e804c07322dbd008ea908c08e8e9a2, type: 3}
   - entityData: {fileID: 11400000, guid: d130e1ac4d98f38acbd948a9c933adca, type: 2}
