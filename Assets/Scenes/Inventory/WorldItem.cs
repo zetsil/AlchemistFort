@@ -50,4 +50,10 @@ public class WorldEntityState : MonoBehaviour
             SaveManager.Instance.RegisterDestroyedWorldItem(uniqueID);
         }
     }
+
+    public void GenerateSeedBasedID(int seed, string entityType, int index)
+    {
+        // Format: "seed_tip_index" → mereu același dacă seed și poziția în listă nu se schimbă
+        uniqueID = $"{seed}_{entityType}_{index}";
+    }
 }

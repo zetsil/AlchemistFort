@@ -13,6 +13,7 @@ public class Enemy : Entity
     private Rigidbody[] ragdollRigidbodies;
     private Collider[] ragdollColliders;
 
+
     protected override void Start()
     {
         base.Start();
@@ -33,6 +34,7 @@ public class Enemy : Entity
         }
     }
 
+    
     public override void TakeDamage(float baseDamage, ToolType attackingToolType = ToolType.None)
     {
         if (currentHealth <= 0) return;
@@ -107,5 +109,7 @@ public class Enemy : Entity
             // 0.1f face ca tranziția între Idle și Walk să fie foarte lină
             animator.SetFloat("Speed", speedPercent, 0.1f, Time.deltaTime);
         }
+
+        
     }
 }

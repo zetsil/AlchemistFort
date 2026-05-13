@@ -150,6 +150,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.00000015590395
       objectReference: {fileID: 0}
+    - target: {fileID: -8391222552659086748, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: -7462960451910592706, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 3.7789881
@@ -277,6 +281,10 @@ PrefabInstance:
     - target: {fileID: -3752013009434273117, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0.00000013707802
+      objectReference: {fileID: 0}
+    - target: {fileID: -3716315528359324704, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -2680207161276743839, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -441,6 +449,10 @@ PrefabInstance:
     - target: {fileID: 2304105074979929115, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: -39.704277
+      objectReference: {fileID: 0}
+    - target: {fileID: 3486984413123074958, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3643293509174545300, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -622,6 +634,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: -180
       objectReference: {fileID: 0}
+    - target: {fileID: 8712794329613768871, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8879528566716807029, guid: 0eab31e1cb029a945828c0964db502ff, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: -89.98021
@@ -690,6 +706,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TerritorialEnemy
   entityData: {fileID: 11400000, guid: 9c25b8584025a14ec91b94da8f8afd4f, type: 2}
+  destroyDelay: 0.1
   currentHealth: 0
   isDead: 0
   flashSettings:

@@ -162,6 +162,7 @@ public class SceneSaveEntry
 [System.Serializable]
 public class WorldSaveData
 {
+    public int mapSeed;
     public GameProgressSaveData gameProgress = new GameProgressSaveData();
     public List<SceneSaveEntry> sceneDataList = new List<SceneSaveEntry>();
 }
@@ -200,6 +201,11 @@ public class SaveManager : MonoBehaviour
             if (!Directory.Exists(baseSavePath)) Directory.CreateDirectory(baseSavePath);
         }
         else Destroy(gameObject);
+    }
+
+    public void InitializeSaveForSeed(int seed)
+    {
+        currentSaveName = $"main_game_{seed}";
     }
 
     private string GetCurrentSaveFolderPath()
@@ -418,7 +424,8 @@ public class SaveManager : MonoBehaviour
     private IEnumerator LoadSequence(string folderPath)
     {
         string worldDataPath = Path.Combine(folderPath, "world_items.json");
-        string sceneToLoad = "Forest"; 
+        // string sceneToLoad = "Forest"; 
+        string sceneToLoad = "MainGame";
         WorldSaveData loadedData = null;
 
         runtimeSceneCache.Clear();
@@ -435,6 +442,20 @@ public class SaveManager : MonoBehaviour
                     runtimeSceneCache.Add(entry.sceneName, entry.data);
             }
             LoadPlayerStats(folderPath);
+        }
+
+        if (loadedData != null && loadedData.mapSeed != 0)
+        {
+            // Sincronizăm seed-ul în MapGenerator înainte de a încărca scena
+            // (sau după, dacă MapGenerator e în scenă)
+            InitializeSaveForSeed(loadedData.mapSeed);
+        }
+
+         MapGenerator mapGen = Object.FindFirstObjectByType<MapGenerator>();
+        if (mapGen != null && loadedData != null && loadedData.mapSeed != 0)
+        {
+            mapGen.settings.seed = loadedData.mapSeed;
+            mapGen.GenerateMap(); // regenerare cu seed-ul corect → ID-uri identice
         }
 
         AsyncOperation asyncLoad = SceneManager.LoadSceneAsync(sceneToLoad);
@@ -480,6 +501,15 @@ public class SaveManager : MonoBehaviour
         ApplyPendingPlayerSpawn();
     }
 
+    public int GetSeedFromCurrentSave()
+    {
+        // "main_game_42069" → 42069
+        string[] parts = currentSaveName.Split('_');
+        if (parts.Length >= 3 && int.TryParse(parts[2], out int seed))
+            return seed;
+        return 0;
+    }
+
     // ----------------------------------------------------------------
     // 3. DETALII IMPLEMENTARE (SAVE / LOAD SPECIFIC)
     // ----------------------------------------------------------------
@@ -487,7 +517,11 @@ public class SaveManager : MonoBehaviour
     public void SaveWorldItemStateToDisk(string folderPath)
     {
         WorldSaveData fullSave = new WorldSaveData();
-        fullSave.gameProgress.currentSceneName = SceneManager.GetActiveScene().name;
+        // fullSave.gameProgress.currentSceneName = SceneManager.GetActiveScene().name;
+        fullSave.gameProgress.currentSceneName = "MainGame";
+
+        MapGenerator mapGen = Object.FindFirstObjectByType<MapGenerator>();
+        if (mapGen != null) fullSave.mapSeed = mapGen.GetCurrentSeed();
         
         if (GameStateManager.Instance != null && WaveManager.Instance != null)
         {
