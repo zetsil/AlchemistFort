@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2922121582586999543}
   - component: {fileID: 8990404065475081802}
   - component: {fileID: 441411448355889510}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: TrowGoblin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -43,7 +43,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6647797519169802918}
-  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 4300002, guid: 08746d293fd827e429733f5c209aee54, type: 3}
 --- !u!23 &6888653703051855553
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -91,6 +91,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!135 &2922121582586999543
 SphereCollider:

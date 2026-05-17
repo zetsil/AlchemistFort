@@ -2264,6 +2264,9 @@ MonoBehaviour:
     duration: 0.05
     targetRenderers: []
   hitTriggerName: Hit
+  ragdollTargetBone: {fileID: 8888590024004362701}
+  backwardForce: 30
+  upwardForce: 35
 --- !u!1 &6039266755601769112
 GameObject:
   m_ObjectHideFlags: 0

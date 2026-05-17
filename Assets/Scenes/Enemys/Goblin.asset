@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Goblin
   m_EditorClassIdentifier: Assembly-CSharp::EntityData
   maxHealth: 10
-  name: Imp
+  name: Goblin
   baseAttackDamage: 7
   toolEffectivenesses:
   - toolType: 4

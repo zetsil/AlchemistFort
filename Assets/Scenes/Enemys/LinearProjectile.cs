@@ -3,7 +3,7 @@ using UnityEngine;
 public class LinearProjectile : MonoBehaviour
 {
     [Header("Referință Manuală")]
-    public NPCBase ownerNPC; // O poți trage în Inspector sau o setezi la Spawn
+    public Entity entity; // S-a redenumit din ownerNPC în entity
 
     [Header("Setări Mișcare")]
     public float speed = 25f;
@@ -18,34 +18,30 @@ public class LinearProjectile : MonoBehaviour
 
     void Start()
     {
-        // Verificăm dacă am primit owner-ul
-        if (ownerNPC != null)
+        // Căutăm direct Player-ul (AllyEntity) în scenă pentru a stabili ținta
+        AllyEntity player = GameObject.FindAnyObjectByType<AllyEntity>();
+
+        if (player != null)
         {
-            if (ownerNPC.Target != null)
-            {
-                // Calculăm direcția
-                Vector3 targetPos = ownerNPC.Target.transform.position;
-                Vector3 targetCenter = targetPos + Vector3.up * 0.8f; 
-                
-                direction = (targetCenter - transform.position).normalized;
-                transform.forward = direction;
-                
-                initialized = true;
-                Debug.Log($"[Projectile] Lansat cu succes către {ownerNPC.Target.name}");
-            }
-            else
-            {
-                Debug.LogWarning($"[Projectile] Owner-ul {ownerNPC.name} nu are Target!");
-                Destroy(gameObject);
-            }
+            // Calculăm direcția către Player
+            Vector3 targetPos = player.transform.position;
+            // Adăugăm înălțimea de 0.8f ca proiectilul să meargă spre corp, nu la picioare
+            Vector3 targetCenter = targetPos + Vector3.up * 0.8f; 
+            
+            direction = (targetCenter - transform.position).normalized;
+            transform.forward = direction;
+            
+            initialized = true;
+            Debug.Log($"[Projectile] Lansat cu succes către Player: {player.name}");
         }
         else
         {
-            // Dacă ai uitat să îl tragi în Inspector sau să îl setezi din cod
-            Debug.LogError("[Projectile] Lipsește referința către NPCBase!");
+            Debug.LogWarning("[Projectile] Nu am găsit niciun AllyEntity (Player) în scenă!");
             Destroy(gameObject);
+            return; // Oprim execuția funcției Start aici
         }
 
+        // Autodistrugere după timpul maxim de viață
         Destroy(gameObject, maxLifetime);
     }
 
@@ -60,7 +56,6 @@ public class LinearProjectile : MonoBehaviour
         HandleCollision(other);
     }
 
-    // Adăugăm și Stay pentru situațiile în care Enter este ratat sau obiectele se suprapun
     private void OnTriggerStay(Collider other)
     {
         HandleCollision(other);
@@ -68,24 +63,23 @@ public class LinearProjectile : MonoBehaviour
 
     private void HandleCollision(Collider other)
     {
-        // Dacă am lovit deja ceva valid, nu mai procesăm nimic
         if (hasHit) return;
 
-        // 1. Ignorăm shooter-ul
-        if (ownerNPC != null && other.transform.root == ownerNPC.transform.root) return;
+        // 1. Ignorăm shooter-ul (folosind noua variabilă 'entity')
+        if (entity != null && other.transform.root == entity.transform.root) return;
         
-        // 2. Ignorăm alte proiectile și triggere (care nu sunt AllyEntity)
+        // 2. Ignorăm alte proiectile și triggere
         if (other.isTrigger || other.GetComponent<LinearProjectile>() != null) return;
 
-        // 3. Căutăm componenta AllyEntity
+        // 3. Căutăm componenta AllyEntity (Player)
         AllyEntity allyVictim = other.GetComponentInParent<AllyEntity>();
 
-        // 4. Dacă am găsit-o, aplicăm damage și distrugem proiectilul
+        // 4. Dacă am lovit player-ul, aplicăm damage
         if (allyVictim != null)
         {
             hasHit = true;
             allyVictim.TakeDamage(impactDamage, ToolType.Claw);
-            Debug.Log($"🎯 Lovitură confirmată (via Trigger) pe: {allyVictim.gameObject.name}");
+            Debug.Log($"🎯 Lovitură confirmată pe: {allyVictim.gameObject.name}");
             
             Destroy(gameObject);
         }

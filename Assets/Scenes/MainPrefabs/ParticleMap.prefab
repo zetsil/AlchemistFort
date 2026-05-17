@@ -57,3 +57,7 @@ MonoBehaviour:
     prefab: {fileID: 1075911434913256, guid: 5490db4cc4dbced44b137549b1a4e6f1, type: 3}
   - key: Hit_Pickaxe_MiningCoal
     prefab: {fileID: 1075911434913256, guid: 5490db4cc4dbced44b137549b1a4e6f1, type: 3}
+  - key: Hit_Sword_Goblin
+    prefab: {fileID: 4553287630450876385, guid: 15483e51212e3d74886ea57291f4639a, type: 3}
+  - key: Hit_Axe_Goblin
+    prefab: {fileID: 4553287630450876385, guid: 15483e51212e3d74886ea57291f4639a, type: 3}

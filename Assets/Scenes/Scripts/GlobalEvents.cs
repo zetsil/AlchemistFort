@@ -31,6 +31,7 @@ public static class GlobalEvents
     public static event Action<string, MessageType> OnNotificationRequested;
 
     public static event Action<string> OnPlaySound;
+    public static event Action<float, float> OnHitstopRequested;
 
     public static event Action<string, Vector3> OnParticleEffectRequested;
     public static event Action OnPlayerDeath;
@@ -55,6 +56,9 @@ public static class GlobalEvents
     {
         OnPlaySoundAtPosition?.Invoke(soundName, position);
     }
+
+    public static void RequestHitstop(float duration, float timeScale) => OnHitstopRequested?.Invoke(duration, timeScale);
+
 
     public static void NotifyEnemyDeath(Entity enemy)
     {

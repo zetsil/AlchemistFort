@@ -29,6 +29,29 @@ public class Food : Item // Moștenește clasa de bază Item
 
                 Debug.Log($"🍎 Consumat: {itemName}. HP +{healthRestored}, Stamina +{staminaRestored}");
 
+                if (InventoryManager.Instance == null)
+                {
+                    Debug.LogError("Managerul de Inventar nu este instanțiat. Nu se poate elimina obiectul.");
+                    return;
+                }
+
+                // --- Logica de Consum Globală ---
+                int amountToConsume = 1;
+
+                // Folosim metoda 'DecreaseItem' pentru a consuma 1 unitate.
+                bool consumed = InventoryManager.Instance.DecreaseItem(itemName, amountToConsume);
+
+                if (consumed)
+                {
+                    Debug.Log($"[Inventar] {itemName} x{amountToConsume} a fost consumat.");
+                    // **Aici se adaugă logica unică a itemului (ex: vindecare, buff).**
+                }
+                else
+                {
+                    // Managerul afișează deja warning-ul specific.
+                    Debug.LogWarning($"[Inventar] Nu s-a putut folosi/consuma {itemName}. Acțiunea eșuează.");
+                }
+
                 // 3. Logica de bază (afișare consolă)
                 base.Use();
 

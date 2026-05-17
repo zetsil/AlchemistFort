@@ -3,8 +3,8 @@ using UnityEngine;
 public class SpawnPrefabAhead : MonoBehaviour
 {
     [Header("Referințe")]
-    [Tooltip("Trage aici NPC-ul care deține acest script (Root-ul).")]
-    public NPCBase ownerNPC;
+    [Tooltip("Trage aici Entity-ul care deține acest script (Root-ul).")]
+    public Entity entity; // Redenumit din ownerNPC în entity
 
     [Header("Settings")]
     public GameObject prefabToSpawn;
@@ -31,19 +31,19 @@ public class SpawnPrefabAhead : MonoBehaviour
         // 2. Instanțiem obiectul
         GameObject spawnedObj = Instantiate(prefabToSpawn, spawnPosition, transform.rotation);
 
-        // 3. LOGICA NOUĂ: Setăm owner-ul pe proiectil dacă acesta are scriptul LinearProjectile
-        if (ownerNPC != null)
+        // 3. Setăm entitatea părinte pe proiectil folosind noua variabilă 'entity'
+        if (entity != null)
         {
             LinearProjectile projectileScript = spawnedObj.GetComponent<LinearProjectile>();
             if (projectileScript != null)
             {
-                projectileScript.ownerNPC = ownerNPC;
-                Debug.Log($"[Spawn] Am setat owner-ul {ownerNPC.name} pe proiectilul {spawnedObj.name}");
+                projectileScript.entity = entity; // Transmitem referința redenumită
+                Debug.Log($"[Spawn] Am setat entitatea {entity.name} pe proiectilul {spawnedObj.name}");
             }
         }
         else
         {
-            Debug.LogWarning($"[Spawn] Obiectul a fost spawnat, dar ownerNPC este NULL pe {gameObject.name}!");
+            Debug.LogWarning($"[Spawn] Obiectul a fost spawnat, dar variabila 'entity' este NULL pe {gameObject.name}!");
         }
 
         // 4. Dacă vrei ca obiectul să rămână lipit de inamic
